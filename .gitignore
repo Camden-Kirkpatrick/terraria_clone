@@ -1,11 +1,11 @@
-/out
-bin/
-build/
+/out/
+/bin/
+/build/
 
-/.vs
-.idea/
+/.vs/
+/.idea/
 CMakeSettings.json
 Makefile
 
-settings/
-saves/
+/settings/
+/saves/

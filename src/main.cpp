@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <imgui.h>
 #include <rlImGui.h>
+#include "imguiThemes.hpp"
 
 int main()
 {
@@ -15,6 +16,10 @@ int main()
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.FontGlobalScale = 2;
+
+	// Change the style/theme
+	//ImGui::StyleColorsClassic();
+	ImGui::SetupImGuiCatppuccinMochaStyle();
 #pragma endregion
 
 	while (!WindowShouldClose())
@@ -56,6 +61,24 @@ int main()
 		// Update a variable using a slider
 		static float a = 0;
 		ImGui::SliderFloat("slider", &a, 0, 1);
+
+		static char buffer[128] = "";
+
+		// Enter text and display it
+		ImGuiInputTextFlags flags =
+			ImGuiInputTextFlags_CharsNoBlank |        // no spaces
+			ImGuiInputTextFlags_EnterReturnsTrue |    // return true on Enter
+			ImGuiInputTextFlags_AutoSelectAll;        // select all text when focused
+
+		if (ImGui::InputText("Player Name", buffer, sizeof(buffer), flags))
+		{
+			std::cout << "Confirmed name: " << buffer << "\n";
+		}
+
+		// Color selector
+		static float color[4]{};
+		ImGui::ColorEdit4("color", color);
+		
 	
 		ImGui::End();
 	#pragma endregion

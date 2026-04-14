@@ -2,6 +2,7 @@
 #include <raylib.h>
 #include <fstream>
 #include <iostream>
+#include <asserts.hpp>
 
 struct GameData
 {
@@ -20,7 +21,7 @@ bool initGame()
 bool updateGame()
 {
 	float deltaTime = GetFrameTime();
-	if (deltaTime > 0.05f) deltaTime = 0.05f;
+	if (deltaTime > 0.05f) deltaTime = 0.05f; // clamp to 20fps minimum
 
 	//DrawText("TEST", 100, 100, 20, RED);
 
@@ -36,11 +37,7 @@ bool updateGame()
 
 
 	// Prevent the player from going out of bounds
-	if (gameData.posX < 0)
-	{
-		gameData.posX = 0;
-		gameData.c.r = 0;
-	}
+	if (gameData.posX < 0) gameData.posX = 0;
 	if (gameData.posX + gameData.playerWidth > win_width)
 		gameData.posX = win_width - gameData.playerWidth;
 	 

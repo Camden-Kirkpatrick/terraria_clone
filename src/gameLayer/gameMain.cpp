@@ -19,6 +19,9 @@ bool initGame()
 
 bool updateGame()
 {
+	float deltaTime = GetFrameTime();
+	if (deltaTime > 0.05f) deltaTime = 0.05f;
+
 	//DrawText("TEST", 100, 100, 20, RED);
 
 	//DrawRectangle(150, 150, 100, 100, { 255, 0, 0, 127 });
@@ -26,14 +29,18 @@ bool updateGame()
 
 
 	// Player movement
-	if (IsKeyDown(KEY_A)) { gameData.posX -= 1; }
-	if (IsKeyDown(KEY_D)) { gameData.posX += 1; }
-	if (IsKeyDown(KEY_W)) { gameData.posY -= 1; }
-	if (IsKeyDown(KEY_S)) { gameData.posY += 1; }
+	if (IsKeyDown(KEY_A)) { gameData.posX -= 200 * deltaTime; }
+	if (IsKeyDown(KEY_D)) { gameData.posX += 200 * deltaTime; }
+	if (IsKeyDown(KEY_W)) { gameData.posY -= 200 * deltaTime; }
+	if (IsKeyDown(KEY_S)) { gameData.posY += 200 * deltaTime; }
 
 
 	// Prevent the player from going out of bounds
-	if (gameData.posX < 0) gameData.posX = 0;
+	if (gameData.posX < 0)
+	{
+		gameData.posX = 0;
+		gameData.c.r = 0;
+	}
 	if (gameData.posX + gameData.playerWidth > win_width)
 		gameData.posX = win_width - gameData.playerWidth;
 	 
@@ -43,7 +50,7 @@ bool updateGame()
 
 
 	// Wrap the player to the left/right/top/bottom of the screen
- //   if (gameData.posX + gameData.playerWidth > win_width)
+    //if (gameData.posX + gameData.playerWidth > win_width)
 	//	gameData.posX = 0;
 	//if (gameData.posX < 0)
 	//	gameData.posX = win_width - gameData.playerWidth;

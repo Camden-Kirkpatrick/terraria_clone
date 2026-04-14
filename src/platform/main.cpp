@@ -14,7 +14,7 @@ int main()
 #endif
 
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-	InitWindow(win_width, win_height, "test");
+	InitWindow(win_width, win_height, "game");
 	SetTargetFPS(FPS);
 
 #pragma region imgui

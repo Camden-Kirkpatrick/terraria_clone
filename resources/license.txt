@@ -1,0 +1,30 @@
+Game Asset License Agreement
+
+Copyright © Low Level Game Dev
+
+All rights reserved.
+1. Grant of License
+
+You are granted a non‑exclusive, worldwide, royalty‑free license to use the included assets (“Assets”) in your own projects, including commercial projects such as video games, applications, and multimedia works.
+2. Permitted Uses
+
+    You may use the Assets in commercial and non‑commercial projects.
+
+    You may modify the Assets for use within your own projects.
+
+    You may distribute the Assets only as part of a larger, finished project (e.g., a video game).
+
+3. Restrictions
+
+You may not:
+
+    Resell, redistribute, or share the Assets in their original or modified form, except when embedded in a larger project.
+
+    Claim ownership of the Assets, whether in original or modified form.
+
+    Re‑license the Assets under a different license.
+
+4. Ownership
+
+The Assets remain the exclusive property of Low Level Game Dev.
+You are granted a license to use them, including embedding them in your game, but no ownership rights are transferred.

@@ -24,15 +24,25 @@ bool initGame()
 {
 	assetManager.loadAll();
 
-	// Create a 30x10 map
-	gameData.gameMap.create(30, 10);
+	// Create a 20x20 map
+	gameData.gameMap.create(40, 22);
 
 	// Add blocks to the map
-	gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
-	gameData.gameMap.getBlockUnsafe(1, 1).type = Block::dirt;
-	gameData.gameMap.getBlockUnsafe(2, 2).type = Block::dirt;
-	gameData.gameMap.getBlockUnsafe(3, 3).type = Block::dirt;
-	gameData.gameMap.getBlockUnsafe(4, 4).type = Block::dirt;
+	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
+	//gameData.gameMap.getBlockUnsafe(1, 1).type = Block::dirt;
+	//gameData.gameMap.getBlockUnsafe(2, 2).type = Block::dirt;
+	//gameData.gameMap.getBlockUnsafe(3, 3).type = Block::dirt;
+	//gameData.gameMap.getBlockUnsafe(4, 4).type = Block::dirt;
+
+	// Draw a checkerboard pattern
+	for (int y = 0; y < gameData.gameMap.h; y++)
+	{
+		for (int x = 0; x < gameData.gameMap.w; x++)
+		{	
+			if ((x + y) % 2 == 0)
+				gameData.gameMap.getBlockUnsafe(x, y).type = Block::dirt;
+		}
+	}
 
 	return true;
 }
@@ -58,24 +68,24 @@ bool updateGame()
 
 	//// Prevent the player from going out of bounds
 	//if (gameData.posX < 0) gameData.posX = 0;
-	//if (gameData.posX + gameData.playerWidth > win_width)
-	//	gameData.posX = win_width - gameData.playerWidth;
+	//if (gameData.posX + gameData.playerWidth > WIN_WIDTH)
+	//	gameData.posX = WIN_WIDTH - gameData.playerWidth;
 	// 
 	//if (gameData.posY < 0) gameData.posY = 0;
-	//if (gameData.posY + gameData.playerHeight > win_height)
-	//	gameData.posY = win_height - gameData.playerHeight;
+	//if (gameData.posY + gameData.playerHeight > WIN_HEIGHT)
+	//	gameData.posY = WIN_HEIGHT - gameData.playerHeight;
 
 
 	// Wrap the player to the left/right/top/bottom of the screen
-    //if (gameData.posX + gameData.playerWidth > win_width)
+    //if (gameData.posX + gameData.playerWidth > WIN_WIDTH)
 	//	gameData.posX = 0;
 	//if (gameData.posX < 0)
-	//	gameData.posX = win_width - gameData.playerWidth;
+	//	gameData.posX = WIN_WIDTH - gameData.playerWidth;
 
-	//if (gameData.posY + gameData.playerHeight > win_height)
+	//if (gameData.posY + gameData.playerHeight > WIN_HEIGHT)
 	//	gameData.posY = 0;
 	//if (gameData.posY < 0)
-	//	gameData.posY = win_height - gameData.playerHeight;
+	//	gameData.posY = WIN_HEIGHT - gameData.playerHeight;
 	
 
 	// Allow the player to wrap smoothy (pixel by pixel), instead of all at once
@@ -83,8 +93,8 @@ bool updateGame()
 	//{
 	//	for (int j = gameData.posX; j < gameData.posX + gameData.playerWidth; j++)
 	//	{
-	//		int wrappedX = ((j % win_width) + win_width) % win_width;
-	//		int wrappedY = ((i % win_height) + win_height) % win_height;
+	//		int wrappedX = ((j % WIN_WIDTH) + WIN_WIDTH) % WIN_WIDTH;
+	//		int wrappedY = ((i % WIN_HEIGHT) + WIN_HEIGHT) % WIN_HEIGHT;
 	//		DrawPixel(wrappedX, wrappedY, gameData.c);
 	//	}
 	//}

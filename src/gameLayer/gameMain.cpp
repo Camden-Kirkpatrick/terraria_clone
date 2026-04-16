@@ -39,8 +39,7 @@ bool initGame()
 	{
 		for (int x = 0; x < gameData.gameMap.w; x++)
 		{	
-			if ((x + y) % 2 == 0)
-				gameData.gameMap.getBlockUnsafe(x, y).type = Block::dirt;
+			gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
 		}
 	}
 
@@ -132,8 +131,8 @@ bool updateGame()
 
 				// Draw the block
 				DrawTexturePro(
-					assetManager.dirt,
-					Rectangle{ 0.0f, 0.0f, (float)assetManager.dirt.width, (float)assetManager.dirt.height },
+					assetManager.stone,
+					Rectangle{ 0.0f, 0.0f, (float)assetManager.stone.width, (float)assetManager.stone.height },
 					{ posX, posY, size, size },
 					{ 0, 0 },
 					0.0f,

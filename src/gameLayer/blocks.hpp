@@ -7,6 +7,7 @@ struct Block
 	{
 		air = 0,
 		dirt,
+		stone,
 
 		BLOCKS_COUNT
 	};

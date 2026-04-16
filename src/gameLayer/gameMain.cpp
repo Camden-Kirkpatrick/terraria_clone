@@ -1,20 +1,39 @@
 #include "gameMain.hpp"
+#include "assetManager.hpp"
+#include "asserts.hpp"
+#include "gameMap.hpp"
 #include <raylib.h>
 #include <fstream>
 #include <iostream>
-#include <asserts.hpp>
 
 struct GameData
 {
-	float posX = 0;
-	float posY = 0;
-	int playerWidth = 50;
-	int playerHeight = 50;
-	Color c{255, 0, 200, 255};
+	//float posX = 0;
+	//float posY = 0;
+	//int playerWidth = 50;
+	//int playerHeight = 50;
+	//Color c{255, 0, 200, 255};
+
+	GameMap gameMap;
+
 }gameData;
+
+AssetManager assetManager;
 
 bool initGame()
 {
+	assetManager.loadAll();
+
+	// Create a 30x10 map
+	gameData.gameMap.create(30, 10);
+
+	// Add blocks to the map
+	gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
+	gameData.gameMap.getBlockUnsafe(1, 1).type = Block::dirt;
+	gameData.gameMap.getBlockUnsafe(2, 2).type = Block::dirt;
+	gameData.gameMap.getBlockUnsafe(3, 3).type = Block::dirt;
+	gameData.gameMap.getBlockUnsafe(4, 4).type = Block::dirt;
+
 	return true;
 }
 
@@ -29,21 +48,22 @@ bool updateGame()
 	//DrawRectangle(175, 175, 100, 100, { 0, 255, 0, 255 });
 
 
-	// Player movement
-	if (IsKeyDown(KEY_A)) { gameData.posX -= 200 * deltaTime; }
-	if (IsKeyDown(KEY_D)) { gameData.posX += 200 * deltaTime; }
-	if (IsKeyDown(KEY_W)) { gameData.posY -= 200 * deltaTime; }
-	if (IsKeyDown(KEY_S)) { gameData.posY += 200 * deltaTime; }
+
+	//// Player movement
+	//if (IsKeyDown(KEY_A)) { gameData.posX -= 200 * deltaTime; }
+	//if (IsKeyDown(KEY_D)) { gameData.posX += 200 * deltaTime; }
+	//if (IsKeyDown(KEY_W)) { gameData.posY -= 200 * deltaTime; }
+	//if (IsKeyDown(KEY_S)) { gameData.posY += 200 * deltaTime; }
 
 
-	// Prevent the player from going out of bounds
-	if (gameData.posX < 0) gameData.posX = 0;
-	if (gameData.posX + gameData.playerWidth > win_width)
-		gameData.posX = win_width - gameData.playerWidth;
-	 
-	if (gameData.posY < 0) gameData.posY = 0;
-	if (gameData.posY + gameData.playerHeight > win_height)
-		gameData.posY = win_height - gameData.playerHeight;
+	//// Prevent the player from going out of bounds
+	//if (gameData.posX < 0) gameData.posX = 0;
+	//if (gameData.posX + gameData.playerWidth > win_width)
+	//	gameData.posX = win_width - gameData.playerWidth;
+	// 
+	//if (gameData.posY < 0) gameData.posY = 0;
+	//if (gameData.posY + gameData.playerHeight > win_height)
+	//	gameData.posY = win_height - gameData.playerHeight;
 
 
 	// Wrap the player to the left/right/top/bottom of the screen
@@ -69,7 +89,49 @@ bool updateGame()
 	//	}
 	//}
 
-	DrawRectangle(gameData.posX, gameData.posY, gameData.playerWidth, gameData.playerHeight, gameData.c);
+	//DrawRectangle(gameData.posX, gameData.posY, gameData.playerWidth, gameData.playerHeight, gameData.c);
+
+
+
+	//DrawTexturePro(
+	//	assetManager.dirt,                                                         // The source texture to draw
+	//	{ 0, 0, (float)assetManager.dirt.width, (float)assetManager.dirt.height }, // Source rectangle (which part of the texture to sample)
+	//	{ 50, 50, 100, 100 },                                                      // Dest rectangle (where and how big to draw it on screen)
+	//	{0, 0},                                                                    // Origin point for rotation (default {0,0} = top-left)
+	//	0.0f,                                                                      // Rotation angle in degrees
+	//	WHITE                                                                      // Tint color (WHITE = no tint, draw as-is)
+	//);
+
+	// Change the background color
+	ClearBackground({ 75, 75, 150, 255 });
+
+	// Draw the map
+	for (int y = 0; y < gameData.gameMap.h; y++)
+	{
+		for (int x = 0; x < gameData.gameMap.w; x++)
+		{
+			// Get the current block
+			Block& b = gameData.gameMap.getBlockUnsafe(x, y);
+
+			if (b.type != Block::air)
+			{
+				// Set block properties
+				float size = 32;
+				float posX = x * size;
+				float posY = y * size;
+
+				// Draw the block
+				DrawTexturePro(
+					assetManager.dirt,
+					Rectangle{ 0.0f, 0.0f, (float)assetManager.dirt.width, (float)assetManager.dirt.height },
+					{ posX, posY, size, size },
+					{ 0, 0 },
+					0.0f,
+					WHITE
+				);
+			}
+		}
+	}
 
 	return true;
 }

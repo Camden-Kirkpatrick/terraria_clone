@@ -15,6 +15,7 @@ struct GameData
 	//Color c{255, 0, 200, 255};
 
 	GameMap gameMap;
+	Camera2D camera;
 
 }gameData;
 
@@ -43,6 +44,10 @@ bool initGame()
 		}
 	}
 
+	gameData.camera.target = { 0, 0 }; // the world-space point the camera looks at; starts at the map origin
+	gameData.camera.rotation = 0.0f;   // no rotation
+	gameData.camera.zoom = 1.0f;       // 1:1 pixel scale, no zoom
+	
 	return true;
 }
 
@@ -50,6 +55,18 @@ bool updateGame()
 {
 	float deltaTime = GetFrameTime();
 	if (deltaTime > 0.05f) deltaTime = 0.05f; // clamp to 20fps minimum
+
+	// offset is the screen-space pixel that the target maps to.
+	// Keeping it at the screen center means the camera's target always appears in the middle of the window.
+	// This is recalculated every frame so it adjusts automatically if the window is resized.
+	gameData.camera.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
+
+	// Camera movement: shift the target (the world point we're looking at) at 300 units/sec.
+	// Multiplying by deltaTime makes the speed framerate-independent.
+	if (IsKeyDown(KEY_A)) { gameData.camera.target.x -= 300.0f * deltaTime; } // pan left
+	if (IsKeyDown(KEY_D)) { gameData.camera.target.x += 300.0f * deltaTime; } // pan right
+	if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= 300.0f * deltaTime; } // pan up
+	if (IsKeyDown(KEY_S)) { gameData.camera.target.y += 300.0f * deltaTime; } // pan down
 
 	//DrawText("TEST", 100, 100, 20, RED);
 
@@ -63,6 +80,7 @@ bool updateGame()
 	//if (IsKeyDown(KEY_D)) { gameData.posX += 200 * deltaTime; }
 	//if (IsKeyDown(KEY_W)) { gameData.posY -= 200 * deltaTime; }
 	//if (IsKeyDown(KEY_S)) { gameData.posY += 200 * deltaTime; }
+
 
 
 	//// Prevent the player from going out of bounds
@@ -114,6 +132,10 @@ bool updateGame()
 	// Change the background color
 	ClearBackground({ 75, 75, 150, 255 });
 
+	// Everything drawn between BeginMode2D and EndMode2D is rendered in world space,
+	// transformed through the camera (target, offset, zoom, rotation).
+	BeginMode2D(gameData.camera);
+
 	// Draw the map
 	for (int y = 0; y < gameData.gameMap.h; y++)
 	{
@@ -141,6 +163,9 @@ bool updateGame()
 			}
 		}
 	}
+
+	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
+	EndMode2D();
 
 	return true;
 }

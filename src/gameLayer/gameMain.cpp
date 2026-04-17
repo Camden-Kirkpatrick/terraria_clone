@@ -2,6 +2,7 @@
 #include "assetManager.hpp"
 #include "asserts.hpp"
 #include "gameMap.hpp"
+#include "helpers.hpp"
 #include <raylib.h>
 #include <fstream>
 #include <iostream>
@@ -76,18 +77,18 @@ bool updateGame()
 				// Set block properties
 				float size = 1; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
 
-				Rectangle textureUV;
-				// Texture size
-				textureUV.width = 32;
-				textureUV.height = 32;
-				// Sample the textures at these coordinates
-				textureUV.x = b.type * 32; // this gives the horizontal offset into the texture atlas
-				textureUV.y = 0; // The top row of the texture atlas is used
+				//Rectangle textureUV;
+				//// Texture size
+				//textureUV.width = 32;
+				//textureUV.height = 32;
+				//// Sample the textures at these coordinates
+				//textureUV.x = b.type * 32; // this gives the horizontal offset into the texture atlas
+				//textureUV.y = 0; // The top row of the texture atlas is used
 
 				// Draw the block
 				DrawTexturePro(
 					assetManager.textures,					// The whole texture atlas
-					textureUV,								// This is the 32x32 region to read from in the texture atlas
+					getTextureAtlas(b.type, 0, 32, 32),		// This is the 32x32 region to read from in the texture atlas
 					{ float(x), float(y), size, size },     // This is where we draw it on screen
 					{ 0, 0 },
 					0.0f,

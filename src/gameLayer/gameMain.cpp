@@ -20,7 +20,7 @@ bool initGame()
 {
 	assetManager.loadAll();
 
-	// Create a 20x20 map
+	// Create a 65x65 map
 	gameData.gameMap.create(65, 65);
 
 	// Add blocks to the map
@@ -46,7 +46,7 @@ bool initGame()
 			else if (y % 4 == 0)
 				gameData.gameMap.getBlockUnsafe(x, y).type = Block::rubyBlock;
 			else
-				gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
+				gameData.gameMap.getBlockUnsafe(x, y).type = Block::gravel;
 
 
 		}

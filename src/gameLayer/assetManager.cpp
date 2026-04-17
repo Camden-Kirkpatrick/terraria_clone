@@ -4,5 +4,6 @@
 void AssetManager::loadAll()
 {
 	dirt = LoadTexture(RESOURCES_PATH "dirt.png");
-	stone = LoadTexture(RESOURCES_PATH "stone.png");
+	stone = LoadTexture(RESOURCES_PATH "stone.png");\
+	textures = LoadTexture(RESOURCES_PATH "textures.png");
 }

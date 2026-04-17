@@ -77,6 +77,48 @@ bool updateGame()
 	if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
 	if (IsKeyDown(KEY_S)) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
 
+	// Change the block being placed using 0-9
+	static int currentBlock = Block::grassBlock;
+	int key = GetKeyPressed();
+	switch (key)
+	{
+		case KEY_ONE:   currentBlock = Block::grassBlock; break;
+		case KEY_TWO:   currentBlock = Block::dirt;       break;
+		case KEY_THREE: currentBlock = Block::stone;      break;
+		case KEY_FOUR:  currentBlock = Block::gravel;     break;
+		case KEY_FIVE:  currentBlock = Block::ice;        break;
+		case KEY_SIX:   currentBlock = Block::leaves;     break;
+		case KEY_SEVEN: currentBlock = Block::goldBlock;  break;
+		case KEY_EIGHT: currentBlock = Block::ironBlock;  break;
+		case KEY_NINE:  currentBlock = Block::rubyBlock;  break;
+		case KEY_ZERO:  currentBlock = Block::copper;     break;
+	}
+
+	// This is used to show which block is selected
+	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
+	int blockX = (int)floor(worldPos.x);
+	int blockY= (int)floor(worldPos.y);
+
+	// Remove a block
+	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+	{
+		Block *b = gameData.gameMap.getBlockSafe(blockX, blockY);
+		if (b)
+		{
+			*b = {};
+		}
+	}
+
+	// Place a block
+	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+	{
+		Block *b = gameData.gameMap.getBlockSafe(blockX, blockY);
+		if (b)
+		{
+			b->type = currentBlock;
+		}
+	}
+
 
 
 	// Change the background color
@@ -119,6 +161,15 @@ bool updateGame()
 			}
 		}
 	}
+
+	DrawTexturePro(
+		assetManager.frame,
+		{ 0, 0, (float)assetManager.frame.width, (float)assetManager.frame.height },
+		{ (float)blockX, (float)blockY, 1, 1 },
+		{ 0, 0 },
+		0.0f,
+		WHITE
+	);
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
 	EndMode2D();

@@ -21,14 +21,36 @@ bool initGame()
 	assetManager.loadAll();
 
 	// Create a 20x20 map
-	gameData.gameMap.create(20, 20);
+	gameData.gameMap.create(65, 65);
 
 	// Add blocks to the map
-	gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
-	gameData.gameMap.getBlockUnsafe(1, 1).type = Block::stone;
-	gameData.gameMap.getBlockUnsafe(2, 2).type = Block::glass;
-	gameData.gameMap.getBlockUnsafe(3, 3).type = Block::leaves;
-	gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
+	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
+	//gameData.gameMap.getBlockUnsafe(1, 1).type = Block::stone;
+	//gameData.gameMap.getBlockUnsafe(2, 2).type = Block::glass;
+	//gameData.gameMap.getBlockUnsafe(3, 3).type = Block::leaves;
+	//gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
+
+	for (int y = 0; y < gameData.gameMap.h; y++)
+	{
+		for (int x = 0; x < gameData.gameMap.w; x++)
+		{
+			//if (x % 5 == 0 || y % 5 == 0)
+			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::woodPlank;
+			//else
+			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::glass;
+
+			if (x % 4 == 0 && y % 4 == 0)
+				gameData.gameMap.getBlockUnsafe(x, y).type = Block::ice;
+			else if (x % 4 == 0)
+				gameData.gameMap.getBlockUnsafe(x, y).type = Block::goldBlock;
+			else if (y % 4 == 0)
+				gameData.gameMap.getBlockUnsafe(x, y).type = Block::rubyBlock;
+			else
+				gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
+
+
+		}
+	}
 
 	// Camera setup
 	gameData.camera.target = { 0, 0 }; // the world-space point the camera looks at; starts at the map origin

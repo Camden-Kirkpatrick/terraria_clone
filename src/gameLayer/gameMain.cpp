@@ -16,6 +16,7 @@ struct GameData
 
 	GameMap gameMap;
 	Camera2D camera;
+	float cameraSpeed = 10.0f;
 
 }gameData;
 
@@ -26,7 +27,7 @@ bool initGame()
 	assetManager.loadAll();
 
 	// Create a 20x20 map
-	gameData.gameMap.create(40, 22);
+	gameData.gameMap.create(10, 1);
 
 	// Add blocks to the map
 	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
@@ -40,13 +41,14 @@ bool initGame()
 	{
 		for (int x = 0; x < gameData.gameMap.w; x++)
 		{	
-			gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
+			if ((x + y) % 2 == 0)
+				gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
 		}
 	}
 
 	gameData.camera.target = { 0, 0 }; // the world-space point the camera looks at; starts at the map origin
 	gameData.camera.rotation = 0.0f;   // no rotation
-	gameData.camera.zoom = 1.0f;       // 1:1 pixel scale, no zoom
+	gameData.camera.zoom = 100.0f;     // 1 world unit = 100 screen pixels
 	
 	return true;
 }
@@ -63,10 +65,10 @@ bool updateGame()
 
 	// Camera movement: shift the target (the world point we're looking at) at 300 units/sec.
 	// Multiplying by deltaTime makes the speed framerate-independent.
-	if (IsKeyDown(KEY_A)) { gameData.camera.target.x -= 300.0f * deltaTime; } // pan left
-	if (IsKeyDown(KEY_D)) { gameData.camera.target.x += 300.0f * deltaTime; } // pan right
-	if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= 300.0f * deltaTime; } // pan up
-	if (IsKeyDown(KEY_S)) { gameData.camera.target.y += 300.0f * deltaTime; } // pan down
+	if (IsKeyDown(KEY_A)) { gameData.camera.target.x -= gameData.cameraSpeed * deltaTime; } // pan left
+	if (IsKeyDown(KEY_D)) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
+	if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
+	if (IsKeyDown(KEY_S)) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
 
 	//DrawText("TEST", 100, 100, 20, RED);
 
@@ -147,7 +149,7 @@ bool updateGame()
 			if (b.type != Block::air)
 			{
 				// Set block properties
-				float size = 32;
+				float size = 1;
 				float posX = x * size;
 				float posY = y * size;
 

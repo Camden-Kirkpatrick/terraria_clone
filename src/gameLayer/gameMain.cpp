@@ -81,14 +81,14 @@ bool updateGame()
 				textureUV.width = 32;
 				textureUV.height = 32;
 				// Sample the textures at these coordinates
-				textureUV.x = b.type * 32;
-				textureUV.y = 0; // The top row of the texture atlas
+				textureUV.x = b.type * 32; // this gives the horizontal offset into the texture atlas
+				textureUV.y = 0; // The top row of the texture atlas is used
 
 				// Draw the block
 				DrawTexturePro(
-					assetManager.textures,
-					textureUV,
-					{ float(x), float(y), size, size },
+					assetManager.textures,					// The whole texture atlas
+					textureUV,								// This is the 32x32 region to read from in the texture atlas
+					{ float(x), float(y), size, size },     // This is where we draw it on screen
 					{ 0, 0 },
 					0.0f,
 					WHITE

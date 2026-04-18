@@ -4,8 +4,10 @@
 #include "gameMap.hpp"
 #include "helpers.hpp"
 #include <raylib.h>
+#include <raymath.h>
 #include <fstream>
 #include <iostream>
+#include <cstdlib>
 
 struct GameData
 {
@@ -21,7 +23,7 @@ bool initGame()
 	assetManager.loadAll();
 
 	// Create a 65x65 map
-	gameData.gameMap.create(65, 65);
+	gameData.gameMap.create(650, 650);
 
 	// Add blocks to the map
 	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
@@ -30,6 +32,7 @@ bool initGame()
 	//gameData.gameMap.getBlockUnsafe(3, 3).type = Block::leaves;
 	//gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
 
+	static int randBlock;
 	for (int y = 0; y < gameData.gameMap.h; y++)
 	{
 		for (int x = 0; x < gameData.gameMap.w; x++)
@@ -39,15 +42,28 @@ bool initGame()
 			//else
 			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::glass;
 
-			if (x % 4 == 0 && y % 4 == 0)
-				gameData.gameMap.getBlockUnsafe(x, y).type = Block::ice;
-			else if (x % 4 == 0)
-				gameData.gameMap.getBlockUnsafe(x, y).type = Block::goldBlock;
-			else if (y % 4 == 0)
-				gameData.gameMap.getBlockUnsafe(x, y).type = Block::rubyBlock;
-			else
-				gameData.gameMap.getBlockUnsafe(x, y).type = Block::gravel;
 
+			//if (x % 4 == 0 && y % 4 == 0)
+			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::ice;
+			//else if (x % 4 == 0)
+			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::goldBlock;
+			//else if (y % 4 == 0)
+			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::rubyBlock;
+			//else
+			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::gravel;
+
+
+			// Make a border around the map
+			//if (x == 0 || x == gameData.gameMap.w - 1 || y == 0 || y == gameData.gameMap.h - 1)
+			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::grassBlock;
+
+
+			// Pick a random block from the first 5 blocks
+			int randBlock = std::rand() % 5;
+			// Replace grass with sand
+			if (randBlock == Block::grass) randBlock = Block::sand;
+			// Update the map with the random block
+			gameData.gameMap.getBlockUnsafe(x, y).type = randBlock;
 
 		}
 	}
@@ -70,7 +86,8 @@ bool updateGame()
 	// This is recalculated every frame so it adjusts automatically if the window is resized.
 	gameData.camera.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
 
-	// Camera movement: shift the target (the world point we're looking at) at 300 units/sec.
+#pragma region keyboard_input
+	// Camera movement: shift the target (the world point we're looking at).
 	// Multiplying by deltaTime makes the speed framerate-independent.
 	if (IsKeyDown(KEY_A)) { gameData.camera.target.x -= gameData.cameraSpeed * deltaTime; } // pan left
 	if (IsKeyDown(KEY_D)) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
@@ -82,16 +99,16 @@ bool updateGame()
 	int key = GetKeyPressed();
 	switch (key)
 	{
-		case KEY_ONE:   currentBlock = Block::grassBlock; break;
-		case KEY_TWO:   currentBlock = Block::dirt;       break;
-		case KEY_THREE: currentBlock = Block::stone;      break;
-		case KEY_FOUR:  currentBlock = Block::gravel;     break;
-		case KEY_FIVE:  currentBlock = Block::ice;        break;
-		case KEY_SIX:   currentBlock = Block::leaves;     break;
-		case KEY_SEVEN: currentBlock = Block::goldBlock;  break;
-		case KEY_EIGHT: currentBlock = Block::ironBlock;  break;
-		case KEY_NINE:  currentBlock = Block::rubyBlock;  break;
-		case KEY_ZERO:  currentBlock = Block::copper;     break;
+		case KEY_ONE:   currentBlock = Block::goldBlock;   break;
+		case KEY_TWO:   currentBlock = Block::stone;       break;
+		case KEY_THREE: currentBlock = Block::stoneBricks; break;
+		case KEY_FOUR:  currentBlock = Block::bricks;      break;
+		case KEY_FIVE:  currentBlock = Block::woodenChest; break;
+		case KEY_SIX:   currentBlock = Block::workBench;   break;
+		case KEY_SEVEN: currentBlock = Block::woodLog;     break;
+		case KEY_EIGHT: currentBlock = Block::sappling;    break;
+		case KEY_NINE:  currentBlock = Block::leaves;      break;
+		case KEY_ZERO:  currentBlock = Block::glass;       break;
 	}
 
 	// This is used to show which block is selected
@@ -118,7 +135,7 @@ bool updateGame()
 			b->type = currentBlock;
 		}
 	}
-
+#pragma endregion
 
 
 	// Change the background color
@@ -128,10 +145,35 @@ bool updateGame()
 	// transformed through the camera (target, offset, zoom, rotation).
 	BeginMode2D(gameData.camera);
 
-	// Draw the map
-	for (int y = 0; y < gameData.gameMap.h; y++)
+#pragma region culling
+	// Convert the screen corners (pixels) into world coordinates.
+	// Screen pixel (0,0) is the top-left; (screenW, screenH) is the bottom-right.
+	// The result is in world units (blocks), so it can be fractional, e.g. (-9.6, -5.4).
+	Vector2 topLeftView = GetScreenToWorld2D({ 0, 0 }, gameData.camera);
+	Vector2 bottomRightView = GetScreenToWorld2D({ (float)GetScreenWidth(), (float)GetScreenHeight()}, gameData.camera);
+
+	// Convert the fractional world coords to integer block indices.
+	// floorf on the start rounds DOWN so we include any partially-visible block on the left/top edge.
+	// ceilf on the end rounds UP so we include any partially-visible block on the right/bottom edge.
+	// The -1/+1 adds one extra block of padding in case of floating-point imprecision at the edges.
+	int startXView = (int)floorf(topLeftView.x - 1);
+	int endXView = (int)ceilf(bottomRightView.x + 1);
+	int startYView = (int)floorf(topLeftView.y - 1);
+	int endYView = (int)ceilf(bottomRightView.y + 1);
+
+	// The camera can look at negative world space (e.g. when centered near the map origin),
+	// so startX/Y can be negative and endX/Y can exceed the map size.
+	// Clamp forces all four values into the valid array index range [0, w/h - 1] to prevent out-of-bounds access.
+	startXView = Clamp(startXView, 0, gameData.gameMap.w - 1);
+	endXView = Clamp(endXView, 0, gameData.gameMap.w - 1);
+	startYView = Clamp(startYView, 0, gameData.gameMap.h - 1);
+	endYView = Clamp(endYView, 0, gameData.gameMap.h - 1);
+#pragma endregion
+
+	// Draw the map, but only render what we can see
+	for (int y = startYView; y < endYView; y++)
 	{
-		for (int x = 0; x < gameData.gameMap.w; x++)
+		for (int x = startXView; x < endXView; x++)
 		{
 			// Get the current block
 			Block& b = gameData.gameMap.getBlockUnsafe(x, y);
@@ -162,6 +204,7 @@ bool updateGame()
 		}
 	}
 
+	// Draw the block selection frame
 	DrawTexturePro(
 		assetManager.frame,
 		{ 0, 0, (float)assetManager.frame.width, (float)assetManager.frame.height },
@@ -173,6 +216,8 @@ bool updateGame()
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
 	EndMode2D();
+
+	DrawFPS(10, 10); // FPS counter
 
 	return true;
 }

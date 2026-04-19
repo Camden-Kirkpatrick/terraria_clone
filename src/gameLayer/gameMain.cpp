@@ -3,6 +3,7 @@
 #include "asserts.hpp"
 #include "gameMap.hpp"
 #include "helpers.hpp"
+#include "blocks.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <fstream>
@@ -13,59 +14,31 @@ struct GameData
 	GameMap gameMap;
 	Camera2D camera = {};
 	float cameraSpeed = 15.0f;
+	int hoverMode = 0; // 0 = block, 1 = wall block
 } gameData;
 
 AssetManager assetManager;
 
 bool initGame()
 {
+	// Load assets (textures)
 	assetManager.loadAll();
 
 	// Create a map
 	gameData.gameMap.create(20, 20);
 
 	// Add blocks to the map
-	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
-	//gameData.gameMap.getBlockUnsafe(1, 1).type = Block::stone;
-	//gameData.gameMap.getBlockUnsafe(2, 2).type = Block::glass;
-	//gameData.gameMap.getBlockUnsafe(3, 3).type = Block::leaves;
-	//gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
-
 	for (int y = 0; y < gameData.gameMap.h; y++)
 	{
 		for (int x = 0; x < gameData.gameMap.w; x++)
 		{
-			//if (x % 5 == 0 || y % 5 == 0)
-			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::woodPlank;
-			//else
-			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::glass;
-
-
-			//if (x % 4 == 0 && y % 4 == 0)
-			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::ice;
-			//else if (x % 4 == 0)
-			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::goldBlock;
-			//else if (y % 4 == 0)
-			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::rubyBlock;
-			//else
-			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::gravel;
-
-
 			// Make a border around the map
 			if (x == 0 || x == gameData.gameMap.w - 1 || y == 0 || y == gameData.gameMap.h - 1)
 				gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
 
 			// Each block will randomly pick one of the 4 textures for its type, so the map looks less repetitive
 			gameData.gameMap.getBlockUnsafe(x, y).randIndex = std::rand() % 4;
-
-
-			// Pick a random block from the first 5 blocks
-			//int randBlock = std::rand() % 5;
-			//// Replace grass with sand
-			//if (randBlock == Block::grass) randBlock = Block::sand;
-			//// Update the map with the random block
-			//gameData.gameMap.getBlockUnsafe(x, y).type = randBlock;
-
+			gameData.gameMap.getWallBlockUnsafe(x, y).randIndex = std::rand() % 4;
 		}
 	}
 
@@ -96,19 +69,19 @@ bool updateGame()
 	if (IsKeyDown(KEY_S)) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
 
 	// Change the block being placed using 0-9
-	static int currentBlock = Block::grassBlock;
+	static int currentBlock = Block::dirt;
 	int key = GetKeyPressed();
 	switch (key)
 	{
-		case KEY_ONE:   currentBlock = Block::grassBlock;  break;
-		case KEY_TWO:   currentBlock = Block::woodLog;     break;
-		case KEY_THREE: currentBlock = Block::leaves;      break;
-		case KEY_FOUR:  currentBlock = Block::sappling;    break;
-		case KEY_FIVE:  currentBlock = Block::stone;       break;
-		case KEY_SIX:   currentBlock = Block::bricks;      break;
-		case KEY_SEVEN: currentBlock = Block::glass;       break;
-		case KEY_EIGHT: currentBlock = Block::goldBlock;   break;
-		case KEY_NINE:  currentBlock = Block::workBench;   break;
+		case KEY_ONE:   currentBlock = Block::furnace;        break;
+		case KEY_TWO:   currentBlock = Block::ironBlock;     break;
+		case KEY_THREE: currentBlock = Block::goldBlock;      break;
+		case KEY_FOUR:  currentBlock = Block::sand;    break;
+		case KEY_FIVE:  currentBlock = Block::grassBlock;       break;
+		case KEY_SIX:   currentBlock = Block::glass;      break;
+		case KEY_SEVEN: currentBlock = Block::goldBlock;       break;
+		case KEY_EIGHT: currentBlock = Block::woodLog;   break;
+		case KEY_NINE:  currentBlock = Block::leaves;   break;
 		case KEY_ZERO:  currentBlock = Block::woodenChest; break;
 	}
 
@@ -117,27 +90,62 @@ bool updateGame()
 	int blockX = (int)floor(worldPos.x);
 	int blockY= (int)floor(worldPos.y);
 
+	// Holding shift toggles "hover mode" which allows placing blocks on the wall layer instead of the main layer
+	bool shiftDown = IsKeyDown(KEY_LEFT_SHIFT);
+
+	if (shiftDown)
+	{
+		gameData.hoverMode = 1;
+	}
+	else
+	{
+		gameData.hoverMode = 0;
+	}
+
 	// Remove a block
 	if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
 	{
-		Block *b = gameData.gameMap.getBlockSafe(blockX, blockY);
-		if (b)
+		if (shiftDown)
 		{
-			*b = {};
+			Block* b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
+			if (b)
+			{
+				*b = {};
+			}
+		}
+		else
+		{
+			Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
+			if (b)
+			{
+				*b = {};
+			}
 		}
 	}
-
+	
 	// Place a block
 	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
 	{
-		Block *b = gameData.gameMap.getBlockSafe(blockX, blockY);
-		if (b)
+		if (shiftDown)
 		{
-			b->type = currentBlock;
+			Block *b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
+			if (b)
+			{
+				b->type = currentBlock;
+			}
+		}
+		else
+		{
+			Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
+			if (b)
+			{
+				b->type = currentBlock;
+			}
 		}
 	}
 #pragma endregion
 
+#pragma region rendering 
 
 	// Change the background color
 	ClearBackground({ 75, 75, 150, 255 });
@@ -171,7 +179,49 @@ bool updateGame()
 	endYView = Clamp(endYView, 0, gameData.gameMap.h - 1);
 #pragma endregion
 
-	// Draw the map, but only render what we can see
+	// There are 2 rendering loops: one for wall blocks and one for main blocks.
+	// This is because some block types have both a main block and a wall block texture,
+	// and the wall block needs to be drawn first so the main block appears on top of it.
+
+	// Draw the wall blocks first, so that if a block and wall block occupy the same space,
+	// the block will be drawn on top of the wall block
+	for (int y = startYView; y <= endYView; y++)
+	{
+		for (int x = startXView; x <= endXView; x++)
+		{
+			Block& b = gameData.gameMap.getWallBlockUnsafe(x, y);
+
+			if (b.type != Block::air)
+			{
+				if (Block::wallColumn[b.type] == -1)
+				{
+					// This block type doesn't have a wall texture, so skip drawing it
+					continue;
+				}
+
+				float size = 1; 
+				Texture2D textureAtlas = assetManager.textures;
+				// Use the wallColumn array to lookup the correct column in the texture atlas for the wall type of this block
+				// randIndex is used to add some variation so not all wall blocks of the same type look identical
+				Rectangle textureAtlasRect = getTextureAtlas(Block::wallColumn[b.type], b.randIndex, 32, 32);
+
+
+				// Draw the block
+				DrawTexturePro(
+					textureAtlas,
+					textureAtlasRect,
+					{ float(x), float(y), size, size },
+					{ 0, 0 },
+					0.0f,
+					WHITE
+				);
+			}
+		}
+	}
+
+
+
+	// Now draw the main blocks on top of the wall blocks
 	for (int y = startYView; y <= endYView; y++)
 	{
 		for (int x = startXView; x <= endXView; x++)
@@ -185,7 +235,6 @@ bool updateGame()
 				float size = 1; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
 
 				Texture2D textureAtlas = assetManager.textures;
-				// Use the block type and randIndex to determine which 32x32 region of the texture atlas to draw from
 				Rectangle textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 32);
 
 				// Special handling for wood logs: they have different textures based on adjacent leaves
@@ -231,15 +280,6 @@ bool updateGame()
 					0.0f,
 					WHITE
 				);
-
-				//DrawTexturePro(
-				//	assetManager.textures,					// The whole texture atlas
-				//	getTextureAtlas(b.type, 0, 32, 32),		// This is the 32x32 region to read from in the texture atlas
-				//	{ float(x), float(y), size, size },     // This is where we draw it on screen
-				//	{ 0, 0 },
-				//	0.0f,
-				//	WHITE
-				//);
 			}
 		}
 	}
@@ -251,13 +291,15 @@ bool updateGame()
 		{ (float)blockX, (float)blockY, 1, 1 },
 		{ 0, 0 },
 		0.0f,
-		WHITE
+		gameData.hoverMode == 0 ? WHITE : RED // white frame for block layer, red frame for wall layer
 	);
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
 	EndMode2D();
 
 	DrawFPS(10, 10); // FPS counter
+
+#pragma endregion
 
 	return true;
 }

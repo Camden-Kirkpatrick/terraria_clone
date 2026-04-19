@@ -9,20 +9,19 @@ set(CMAKE_CXX_STANDARD 17)
 #delete the out folder after changing if visual studio doesn recognize the change
 set(PRODUCTION_BUILD OFF CACHE BOOL "Make this a production build" FORCE)
 
-if(MSVC) 
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-add_compile_options(/arch:AVX2) #make sure SIMD optimizations take place
-else()
-	add_compile_options(-mavx2 -mfma) # make sure SIMD optimizations take place, but on linux and other platforms
-endif()
-
-
 # Ensure raylib is built as static libraries
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Raylib as static libraries" FORCE)
 
 
 project(mygame)
+
+if(MSVC)
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	add_compile_options(/arch:AVX2) #make sure SIMD optimizations take place
+else()
+	add_compile_options(-mavx2 -mfma) # make sure SIMD optimizations take place, but on linux and other platforms
+endif()
 
 #add raylib, and here you would add other libraries if needed!
 add_subdirectory(thirdparty/raylib-5.0)

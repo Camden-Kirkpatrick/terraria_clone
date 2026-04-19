@@ -7,12 +7,11 @@
 #include <raymath.h>
 #include <fstream>
 #include <iostream>
-#include <cstdlib>
 
 struct GameData
 {
 	GameMap gameMap;
-	Camera2D camera;
+	Camera2D camera = {};
 	float cameraSpeed = 15.0f;
 } gameData;
 
@@ -22,8 +21,8 @@ bool initGame()
 {
 	assetManager.loadAll();
 
-	// Create a 65x65 map
-	gameData.gameMap.create(100, 100);
+	// Create a map
+	gameData.gameMap.create(20, 20);
 
 	// Add blocks to the map
 	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
@@ -54,8 +53,8 @@ bool initGame()
 
 
 			// Make a border around the map
-			//if (x == 0 || x == gameData.gameMap.w - 1 || y == 0 || y == gameData.gameMap.h - 1)
-			//	gameData.gameMap.getBlockUnsafe(x, y).type = Block::grassBlock;
+			if (x == 0 || x == gameData.gameMap.w - 1 || y == 0 || y == gameData.gameMap.h - 1)
+				gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
 
 
 			// Pick a random block from the first 5 blocks
@@ -99,16 +98,16 @@ bool updateGame()
 	int key = GetKeyPressed();
 	switch (key)
 	{
-		case KEY_ONE:   currentBlock = Block::grassBlock;   break;
-		case KEY_TWO:   currentBlock = Block::stone;       break;
-		case KEY_THREE: currentBlock = Block::stoneBricks; break;
-		case KEY_FOUR:  currentBlock = Block::bricks;      break;
-		case KEY_FIVE:  currentBlock = Block::woodenChest; break;
-		case KEY_SIX:   currentBlock = Block::workBench;   break;
-		case KEY_SEVEN: currentBlock = Block::woodLog;     break;
-		case KEY_EIGHT: currentBlock = Block::sappling;    break;
-		case KEY_NINE:  currentBlock = Block::leaves;      break;
-		case KEY_ZERO:  currentBlock = Block::glass;       break;
+		case KEY_ONE:   currentBlock = Block::grassBlock;  break;
+		case KEY_TWO:   currentBlock = Block::woodLog;     break;
+		case KEY_THREE: currentBlock = Block::leaves;      break;
+		case KEY_FOUR:  currentBlock = Block::sappling;    break;
+		case KEY_FIVE:  currentBlock = Block::stone;       break;
+		case KEY_SIX:   currentBlock = Block::bricks;      break;
+		case KEY_SEVEN: currentBlock = Block::glass;       break;
+		case KEY_EIGHT: currentBlock = Block::goldBlock;   break;
+		case KEY_NINE:  currentBlock = Block::workBench;   break;
+		case KEY_ZERO:  currentBlock = Block::woodenChest; break;
 	}
 
 	// This is used to show which block is selected

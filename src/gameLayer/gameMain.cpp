@@ -13,7 +13,7 @@ struct GameData
 {
 	GameMap gameMap;
 	Camera2D camera;
-	float cameraSpeed = 10.0f;
+	float cameraSpeed = 15.0f;
 } gameData;
 
 AssetManager assetManager;
@@ -23,7 +23,7 @@ bool initGame()
 	assetManager.loadAll();
 
 	// Create a 65x65 map
-	gameData.gameMap.create(650, 650);
+	gameData.gameMap.create(100, 100);
 
 	// Add blocks to the map
 	//gameData.gameMap.getBlockUnsafe(0, 0).type = Block::dirt;
@@ -59,11 +59,11 @@ bool initGame()
 
 
 			// Pick a random block from the first 5 blocks
-			int randBlock = std::rand() % 5;
-			// Replace grass with sand
-			if (randBlock == Block::grass) randBlock = Block::sand;
-			// Update the map with the random block
-			gameData.gameMap.getBlockUnsafe(x, y).type = randBlock;
+			//int randBlock = std::rand() % 5;
+			//// Replace grass with sand
+			//if (randBlock == Block::grass) randBlock = Block::sand;
+			//// Update the map with the random block
+			//gameData.gameMap.getBlockUnsafe(x, y).type = randBlock;
 
 		}
 	}
@@ -99,7 +99,7 @@ bool updateGame()
 	int key = GetKeyPressed();
 	switch (key)
 	{
-		case KEY_ONE:   currentBlock = Block::goldBlock;   break;
+		case KEY_ONE:   currentBlock = Block::grassBlock;   break;
 		case KEY_TWO:   currentBlock = Block::stone;       break;
 		case KEY_THREE: currentBlock = Block::stoneBricks; break;
 		case KEY_FOUR:  currentBlock = Block::bricks;      break;
@@ -171,9 +171,9 @@ bool updateGame()
 #pragma endregion
 
 	// Draw the map, but only render what we can see
-	for (int y = startYView; y < endYView; y++)
+	for (int y = startYView; y <= endYView; y++)
 	{
-		for (int x = startXView; x < endXView; x++)
+		for (int x = startXView; x <= endXView; x++)
 		{
 			// Get the current block
 			Block& b = gameData.gameMap.getBlockUnsafe(x, y);
@@ -183,23 +183,60 @@ bool updateGame()
 				// Set block properties
 				float size = 1; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
 
-				//Rectangle textureUV;
-				//// Texture size
-				//textureUV.width = 32;
-				//textureUV.height = 32;
-				//// Sample the textures at these coordinates
-				//textureUV.x = b.type * 32; // this gives the horizontal offset into the texture atlas
-				//textureUV.y = 0; // The top row of the texture atlas is used
+				Texture2D textureAtlas = assetManager.textures;
+				Rectangle textureAtlasRect = getTextureAtlas(b.type, 0, 32, 32);
+
+				if (b.type == Block::woodLog)
+				{
+					textureAtlas = assetManager.woodLogs;
+
+					bool between_leaves = (gameData.gameMap.getBlockUnsafe(x - 1, y).type == Block::leaves &&
+						                   gameData.gameMap.getBlockUnsafe(x + 1, y).type == Block::leaves);
+
+					bool right_leaves =    gameData.gameMap.getBlockUnsafe(x + 1, y).type == Block::leaves;
+					bool left_leaves  =    gameData.gameMap.getBlockUnsafe(x - 1, y).type == Block::leaves;
+					bool top_leaves   =    gameData.gameMap.getBlockUnsafe(x, y - 1).type == Block::leaves;
+
+					if (top_leaves)
+					{
+						textureAtlasRect = getTextureAtlas(5, 0, 32, 32);
+					}
+					else if (between_leaves)
+					{
+						textureAtlasRect = getTextureAtlas(1, 0, 32, 32);
+					}
+					else if (right_leaves)
+					{
+						textureAtlasRect = getTextureAtlas(2, 0, 32, 32);
+					}
+					else if (left_leaves)
+					{
+						textureAtlasRect = getTextureAtlas(3, 0, 32, 32);
+					}
+					else
+					{
+						textureAtlasRect = getTextureAtlas(0, 0, 32, 32);
+					}
+				}
 
 				// Draw the block
 				DrawTexturePro(
-					assetManager.textures,					// The whole texture atlas
-					getTextureAtlas(b.type, 0, 32, 32),		// This is the 32x32 region to read from in the texture atlas
+					textureAtlas,					        // The whole texture atlas
+					textureAtlasRect,		                // This is the 32x32 region to read from in the texture atlas
 					{ float(x), float(y), size, size },     // This is where we draw it on screen
 					{ 0, 0 },
 					0.0f,
 					WHITE
 				);
+
+				//DrawTexturePro(
+				//	assetManager.textures,					// The whole texture atlas
+				//	getTextureAtlas(b.type, 0, 32, 32),		// This is the 32x32 region to read from in the texture atlas
+				//	{ float(x), float(y), size, size },     // This is where we draw it on screen
+				//	{ 0, 0 },
+				//	0.0f,
+				//	WHITE
+				//);
 			}
 		}
 	}

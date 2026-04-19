@@ -9,7 +9,7 @@
 #include <iostream>
 
 struct GameData
-{
+{ 
 	GameMap gameMap;
 	Camera2D camera = {};
 	float cameraSpeed = 15.0f;
@@ -31,7 +31,6 @@ bool initGame()
 	//gameData.gameMap.getBlockUnsafe(3, 3).type = Block::leaves;
 	//gameData.gameMap.getBlockUnsafe(4, 4).type = Block::platform;
 
-	static int randBlock;
 	for (int y = 0; y < gameData.gameMap.h; y++)
 	{
 		for (int x = 0; x < gameData.gameMap.w; x++)
@@ -55,6 +54,9 @@ bool initGame()
 			// Make a border around the map
 			if (x == 0 || x == gameData.gameMap.w - 1 || y == 0 || y == gameData.gameMap.h - 1)
 				gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
+
+			// Each block will randomly pick one of the 4 textures for its type, so the map looks less repetitive
+			gameData.gameMap.getBlockUnsafe(x, y).randIndex = std::rand() % 4;
 
 
 			// Pick a random block from the first 5 blocks
@@ -183,8 +185,10 @@ bool updateGame()
 				float size = 1; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
 
 				Texture2D textureAtlas = assetManager.textures;
-				Rectangle textureAtlasRect = getTextureAtlas(b.type, 0, 32, 32);
+				// Use the block type and randIndex to determine which 32x32 region of the texture atlas to draw from
+				Rectangle textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 32);
 
+				// Special handling for wood logs: they have different textures based on adjacent leaves
 				if (b.type == Block::woodLog)
 				{
 					textureAtlas = assetManager.woodLogs;
@@ -198,23 +202,23 @@ bool updateGame()
 
 					if (top_leaves)
 					{
-						textureAtlasRect = getTextureAtlas(5, 0, 32, 32);
+						textureAtlasRect = getTextureAtlas(5, b.randIndex, 32, 32);
 					}
 					else if (between_leaves)
 					{
-						textureAtlasRect = getTextureAtlas(1, 0, 32, 32);
+						textureAtlasRect = getTextureAtlas(1, b.randIndex, 32, 32);
 					}
 					else if (right_leaves)
 					{
-						textureAtlasRect = getTextureAtlas(2, 0, 32, 32);
+						textureAtlasRect = getTextureAtlas(2, b.randIndex, 32, 32);
 					}
 					else if (left_leaves)
 					{
-						textureAtlasRect = getTextureAtlas(3, 0, 32, 32);
+						textureAtlasRect = getTextureAtlas(3, b.randIndex, 32, 32);
 					}
 					else
 					{
-						textureAtlasRect = getTextureAtlas(0, 0, 32, 32);
+						textureAtlasRect = getTextureAtlas(0, b.randIndex, 32, 32);
 					}
 				}
 

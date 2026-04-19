@@ -65,4 +65,5 @@ struct Block
 	};
 
 	std::uint16_t type = air;
+	std::uint8_t randIndex = 0;
 };

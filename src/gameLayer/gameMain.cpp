@@ -20,7 +20,7 @@ struct GameData
 	} hoverMode = blockLayer; // determines whether we are placing/breaking normal blocks or wall blocks
 } gameData;
 
-AssetManager assetManager;
+AssetManager assetManager; // global asset manager instance to load and store textures
 
 bool initGame()
 {

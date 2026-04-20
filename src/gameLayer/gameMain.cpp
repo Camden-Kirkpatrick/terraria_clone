@@ -1,6 +1,5 @@
 #include "gameMain.hpp"
 #include "assetManager.hpp"
-#include "asserts.hpp"
 #include "gameMap.hpp"
 #include "helpers.hpp"
 #include "blocks.hpp"
@@ -14,7 +13,11 @@ struct GameData
 	GameMap gameMap;
 	Camera2D camera = {};
 	float cameraSpeed = 15.0f;
-	int hoverMode = 0; // 0 = block, 1 = wall block
+	enum HoverMode
+	{
+		blockLayer = 0,
+		wallLayer = 1,
+	} hoverMode = blockLayer;
 } gameData;
 
 AssetManager assetManager;
@@ -73,15 +76,15 @@ bool updateGame()
 	int key = GetKeyPressed();
 	switch (key)
 	{
-		case KEY_ONE:   currentBlock = Block::furnace;        break;
-		case KEY_TWO:   currentBlock = Block::ironBlock;     break;
-		case KEY_THREE: currentBlock = Block::goldBlock;      break;
-		case KEY_FOUR:  currentBlock = Block::sand;    break;
-		case KEY_FIVE:  currentBlock = Block::grassBlock;       break;
-		case KEY_SIX:   currentBlock = Block::glass;      break;
-		case KEY_SEVEN: currentBlock = Block::goldBlock;       break;
-		case KEY_EIGHT: currentBlock = Block::woodLog;   break;
-		case KEY_NINE:  currentBlock = Block::leaves;   break;
+		case KEY_ONE:   currentBlock = Block::dirt;        break;
+		case KEY_TWO:   currentBlock = Block::grassBlock;  break;
+		case KEY_THREE: currentBlock = Block::stone;       break;
+		case KEY_FOUR:  currentBlock = Block::bricks;      break;
+		case KEY_FIVE:  currentBlock = Block::sand;        break;
+		case KEY_SIX:   currentBlock = Block::glass;       break;
+		case KEY_SEVEN: currentBlock = Block::goldBlock;   break;
+		case KEY_EIGHT: currentBlock = Block::woodLog;     break;
+		case KEY_NINE:  currentBlock = Block::leaves;      break;
 		case KEY_ZERO:  currentBlock = Block::woodenChest; break;
 	}
 
@@ -95,11 +98,11 @@ bool updateGame()
 
 	if (shiftDown)
 	{
-		gameData.hoverMode = 1;
+		gameData.hoverMode = GameData::HoverMode::wallLayer;
 	}
 	else
 	{
-		gameData.hoverMode = 0;
+		gameData.hoverMode = GameData::HoverMode::blockLayer;
 	}
 
 	// Remove a block
@@ -291,7 +294,7 @@ bool updateGame()
 		{ (float)blockX, (float)blockY, 1, 1 },
 		{ 0, 0 },
 		0.0f,
-		gameData.hoverMode == 0 ? WHITE : RED // white frame for block layer, red frame for wall layer
+		gameData.hoverMode == GameData::HoverMode::blockLayer ? WHITE : RED // white frame for block layer, red frame for wall layer
 	);
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.

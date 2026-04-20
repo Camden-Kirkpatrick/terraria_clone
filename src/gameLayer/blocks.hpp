@@ -65,6 +65,7 @@ struct Block
 	};
 
 	std::uint16_t type = air;
+	// This is used to select a random row in the texture atlas for blocks that have multiple textures (e.g. different types of dirt or stone).
 	std::uint8_t randIndex = 0;
 
 	static constexpr int wallColumn[Block::BLOCKS_COUNT] = {
@@ -87,7 +88,7 @@ struct Block
 		60, // copperBlock
 		61, // ironBlock
 		62, // goldBlock
-		-1, // bricks
+		58, // bricks
 		63, // snow
 		-1, // ice
 		66, // rubyBlock

@@ -125,26 +125,46 @@ bool updateGame()
 			}
 		}
 	}
+
+	// Track the x and y of the block previously placed
+	static int lastPlacedX = -1;
+	static int lastPlacedY = -1;
 	
 	// Place a block
 	if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
 	{
-		if (shiftDown)
+		// If the cursor is on a new block, place it with a fresh random texture
+		if (blockX != lastPlacedX || blockY != lastPlacedY)
 		{
-			Block *b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
-			if (b)
+			lastPlacedX = blockX;
+			lastPlacedY = blockY;
+
+			if (shiftDown)
 			{
-				b->type = currentBlock;
+				Block* b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
+				if (b)
+				{
+					b->type = currentBlock;
+					b->randIndex = std::rand() % 4; // Pick a random texture when placing a block
+				}
+			}
+			else
+			{
+				Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
+				if (b)
+				{
+					b->type = currentBlock;
+					b->randIndex = std::rand() % 4;
+				}
 			}
 		}
-		else
-		{
-			Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
-			if (b)
-			{
-				b->type = currentBlock;
-			}
-		}
+	}
+
+	// Reset so re-clicking the same tile generates a new randIndex
+	if (IsMouseButtonReleased(MOUSE_BUTTON_RIGHT))
+	{
+		lastPlacedX = -1;
+		lastPlacedY = -1;
 	}
 #pragma endregion
 
@@ -287,7 +307,7 @@ bool updateGame()
 					{
 						textureAtlasRect = getTextureAtlas(3, b.randIndex, 32, 32);
 					}
-					else
+					else // normal woodLog texture
 					{
 						textureAtlasRect = getTextureAtlas(0, b.randIndex, 32, 32);
 					}

@@ -20,4 +20,7 @@ struct GameMap
 	Block* getBlockSafe(int x, int y);
 	Block& GameMap::getWallBlockUnsafe(int x, int y);
 	Block* GameMap::getWallBlockSafe(int x, int y);
+
+	// Helper function to get the block type at (x, y) safely, returning air for out-of-bounds coordinates.
+	std::uint16_t getBlockType(int x, int y);
 };

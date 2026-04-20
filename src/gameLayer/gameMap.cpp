@@ -76,3 +76,12 @@ Block* GameMap::getWallBlockSafe(int x, int y)
 
 	return &mapWallBlocks[w * y + x];
 }
+
+std::uint16_t GameMap::getBlockType(int x, int y)
+{
+	Block* b = getBlockSafe(x, y);
+	if (b)
+		return b->type;
+	else
+		return Block::air;
+}

@@ -245,28 +245,35 @@ bool updateGame()
 				{
 					textureAtlas = assetManager.woodLogs; // wood logs have a separate texture atlas from the other blocks
 
-					bool stump = (gameData.gameMap.getBlockType(x, y + 1) != Block::woodLog &&
-						          gameData.gameMap.getBlockType(x, y - 1) == Block::air);
+					bool stump =          (gameData.gameMap.getBlockType(x, y + 1) != Block::woodLog &&
+						                   gameData.gameMap.getBlockType(x, y - 1) != Block::woodLog);
 
 					bool betweenLeaves =  (gameData.gameMap.getBlockType(x - 1, y) == Block::leaves &&
 						                   gameData.gameMap.getBlockType(x + 1, y) == Block::leaves);
+
+					bool treeBase =		  (gameData.gameMap.getBlockType(x, y + 1) != Block::woodLog &&
+						                   gameData.gameMap.getBlockType(x, y - 1) == Block::woodLog);
 
 					bool rightLeaves  =    gameData.gameMap.getBlockType(x + 1, y) == Block::leaves;
 					bool leftLeaves   =    gameData.gameMap.getBlockType(x - 1, y) == Block::leaves;
 					bool topLeaves    =    gameData.gameMap.getBlockType(x, y - 1) == Block::leaves;
 					bool noTopLeaves  =    gameData.gameMap.getBlockType(x, y - 1) == Block::air;
 
-					if (topLeaves)
-					{
-						textureAtlasRect = getTextureAtlas(5, b.randIndex, 32, 32);
-					}
-					else if (stump)
+					if (stump)
 					{
 						textureAtlasRect = getTextureAtlas(7, b.randIndex, 32, 32);
+					}
+					else if (topLeaves)
+					{
+						textureAtlasRect = getTextureAtlas(5, b.randIndex, 32, 32);
 					}
 					else if (noTopLeaves)
 					{
 						textureAtlasRect = getTextureAtlas(6, b.randIndex, 32, 32);
+					}
+					else if (treeBase)
+					{
+						textureAtlasRect = getTextureAtlas(4, b.randIndex, 32, 32);
 					}
 					else if (betweenLeaves)
 					{
@@ -282,7 +289,7 @@ bool updateGame()
 					}
 					else
 					{
-						textureAtlasRect = getTextureAtlas((b.randIndex % 2) * 4, b.randIndex, 32, 32);
+						textureAtlasRect = getTextureAtlas(0, b.randIndex, 32, 32);
 					}
 				}
 

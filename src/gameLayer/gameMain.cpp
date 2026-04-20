@@ -248,7 +248,7 @@ bool updateGame()
 					bool stump = (gameData.gameMap.getBlockType(x, y + 1) != Block::woodLog &&
 						          gameData.gameMap.getBlockType(x, y - 1) == Block::air);
 
-					bool betweenLeaves = (gameData.gameMap.getBlockType(x - 1, y) == Block::leaves &&
+					bool betweenLeaves =  (gameData.gameMap.getBlockType(x - 1, y) == Block::leaves &&
 						                   gameData.gameMap.getBlockType(x + 1, y) == Block::leaves);
 
 					bool rightLeaves  =    gameData.gameMap.getBlockType(x + 1, y) == Block::leaves;
@@ -282,7 +282,7 @@ bool updateGame()
 					}
 					else
 					{
-						textureAtlasRect = getTextureAtlas(0, b.randIndex, 32, 32);
+						textureAtlasRect = getTextureAtlas((b.randIndex % 2) * 4, b.randIndex, 32, 32);
 					}
 				}
 

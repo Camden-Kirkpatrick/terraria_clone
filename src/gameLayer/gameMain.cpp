@@ -243,28 +243,40 @@ bool updateGame()
 				// Special handling for wood logs: they have different textures based on adjacent leaves
 				if (b.type == Block::woodLog)
 				{
-					textureAtlas = assetManager.woodLogs;
+					textureAtlas = assetManager.woodLogs; // wood logs have a separate texture atlas from the other blocks
 
-					bool between_leaves = (gameData.gameMap.getBlockUnsafe(x - 1, y).type == Block::leaves &&
-						                   gameData.gameMap.getBlockUnsafe(x + 1, y).type == Block::leaves);
+					bool stump = (gameData.gameMap.getBlockType(x, y + 1) != Block::woodLog &&
+						          gameData.gameMap.getBlockType(x, y - 1) == Block::air);
 
-					bool right_leaves =    gameData.gameMap.getBlockUnsafe(x + 1, y).type == Block::leaves;
-					bool left_leaves  =    gameData.gameMap.getBlockUnsafe(x - 1, y).type == Block::leaves;
-					bool top_leaves   =    gameData.gameMap.getBlockUnsafe(x, y - 1).type == Block::leaves;
+					bool betweenLeaves = (gameData.gameMap.getBlockType(x - 1, y) == Block::leaves &&
+						                   gameData.gameMap.getBlockType(x + 1, y) == Block::leaves);
 
-					if (top_leaves)
+					bool rightLeaves  =    gameData.gameMap.getBlockType(x + 1, y) == Block::leaves;
+					bool leftLeaves   =    gameData.gameMap.getBlockType(x - 1, y) == Block::leaves;
+					bool topLeaves    =    gameData.gameMap.getBlockType(x, y - 1) == Block::leaves;
+					bool noTopLeaves  =    gameData.gameMap.getBlockType(x, y - 1) == Block::air;
+
+					if (topLeaves)
 					{
 						textureAtlasRect = getTextureAtlas(5, b.randIndex, 32, 32);
 					}
-					else if (between_leaves)
+					else if (stump)
+					{
+						textureAtlasRect = getTextureAtlas(7, b.randIndex, 32, 32);
+					}
+					else if (noTopLeaves)
+					{
+						textureAtlasRect = getTextureAtlas(6, b.randIndex, 32, 32);
+					}
+					else if (betweenLeaves)
 					{
 						textureAtlasRect = getTextureAtlas(1, b.randIndex, 32, 32);
 					}
-					else if (right_leaves)
+					else if (rightLeaves)
 					{
 						textureAtlasRect = getTextureAtlas(2, b.randIndex, 32, 32);
 					}
-					else if (left_leaves)
+					else if (leftLeaves)
 					{
 						textureAtlasRect = getTextureAtlas(3, b.randIndex, 32, 32);
 					}

@@ -17,7 +17,7 @@ struct GameData
 	{
 		blockLayer = 0,
 		wallLayer = 1,
-	} hoverMode = blockLayer;
+	} hoverMode = blockLayer; // determines whether we are placing/breaking normal blocks or wall blocks
 } gameData;
 
 AssetManager assetManager;

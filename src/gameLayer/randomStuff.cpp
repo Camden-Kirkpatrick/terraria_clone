@@ -6,7 +6,7 @@ float getRandomFloat(std::ranlux24_base& rng, float min, float max)
 	return dist(rng);
 }
 
-float getRandomInt(std::ranlux24_base& rng, int min, int max)
+int getRandomInt(std::ranlux24_base& rng, int min, int max)
 {
 	std::uniform_int_distribution<int> dist(min, max);
 	return dist(rng);

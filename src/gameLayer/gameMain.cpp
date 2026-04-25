@@ -3,10 +3,13 @@
 #include "gameMap.hpp"
 #include "helpers.hpp"
 #include "blocks.hpp"
+#include "worldGenerator.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <fstream>
 #include <iostream>
+#include <imgui.h>
+#include <rlImGui.h>
 
 struct GameData
 { 
@@ -28,22 +31,26 @@ bool initGame()
 	assetManager.loadAll();
 
 	// Create a map
-	gameData.gameMap.create(20, 20);
+	//gameData.gameMap.create(20, 20);
+
+	generateWorld(gameData.gameMap);
+
+
 
 	// Add blocks to the map
-	for (int y = 0; y < gameData.gameMap.h; y++)
-	{
-		for (int x = 0; x < gameData.gameMap.w; x++)
-		{
-			// Make a border around the map
-			if (x == 0 || x == gameData.gameMap.w - 1 || y == 0 || y == gameData.gameMap.h - 1)
-				gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
+	//for (int y = 0; y < gameData.gameMap.h; y++)
+	//{
+	//	for (int x = 0; x < gameData.gameMap.w; x++)
+	//	{
+	//		// Make a border around the map
+	//		if (x == 0 || x == gameData.gameMap.w - 1 || y == 0 || y == gameData.gameMap.h - 1)
+	//			gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
 
-			// Each block will randomly pick one of the 4 textures for its type, so the map looks less repetitive
-			gameData.gameMap.getBlockUnsafe(x, y).randIndex = std::rand() % 4;
-			gameData.gameMap.getWallBlockUnsafe(x, y).randIndex = std::rand() % 4;
-		}
-	}
+	//		// Each block will randomly pick one of the 4 textures for its type, so the map looks less repetitive
+	//		gameData.gameMap.getBlockUnsafe(x, y).randIndex = std::rand() % 4;
+	//		gameData.gameMap.getWallBlockUnsafe(x, y).randIndex = std::rand() % 4;
+	//	}
+	//}
 
 	// Camera setup
 	gameData.camera.target = { 0, 0 }; // the world-space point the camera looks at; starts at the map origin
@@ -229,7 +236,7 @@ bool updateGame()
 				Rectangle textureAtlasRect = getTextureAtlas(Block::wallColumn[b.type], b.randIndex, 32, 32);
 
 
-				// Draw the block
+				// Draw the wall block
 				DrawTexturePro(
 					textureAtlas,
 					textureAtlasRect,
@@ -338,6 +345,13 @@ bool updateGame()
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
 	EndMode2D();
+
+	ImGui::Begin("Game control");
+
+	ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, 10, 150);
+	ImGui::SliderFloat("Camera speed:", &gameData.cameraSpeed, 5, 30);
+
+	ImGui::End();
 
 	DrawFPS(10, 10); // FPS counter
 

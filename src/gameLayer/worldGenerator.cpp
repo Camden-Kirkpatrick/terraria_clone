@@ -3,46 +3,108 @@
 
 void generateWorld(GameMap& gameMap, int seed)
 {
-    const int w = 100;
-    const int h = 100;
+    const int w = 900;
+    const int h = 500;
 
     gameMap.create(w, h);
 
-    // stoneDepth: how many rows from the bottom are filled with stone (50 blocks)
-    // dirtDepth:  how many rows sit on top of stone, filled with dirt (10 blocks)
-    // Both are random-walked per column to create an uneven, natural surface.
-    int stoneDepth = 50;
-    int dirtDepth = 10;
-
     std::ranlux24_base rng(seed);
+
+    int dirtDirectionTimer = getRandomInt(rng, 5, 50);
+    int dirtDirection = getRandomInt(rng, -2, 2);
+
+    int stoneDirectionTimer = getRandomInt(rng, 5, 50);
+    int stoneDirection = getRandomInt(rng, -2, 2);
+
+    int dirtHeight = 70;
+    int stoneHeight = 90;
 
     for (int x = 0; x < w; x++)
     {
-        // Randomly drift the layer thicknesses by -1, 0, or +1 each column.
-        // This makes the terrain surface and stone depth vary organically across the map.
-        stoneDepth = stoneDepth + getRandomInt(rng, -1, 1);
-        dirtDepth = dirtDepth + getRandomInt(rng, -1, 1);
+        dirtDirectionTimer--;
+        if (dirtDirectionTimer <= 0)
+        {
+            dirtDirectionTimer = getRandomInt(rng, 5, 50);
+            dirtDirection = getRandomInt(rng, -2, 2);
+        }
+
+        if (dirtDirection == -1)
+        {
+            if (getRandomChance(rng, 0.25f))
+                dirtHeight--;
+        }
+        else if (dirtDirection == -2)
+        {
+            if (getRandomChance(rng, 0.25f))
+                dirtHeight--;
+            if (getRandomChance(rng, 0.25f))
+                dirtHeight--;
+        }
+        else if (dirtDirection == 1)
+        { 
+            if (getRandomChance(rng, 0.25f))
+                dirtHeight++;
+        }
+        else if (dirtDirection == 2)
+        {
+            if (getRandomChance(rng, 0.25f))
+                dirtHeight++;
+            if (getRandomChance(rng, 0.25f))
+                dirtHeight++;
+        }
+
+        if (dirtHeight < 50) dirtHeight = 50;
+        if (dirtHeight > 90) dirtHeight = 90;
+        
+
+        stoneDirectionTimer--;
+        if (stoneDirectionTimer <= 0)
+        {
+            stoneDirectionTimer = getRandomInt(rng, 5, 50);
+            stoneDirection = getRandomInt(rng, -2, 2);
+        }
+
+        if (stoneDirection == -1)
+        {
+            if (getRandomChance(rng, 0.25f))
+                stoneHeight--;
+        }
+        else if (stoneDirection == -2)
+        {
+            if (getRandomChance(rng, 0.25f))
+                stoneHeight--;
+            if (getRandomChance(rng, 0.25f))
+                stoneHeight--;
+        }
+        else if (stoneDirection == 1)
+        {
+            if (getRandomChance(rng, 0.25f))
+                stoneHeight++;
+        }
+        else if (stoneDirection == 2)
+        {
+            if (getRandomChance(rng, 0.25f))
+                stoneHeight++;
+            if (getRandomChance(rng, 0.25f))
+                stoneHeight++;
+        }
+
+        if (stoneHeight < 60) stoneHeight = 60;
+        if (stoneHeight > 120) stoneHeight = 120;
 
         for (int y = 0; y < h; y++)
         {
             Block b;
 
-            // The surface line sits at y = h - (dirtDepth + stoneDepth).
-            // Everything above it is air; everything at or below it is terrain.
-            if      (y < h - (dirtDepth + stoneDepth)) {}                               // air
-            else if (y == h - (dirtDepth + stoneDepth)) { b.type = Block::grassBlock; } // surface row
-            else if (y < h - stoneDepth) { b.type = Block::dirt; }                      // dirt layer
-            else
-            {
-                // Stone layer (bottom 50 rows).
-                // 3% of stone cells become gold ore.
-                if (getRandomChance(rng, 0.03f))
-                    b.type = Block::gold;
-                else
-                    b.type = Block::stone;
-            }
+            if (y > dirtHeight) b.type = Block::dirt;
+
+            if (y == dirtHeight) b.type = Block::grassBlock;
+
+            if (y > stoneHeight) b.type = Block::stone;
 
             gameMap.getBlockUnsafe(x, y) = b;
         }
     }
+
+    
 }

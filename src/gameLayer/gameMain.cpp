@@ -11,6 +11,11 @@
 #include <imgui.h>
 #include <rlImGui.h>
 
+#define MIN_CAM_ZOOM 10
+#define MAX_CAM_ZOOM 200
+#define MIN_CAM_SPEED 1
+#define MAX_CAM_SPEED 100
+
 struct GameData
 { 
 	GameMap gameMap;
@@ -348,8 +353,8 @@ bool updateGame()
 
 	ImGui::Begin("Game control");
 
-	ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, 10, 150);
-	ImGui::SliderFloat("Camera speed:", &gameData.cameraSpeed, 5, 30);
+	ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
+	ImGui::SliderFloat("Camera speed:", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 
 	ImGui::End();
 

@@ -2,4 +2,5 @@
 
 [![Watch the video](https://img.youtube.com/vi/dmHG8RRyoPA/maxresdefault.jpg)](https://youtu.be/dmHG8RRyoPA)
 
-### [Video](https://youtu.be/dmHG8RRyoPA)
+### [Video (v1.0.0)](https://youtu.be/dmHG8RRyoPA)
+### [Video (v1.1.0)](https://www.youtube.com/watch?v=oxETT8wUXEo)

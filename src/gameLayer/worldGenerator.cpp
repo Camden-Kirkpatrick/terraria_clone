@@ -201,7 +201,15 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, const in
             // Each block will use a random texture variation.
             b.randIndex = std::rand() % 4;
 
+            // Set the map to use the correct block
             gameMap.getBlockUnsafe(x, y) = b;
+
+            // Use the correct background based on the block placed
+            gameMap.getWallBlockUnsafe(x, y) = b;
+
+            // Ensure that gold has a stone background behind it
+            if (b.type == Block::gold)
+                gameMap.getWallBlockUnsafe(x, y).type = Block::stone;
         }
     }
 }

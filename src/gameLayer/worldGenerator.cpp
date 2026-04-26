@@ -179,6 +179,23 @@ void generateWorld(GameMap& gameMap, int seed)
             // When y is exactly equal to the dirtHeight threshold, grass generates
             else if (y == dirtHeight)  b.type = Block::grassBlock;
 
+            // Show the bounds for where dirt can generate
+            // Highest point: y = MIN_DIRT_HEIGHT + 1 ->
+            // Blocks at dirtHeight are always grass, since blocks are dirt only when when y > dirtHeight.
+            // This means the highest dirt is found one below the highest grass block.
+            // Lowest point: y = MAX_STONE_HEIGHT -> 
+            // When stoneHeight == MAX_STONE_HEIGHT, blocks that are at MAX_STONE_HEIGHT are still dirt,
+            // since stone only appears when y > stoneHeight.
+            if (y == MIN_DIRT_HEIGHT + 1 || y == MAX_STONE_HEIGHT)
+                b.type = Block::goldBlock;
+
+            // Show the highest point that stone can generate.
+            // When stoneHeight == MIN_STONE_HEIGHT, blocks that are at MIN_STONE_HEIGHT are still dirt,
+            // since stone only appears when y > stoneHeight.
+            // This means that the highest stone is found one block below this.
+            if (y == MIN_STONE_HEIGHT + 1)
+                b.type = Block::glass;
+
             gameMap.getBlockUnsafe(x, y) = b;
         }
     }

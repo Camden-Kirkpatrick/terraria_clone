@@ -1,7 +1,7 @@
 #include "worldGenerator.hpp"
 #include "randomStuff.hpp"
 
-void generateWorld(GameMap& gameMap, int WIDTH, int HEIGHT, int SEED)
+void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, const int SEED)
 {
     gameMap.create(WIDTH, HEIGHT);
 
@@ -58,35 +58,35 @@ void generateWorld(GameMap& gameMap, int WIDTH, int HEIGHT, int SEED)
         // Change dirtHeight based off of the dirtDirection
         switch (dirtDirection)
         {
-        case STEEP_DECLINE:
+        case STEEP_DECLINE:                        // 3 rolls at 25%, avg +0.75/col
             for (int i = 0; i < 3; i++)
                 if (getRandomChance(rng, 0.25f))
                     dirtHeight++;
             break;
 
-        case DECLINE:
+        case DECLINE:                              // 2 rolls at 25%, avg +0.50/col
             for (int i = 0; i < 2; i++)
                 if (getRandomChance(rng, 0.25f))
                     dirtHeight++;
             break;
 
-        case MILD_DECLINE:
+        case MILD_DECLINE:                         // 1 roll  at 25%, avg +0.25/col
             if (getRandomChance(rng, 0.25f))
                 dirtHeight++;
             break;
 
-        case MILD_INCLINE:
+        case MILD_INCLINE:                         // 1 roll  at 25%, avg -0.25/col
             if (getRandomChance(rng, 0.25f))
                 dirtHeight--;
             break;
 
-        case INCLINE:
+        case INCLINE:                              // 2 rolls at 25%, avg -0.50/col
             for (int i = 0; i < 2; i++)
                 if (getRandomChance(rng, 0.25f))
                     dirtHeight--;
             break;
 
-        case STEEP_INCLINE:
+        case STEEP_INCLINE:                        // 3 rolls at 25%, avg -0.75/col
             for (int i = 0; i < 3; i++)
                 if (getRandomChance(rng, 0.25f))
                     dirtHeight--;
@@ -151,7 +151,7 @@ void generateWorld(GameMap& gameMap, int WIDTH, int HEIGHT, int SEED)
         if (stoneHeight < MIN_STONE_HEIGHT) stoneHeight = MIN_STONE_HEIGHT;
         if (stoneHeight > MAX_STONE_HEIGHT) stoneHeight = MAX_STONE_HEIGHT;
 
-        // Set the block type based on the HEIGHTs
+        // Set the block type based on the current depth
         for (int y = 0; y < HEIGHT; y++)
         {
             Block b;
@@ -162,6 +162,7 @@ void generateWorld(GameMap& gameMap, int WIDTH, int HEIGHT, int SEED)
                 // Gold can generate further down in the stone layer
                 if (y > stoneHeight + GOLD_THRESHOLD)
                 {
+                    // GOLD_CHANCE chance for gold to generate instead of stone
                     if (getRandomChance(rng, GOLD_CHANCE))
                         b.type = Block::gold;
                     else

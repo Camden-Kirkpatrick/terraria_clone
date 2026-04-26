@@ -6,21 +6,23 @@
 #include "worldGenerator.hpp"
 #include <raylib.h>
 #include <raymath.h>
-#include <fstream>
-#include <iostream>
 #include <imgui.h>
 #include <rlImGui.h>
+#include <fstream>
+#include <iostream>
 
-#define MIN_CAM_ZOOM 10
-#define MAX_CAM_ZOOM 200
-#define MIN_CAM_SPEED 1
-#define MAX_CAM_SPEED 100
+#define MIN_CAM_ZOOM 10.0f
+#define MAX_CAM_ZOOM 200.0f
+#define DEFAULT_CAM_ZOOM 100.0f
+#define MIN_CAM_SPEED 1.0f
+#define MAX_CAM_SPEED 100.0f
+#define DEFAULT_CAM_SPEED 15.0f
 
 struct GameData
 { 
 	GameMap gameMap;
 	Camera2D camera = {};
-	float cameraSpeed = 15.0f;
+	float cameraSpeed = 0.0f;
 	enum HoverMode
 	{
 		blockLayer = 0,
@@ -35,32 +37,14 @@ bool initGame()
 	// Load assets (textures)
 	assetManager.loadAll();
 
-	// Create a map
-	//gameData.gameMap.create(20, 20);
-
+	// Generate the world
 	generateWorld(gameData.gameMap);
 
-
-
-	// Add blocks to the map
-	//for (int y = 0; y < gameData.gameMap.h; y++)
-	//{
-	//	for (int x = 0; x < gameData.gameMap.w; x++)
-	//	{
-	//		// Make a border around the map
-	//		if (x == 0 || x == gameData.gameMap.w - 1 || y == 0 || y == gameData.gameMap.h - 1)
-	//			gameData.gameMap.getBlockUnsafe(x, y).type = Block::stone;
-
-	//		// Each block will randomly pick one of the 4 textures for its type, so the map looks less repetitive
-	//		gameData.gameMap.getBlockUnsafe(x, y).randIndex = std::rand() % 4;
-	//		gameData.gameMap.getWallBlockUnsafe(x, y).randIndex = std::rand() % 4;
-	//	}
-	//}
-
 	// Camera setup
-	gameData.camera.target = { 0, 0 }; // the world-space point the camera looks at; starts at the map origin
-	gameData.camera.rotation = 0.0f;   // no rotation
-	gameData.camera.zoom = 100.0f;     // 1 world unit = 100 screen pixels
+	gameData.camera.target = { 50, 50 };        // the world-space point the camera looks at
+	gameData.camera.rotation = 0.0f;            // no rotation
+	gameData.camera.zoom = DEFAULT_CAM_ZOOM;    // 1 world unit = 100 screen pixels
+	gameData.cameraSpeed = DEFAULT_CAM_SPEED;
 	
 	return true;
 }

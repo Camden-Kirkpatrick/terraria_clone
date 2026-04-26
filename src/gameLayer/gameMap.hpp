@@ -22,5 +22,6 @@ struct GameMap
 	Block* GameMap::getWallBlockSafe(int x, int y);
 
 	// Helper function to get the block type at (x, y) safely, returning air for out-of-bounds coordinates.
+	// This is used for checking the blocks around woodLogs, to see if the texture needs to be updated.
 	std::uint16_t getBlockType(int x, int y);
 };

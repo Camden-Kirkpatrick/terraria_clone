@@ -82,6 +82,7 @@ bool updateGame()
 		case KEY_EIGHT: currentBlock = Block::woodLog;     break;
 		case KEY_NINE:  currentBlock = Block::leaves;      break;
 		case KEY_ZERO:  currentBlock = Block::woodenChest; break;
+		case KEY_R:     initGame(); break;
 	}
 
 	// This is used to show which block is selected

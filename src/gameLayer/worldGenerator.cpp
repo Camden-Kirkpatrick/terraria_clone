@@ -197,6 +197,9 @@ void generateWorld(GameMap& gameMap, int WIDTH, int HEIGHT, int SEED)
                     b.type = Block::glass;
             }
 
+            // Each block will use a random texture variation.
+            b.randIndex = std::rand() % 4;
+
             gameMap.getBlockUnsafe(x, y) = b;
         }
     }

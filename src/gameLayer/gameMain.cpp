@@ -84,9 +84,6 @@ bool updateGame()
 	else if (gameData.cameraSpeed < MIN_CAM_SPEED) { gameData.cameraSpeed = MIN_CAM_SPEED; }
 
 
-
-
-
 	// Change the block being placed using 0-9
 	static int currentBlock = Block::dirt;
 	int key = GetKeyPressed();
@@ -104,6 +101,7 @@ bool updateGame()
 		case KEY_ZERO:  currentBlock = Block::woodenChest; break;
 		case KEY_R:     initGame(); break;
 	}
+
 
 	// This is used to show which block is selected
 	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);

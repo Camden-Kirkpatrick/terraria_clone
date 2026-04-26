@@ -40,10 +40,10 @@ bool initGame()
 	assetManager.loadAll();
 
 	// Generate the world
-	generateWorld(gameData.gameMap);
+	generateWorld(gameData.gameMap, 2500, 250);
 
 	// Camera setup
-	gameData.camera.target = { 50, 50 };        // the world-space point the camera looks at
+	gameData.camera.target = { 0, 60 };         // the world-space point the camera looks at
 	gameData.camera.rotation = 0.0f;            // no rotation
 	gameData.camera.zoom = DEFAULT_CAM_ZOOM;    // 1 world unit = 100 screen pixels
 	gameData.cameraSpeed = DEFAULT_CAM_SPEED;

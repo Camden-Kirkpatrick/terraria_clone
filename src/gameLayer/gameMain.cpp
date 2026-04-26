@@ -14,9 +14,11 @@
 #define MIN_CAM_ZOOM 10.0f
 #define MAX_CAM_ZOOM 200.0f
 #define DEFAULT_CAM_ZOOM 100.0f
+#define INC_CAM_ZOOM 0.25f
 #define MIN_CAM_SPEED 1.0f
-#define MAX_CAM_SPEED 100.0f
+#define MAX_CAM_SPEED 200.0f
 #define DEFAULT_CAM_SPEED 15.0f
+#define INC_CAM_SPEED 0.25f
 
 struct GameData
 { 
@@ -63,9 +65,27 @@ bool updateGame()
 	// Camera movement: shift the target (the world point we're looking at).
 	// Multiplying by deltaTime makes the speed framerate-independent.
 	if (IsKeyDown(KEY_A)) { gameData.camera.target.x -= gameData.cameraSpeed * deltaTime; } // pan left
-	if (IsKeyDown(KEY_D)) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
-	if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
-	if (IsKeyDown(KEY_S)) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
+	else if (IsKeyDown(KEY_D)) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
+	else if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
+	else if (IsKeyDown(KEY_S)) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
+	 
+	// Camera zoom
+	if (IsKeyDown(KEY_MINUS)) { gameData.camera.zoom -= INC_CAM_ZOOM; }
+	if (IsKeyDown(KEY_EQUAL)) { gameData.camera.zoom += INC_CAM_ZOOM; }
+	// Clamp values to within the valid range
+	if (gameData.camera.zoom > MAX_CAM_ZOOM) { gameData.camera.zoom = MAX_CAM_ZOOM; }
+	else if (gameData.camera.zoom < MIN_CAM_ZOOM) { gameData.camera.zoom = MIN_CAM_ZOOM; }
+
+	// Camera speed
+	if (IsKeyDown(KEY_LEFT_BRACKET)) { gameData.cameraSpeed -= INC_CAM_SPEED; }
+	if (IsKeyDown(KEY_RIGHT_BRACKET)) { gameData.cameraSpeed += INC_CAM_SPEED; }
+	// Clamp values to within the valid range
+	if (gameData.cameraSpeed > MAX_CAM_SPEED) { gameData.cameraSpeed = MAX_CAM_SPEED; }
+	else if (gameData.cameraSpeed < MIN_CAM_SPEED) { gameData.cameraSpeed = MIN_CAM_SPEED; }
+
+
+
+
 
 	// Change the block being placed using 0-9
 	static int currentBlock = Block::dirt;

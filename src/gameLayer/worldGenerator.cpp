@@ -16,7 +16,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, const in
     const int MIN_STONE_HEIGHT = 60;
     const int MAX_STONE_HEIGHT = 120;
     const bool SHOW_THRESHOLDS = false;
-    const int GOLD_THRESHOLD = 30;
+    const int GOLD_THRESHOLD = 60;
     const float GOLD_CHANCE = 0.01f;
    
     // A timer set with a random value. When the timer reaches 0, a new direction is selected.

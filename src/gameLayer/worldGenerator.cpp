@@ -35,41 +35,31 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     dirtNoiseGenrator->FillNoiseSet(dirtNoise, 0, 0, 0, WIDTH, 1, 1);
     stoneNoiseGenrator->FillNoiseSet(stoneNoise, 0, 0, 0, WIDTH, 1, 1);
 
-    // Convert from [-1, 1] to [0, 1]
+    // Noise output is in range [-1, 1], remap to [0, 1]
     for (int i = 0; i < WIDTH; i++)
     {
         dirtNoise[i] = (dirtNoise[i] + 1) / 2;
         stoneNoise[i] = (stoneNoise[i] + 1) / 2;
-
-        //stoneNoise[i] = std::pow(stoneNoise[i], 2); //steeper mountains.
     }
 
 
-
-
-    // Y coordinate bounds that clamp where the dirt/stone layer boundaries can settle (y=0 is the top of the world)
-    //const int MIN_DIRT_HEIGHT = 50;
-    //const int MAX_DIRT_HEIGHT = 90;
-    //const int MIN_STONE_HEIGHT = 60;
-    //const int MAX_STONE_HEIGHT = 120;
-
-    const int MIN_DIRT_HEIGHT = -5;
-    const int MAX_DIRT_HEIGHT = 35;
-    const int MIN_STONE_HEIGHT = 80;
-    const int MAX_STONE_HEIGHT = 170;
-    const int GOLD_THRESHOLD = 60;
+    const int MIN_DIRT_THICKNESS = -5;  // Negative allows stone to poke through dirt layer
+    const int MAX_DIRT_THICKNESS = 35;  // Maximum blocks of dirt above stone
+    const int MIN_STONE_HEIGHT = 80;    // Stone layer is at least 80 blocks from the top
+    const int MAX_STONE_HEIGHT = 170;   // The top of the stone layer is at most 170px from the top
+    const int GOLD_THRESHOLD = 60;      // Gold can generate 60 blocks from the top of the stone layer
     const float GOLD_CHANCE = 0.01f;
-   
-    // Thresholds for when the block type changes
-    int dirtHeight = 70;
-    int stoneHeight = 90;
 
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
-        stoneHeight = MIN_STONE_HEIGHT + (MAX_STONE_HEIGHT - MIN_STONE_HEIGHT) * stoneNoise[x];
-        dirtHeight = MIN_DIRT_HEIGHT + (MAX_DIRT_HEIGHT - MIN_DIRT_HEIGHT) * dirtNoise[x];
-        dirtHeight = stoneHeight - dirtHeight;
+        // Lerp: find where the stone surface sits in this column (y=0 is top, so smaller = higher up)
+        int stoneHeight = MIN_STONE_HEIGHT + (MAX_STONE_HEIGHT - MIN_STONE_HEIGHT) * stoneNoise[x];
+        // Lerp: find how many blocks thick the dirt layer is for this column
+        int dirtThickness = MIN_DIRT_THICKNESS + (MAX_DIRT_THICKNESS - MIN_DIRT_THICKNESS) * dirtNoise[x];
+        // The dirt surface sits above the stone surface by dirtThickness blocks (subtract because y=0 is top)
+        int dirtHeight = stoneHeight - dirtThickness;
+
         // Set the block type based on the current depth
         for (int y = 0; y < HEIGHT; y++)
         {

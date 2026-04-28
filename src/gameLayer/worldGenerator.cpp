@@ -1,44 +1,65 @@
 #include "worldGenerator.hpp"
 #include "randomStuff.hpp"
+#include <FastNoiseSIMD.h>
 
-void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, const int SEED)
-{
+void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed)
+{   
     gameMap.create(WIDTH, HEIGHT);
 
-    // Use a random number generator populated with a seed
-    std::ranlux24_base rng(SEED);
 
-    const int MIN_TIME = 5;
-    const int MAX_TIME = 50;
+    std::ranlux24_base rng(seed++);
+
+    // One noise generator per terrain layer - different seeds produce independent shapes
+    std::unique_ptr<FastNoiseSIMD> dirtNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
+    std::unique_ptr<FastNoiseSIMD> stoneNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
+
+    // Each generator gets a unique seed so their shapes don't match
+    dirtNoiseGenrator->SetSeed(seed);
+    stoneNoiseGenrator->SetSeed(seed);
+
+    // Dirt: 1 octave = smooth gentle hills, higher frequency = shorter hills
+    dirtNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    dirtNoiseGenrator->SetFractalOctaves(1);
+    dirtNoiseGenrator->SetFrequency(0.02);
+
+    // Stone: 4 octaves = rougher jagged terrain, lower frequency = broader features
+    stoneNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    stoneNoiseGenrator->SetFractalOctaves(4);
+    stoneNoiseGenrator->SetFrequency(0.01);
+
+    // One float per world column, each will be filled with a value in roughly [-1, 1]
+    float* dirtNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
+    float* stoneNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
+
+    // Sample a 1D horizontal slice (ySize=1, zSize=1) — one height value per column
+    dirtNoiseGenrator->FillNoiseSet(dirtNoise, 0, 0, 0, WIDTH, 1, 1);
+    stoneNoiseGenrator->FillNoiseSet(stoneNoise, 0, 0, 0, WIDTH, 1, 1);
+
+    // Convert from [-1, 1] to [0, 1]
+    for (int i = 0; i < WIDTH; i++)
+    {
+        dirtNoise[i] = (dirtNoise[i] + 1) / 2;
+        stoneNoise[i] = (stoneNoise[i] + 1) / 2;
+
+        //stoneNoise[i] = std::pow(stoneNoise[i], 2); //steeper mountains.
+    }
+
+
+
+
     // Y coordinate bounds that clamp where the dirt/stone layer boundaries can settle (y=0 is the top of the world)
-    const int MIN_DIRT_HEIGHT = 50;
-    const int MAX_DIRT_HEIGHT = 90;
-    const int MIN_STONE_HEIGHT = 60;
-    const int MAX_STONE_HEIGHT = 120;
-    const bool SHOW_THRESHOLDS = false;
+    //const int MIN_DIRT_HEIGHT = 50;
+    //const int MAX_DIRT_HEIGHT = 90;
+    //const int MIN_STONE_HEIGHT = 60;
+    //const int MAX_STONE_HEIGHT = 120;
+
+    const int MIN_DIRT_HEIGHT = -5;
+    const int MAX_DIRT_HEIGHT = 35;
+    const int MIN_STONE_HEIGHT = 80;
+    const int MAX_STONE_HEIGHT = 170;
     const int GOLD_THRESHOLD = 60;
     const float GOLD_CHANCE = 0.01f;
    
-    // A timer set with a random value. When the timer reaches 0, a new direction is selected.
-    int dirtDirectionTimer = getRandomInt(rng, MIN_TIME, MAX_TIME);
-
-    enum
-    {
-        STEEP_DECLINE = -3,
-        DECLINE = -2,
-        MILD_DECLINE = -1,
-        FLAT_SURFACE = 0,
-        MILD_INCLINE = 1,
-        INCLINE = 2,
-        STEEP_INCLINE = 3
-    };
-
-    // Different directions that dirt can be placed in
-    int dirtDirection = getRandomInt(rng, STEEP_DECLINE, STEEP_INCLINE);
-
-    int stoneDirectionTimer = getRandomInt(rng, MIN_TIME, MAX_TIME);
-    int stoneDirection = getRandomInt(rng, STEEP_DECLINE, STEEP_INCLINE);
-
     // Thresholds for when the block type changes
     int dirtHeight = 70;
     int stoneHeight = 90;
@@ -46,111 +67,9 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, const in
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
-        // Subtract one from the timer for each horizontal distance made
-        dirtDirectionTimer--;
-        // Reset the timer and pick a new direction
-        if (dirtDirectionTimer == 0)
-        {
-            dirtDirectionTimer = getRandomInt(rng, MIN_TIME, MAX_TIME);
-            dirtDirection = getRandomInt(rng, STEEP_DECLINE, STEEP_INCLINE);
-        }
-
-        // Change dirtHeight based off of the dirtDirection
-        switch (dirtDirection)
-        {
-        case STEEP_DECLINE:                        // 3 rolls at 25%, avg +0.75/col
-            for (int i = 0; i < 3; i++)
-                if (getRandomChance(rng, 0.25f))
-                    dirtHeight++;
-            break;
-
-        case DECLINE:                              // 2 rolls at 25%, avg +0.50/col
-            for (int i = 0; i < 2; i++)
-                if (getRandomChance(rng, 0.25f))
-                    dirtHeight++;
-            break;
-
-        case MILD_DECLINE:                         // 1 roll  at 25%, avg +0.25/col
-            if (getRandomChance(rng, 0.25f))
-                dirtHeight++;
-            break;
-
-        case MILD_INCLINE:                         // 1 roll  at 25%, avg -0.25/col
-            if (getRandomChance(rng, 0.25f))
-                dirtHeight--;
-            break;
-
-        case INCLINE:                              // 2 rolls at 25%, avg -0.50/col
-            for (int i = 0; i < 2; i++)
-                if (getRandomChance(rng, 0.25f))
-                    dirtHeight--;
-            break;
-
-        case STEEP_INCLINE:                        // 3 rolls at 25%, avg -0.75/col
-            for (int i = 0; i < 3; i++)
-                if (getRandomChance(rng, 0.25f))
-                    dirtHeight--;
-            break;
-
-        default:
-            break;
-        }
-
-        // dirtHeight must be within this range
-        if (dirtHeight < MIN_DIRT_HEIGHT) dirtHeight = MIN_DIRT_HEIGHT;
-        if (dirtHeight > MAX_DIRT_HEIGHT) dirtHeight = MAX_DIRT_HEIGHT;
-        
-
-        // Same exact code, but for stone instead
-        stoneDirectionTimer--;
-        if (stoneDirectionTimer == 0)
-        {
-            stoneDirectionTimer = getRandomInt(rng, MIN_TIME, MAX_TIME);
-            stoneDirection = getRandomInt(rng, STEEP_DECLINE, STEEP_INCLINE);
-        }
-
-        switch (stoneDirection)
-        {
-        case STEEP_DECLINE:
-            for (int i = 0; i < 3; i++)
-                if (getRandomChance(rng, 0.25f))
-                    stoneHeight++;
-            break;
-
-        case DECLINE:
-            for (int i = 0; i < 2; i++)
-                if (getRandomChance(rng, 0.25f))
-                    stoneHeight++;
-            break;
-
-        case MILD_DECLINE:
-            if (getRandomChance(rng, 0.25f))
-                stoneHeight++;
-            break;
-
-        case MILD_INCLINE:
-            if (getRandomChance(rng, 0.25f))
-                stoneHeight--;
-            break;
-
-        case INCLINE:
-            for (int i = 0; i < 2; i++)
-                if (getRandomChance(rng, 0.25f))
-                    stoneHeight--;
-            break;
-
-        case STEEP_INCLINE:
-            for (int i = 0; i < 3; i++)
-                if (getRandomChance(rng, 0.25f))
-                    stoneHeight--;
-            break;
-        default:
-            break;
-        }
-
-        if (stoneHeight < MIN_STONE_HEIGHT) stoneHeight = MIN_STONE_HEIGHT;
-        if (stoneHeight > MAX_STONE_HEIGHT) stoneHeight = MAX_STONE_HEIGHT;
-
+        stoneHeight = MIN_STONE_HEIGHT + (MAX_STONE_HEIGHT - MIN_STONE_HEIGHT) * stoneNoise[x];
+        dirtHeight = MIN_DIRT_HEIGHT + (MAX_DIRT_HEIGHT - MIN_DIRT_HEIGHT) * dirtNoise[x];
+        dirtHeight = stoneHeight - dirtHeight;
         // Set the block type based on the current depth
         for (int y = 0; y < HEIGHT; y++)
         {
@@ -178,26 +97,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, const in
             // When y is exactly equal to the dirtHeight threshold, grass generates
             else if (y == dirtHeight)  b.type = Block::grassBlock;
 
-            if (SHOW_THRESHOLDS)
-            {
-                // Show the bounds for where dirt can generate
-                // Highest point: y = MIN_DIRT_HEIGHT + 1 ->
-                // Blocks at dirtHeight are always grass, since blocks are dirt only when when y > dirtHeight.
-                // This means the highest dirt is found one below the highest grass block.
-                // Lowest point: y = MAX_STONE_HEIGHT -> 
-                // When stoneHeight == MAX_STONE_HEIGHT, blocks that are at MAX_STONE_HEIGHT are still dirt,
-                // since stone only appears when y > stoneHeight.
-                if (y == MIN_DIRT_HEIGHT + 1 || y == MAX_STONE_HEIGHT)
-                    b.type = Block::goldBlock;
-
-                // Show the highest point that stone can generate.
-                // When stoneHeight == MIN_STONE_HEIGHT, blocks that are at MIN_STONE_HEIGHT are still dirt,
-                // since stone only appears when y > stoneHeight.
-                // This means that the highest stone is found one block below this.
-                if (y == MIN_STONE_HEIGHT + 1)
-                    b.type = Block::glass;
-            }
-
             // Each block will use a random texture variation.
             b.randIndex = std::rand() % 4;
 
@@ -212,4 +111,123 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, const in
                 gameMap.getWallBlockUnsafe(x, y).type = Block::stone;
         }
     }
+
+    
+
+    FastNoiseSIMD::FreeNoiseSet(dirtNoise);
+    FastNoiseSIMD::FreeNoiseSet(stoneNoise);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//#include "worldGenerator.hpp"
+//#include "randomStuff.hpp"
+//#include <FastNoiseSIMD.h>
+//
+//
+//void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed)
+//{
+//
+//	const int w = 900;
+//	const int h = 500;
+//
+//	gameMap.create(w, h);
+//
+//
+//	std::ranlux24_base rng(seed++);
+//
+//
+//	std::unique_ptr<FastNoiseSIMD> dirtNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
+//	std::unique_ptr<FastNoiseSIMD> stoneNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
+//
+//
+//	dirtNoiseGenrator->SetSeed(seed++);
+//	stoneNoiseGenrator->SetSeed(seed++);
+//
+//	dirtNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+//	dirtNoiseGenrator->SetFractalOctaves(1);
+//	dirtNoiseGenrator->SetFrequency(0.02);
+//
+//	stoneNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+//	stoneNoiseGenrator->SetFractalOctaves(4);
+//	stoneNoiseGenrator->SetFrequency(0.01);
+//
+//	float* dirtNoise = FastNoiseSIMD::GetEmptySet(w);
+//	float* stoneNoise = FastNoiseSIMD::GetEmptySet(w);
+//
+//	dirtNoiseGenrator->FillNoiseSet(dirtNoise, 0, 0, 0, w, 1, 1);
+//	stoneNoiseGenrator->FillNoiseSet(stoneNoise, 0, 0, 0, w, 1, 1);
+//
+//	//convert from [-1 1] to [0 1]
+//	for (int i = 0; i < w; i++)
+//	{
+//		dirtNoise[i] = (dirtNoise[i] + 1) / 2;
+//		stoneNoise[i] = (stoneNoise[i] + 1) / 2;
+//
+//		//stoneNoise[i] = std::pow(stoneNoise[i], 2); //steeper mountains.
+//	}
+//
+//	int dirtOffsetStart = -5;
+//	int dirtOffsetEnd = 35;
+//
+//	int stoneHeightStart = 80;
+//	int stoneHeightEnd = 170;
+//
+//
+//	for (int x = 0; x < w; x++)
+//	{
+//
+//		int stoneHeight = stoneHeightStart + (stoneHeightEnd - stoneHeightStart) * stoneNoise[x];
+//		int dirtHeight = dirtOffsetStart + (dirtOffsetEnd - dirtOffsetStart) * dirtNoise[x];
+//		dirtHeight = stoneHeight - dirtHeight;
+//
+//		for (int y = 0; y < h; y++)
+//		{
+//			Block b;
+//
+//			if (y > dirtHeight)
+//			{
+//				b.type = Block::dirt;
+//			}
+//
+//			if (y == dirtHeight)
+//			{
+//				b.type = Block::grassBlock;
+//			}
+//
+//			if (y >= stoneHeight)
+//			{
+//				b.type = Block::stone;
+//			}
+//
+//			gameMap.getBlockUnsafe(x, y) = b;
+//
+//
+//		}
+//
+//
+//
+//	}
+//
+//
+//
+//
+//	FastNoiseSIMD::FreeNoiseSet(dirtNoise);
+//	FastNoiseSIMD::FreeNoiseSet(stoneNoise);
+//
+//}

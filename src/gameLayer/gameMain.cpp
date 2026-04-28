@@ -40,7 +40,7 @@ bool initGame()
 	assetManager.loadAll();
 
 	// Generate the world
-	generateWorld(gameData.gameMap, 2500, 250);
+	generateWorld(gameData.gameMap, 5000, 250);
 
 	// Camera setup
 	gameData.camera.target = { 0, 60 };         // the world-space point the camera looks at

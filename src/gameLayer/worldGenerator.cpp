@@ -2,6 +2,8 @@
 #include "randomStuff.hpp"
 #include <FastNoiseSIMD.h>
 
+WorldNoise worldNoise;
+
 float lerp(float a, float b, float t)
 {
     return a + (b - a) * t;
@@ -11,18 +13,17 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 {   
     gameMap.create(WIDTH, HEIGHT);
 
-
     std::ranlux24_base rng(seed++);
 
     // One noise generator per terrain layer - different seeds produce independent shapes
-    std::unique_ptr<FastNoiseSIMD> dirtNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
-    std::unique_ptr<FastNoiseSIMD> stoneNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
-    std::unique_ptr<FastNoiseSIMD> biomeNoiseGenrator(FastNoiseSIMD::NewFastNoiseSIMD());
+    std::unique_ptr<FastNoiseSIMD> dirtNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
+    std::unique_ptr<FastNoiseSIMD> stoneNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
+    std::unique_ptr<FastNoiseSIMD> biomeNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
 
     // Each generator gets a unique seed so their shapes don't match
-    dirtNoiseGenrator->SetSeed(seed++);
-    stoneNoiseGenrator->SetSeed(seed++);
-    biomeNoiseGenrator->SetSeed(seed++);
+    dirtNoiseGenerator->SetSeed(seed++);
+    stoneNoiseGenerator->SetSeed(seed++);
+    biomeNoiseGenerator->SetSeed(seed++);
     
 
 #pragma region generate_noise
@@ -30,53 +31,53 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // Dirt:
     // 1 octave = smooth gentle hills
     // Higher frequency = samples further apart on the noise curve = rapid value changes = narrow steep hills
-    dirtNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    dirtNoiseGenrator->SetFractalOctaves(1);
-    dirtNoiseGenrator->SetFrequency(0.02);
+    dirtNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    dirtNoiseGenerator->SetFractalOctaves(worldNoise.dirtMountainOctaves);
+    dirtNoiseGenerator->SetFrequency(worldNoise.dirtMountainFrequency);
 
     // Stone:
     // 4 octaves = rougher jagged terrain
     // Lower frequency = samples closer together on the noise curve = gradual value changes = broad wide hills
-    stoneNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    stoneNoiseGenrator->SetFractalOctaves(4);
-    stoneNoiseGenrator->SetFrequency(0.01);
+    stoneNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    stoneNoiseGenerator->SetFractalOctaves(worldNoise.stoneMountainOctaves);
+    stoneNoiseGenerator->SetFrequency(worldNoise.stoneMountainFrequency);
 
     // One float per world column, each will be filled with a value in roughly [-1, 1]
     float* dirtMountainNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
     float* stoneMountainNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
 
     // Sample a 1D horizontal slice (ySize=1, zSize=1) — one height value per column
-    dirtNoiseGenrator->FillNoiseSet(dirtMountainNoise, 0, 0, 0, WIDTH, 1, 1);
-    stoneNoiseGenrator->FillNoiseSet(stoneMountainNoise, 0, 0, 0, WIDTH, 1, 1);
+    dirtNoiseGenerator->FillNoiseSet(dirtMountainNoise, 0, 0, 0, WIDTH, 1, 1);
+    stoneNoiseGenerator->FillNoiseSet(stoneMountainNoise, 0, 0, 0, WIDTH, 1, 1);
 
 
     // Noise for plains
     // Dirt:
-    dirtNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    dirtNoiseGenrator->SetFractalOctaves(1);
-    dirtNoiseGenrator->SetFrequency(0.0025);
+    dirtNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    dirtNoiseGenerator->SetFractalOctaves(worldNoise.dirtPlainOctaves);
+    dirtNoiseGenerator->SetFrequency(worldNoise.dirtPlainFrequency);
 
     // Stone:
-    stoneNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    stoneNoiseGenrator->SetFractalOctaves(1);
-    stoneNoiseGenrator->SetFrequency(0.005);
+    stoneNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    stoneNoiseGenerator->SetFractalOctaves(worldNoise.stonePlainOctaves);
+    stoneNoiseGenerator->SetFrequency(worldNoise.stonePlainFrequency);
 
     float* dirtPlainNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
     float* stonePlainNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
 
-    dirtNoiseGenrator->FillNoiseSet(dirtPlainNoise, 0, 0, 0, WIDTH, 1, 1);
-    stoneNoiseGenrator->FillNoiseSet(stonePlainNoise, 0, 0, 0, WIDTH, 1, 1);
+    dirtNoiseGenerator->FillNoiseSet(dirtPlainNoise, 0, 0, 0, WIDTH, 1, 1);
+    stoneNoiseGenerator->FillNoiseSet(stonePlainNoise, 0, 0, 0, WIDTH, 1, 1);
 
 
     // Noise for switching between biomes
-    biomeNoiseGenrator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    biomeNoiseGenrator->SetFractalOctaves(1);
+    biomeNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    biomeNoiseGenerator->SetFractalOctaves(worldNoise.biomeOctaves);
     // Lower frequency = larger biome regions, slower transitions between plains and mountains
-    biomeNoiseGenrator->SetFrequency(0.00025);
+    biomeNoiseGenerator->SetFrequency(worldNoise.biomeFrequency);
 
     float* biomeNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
 
-    biomeNoiseGenrator->FillNoiseSet(biomeNoise, 0, 0, 0, WIDTH, 1, 1);
+    biomeNoiseGenerator->FillNoiseSet(biomeNoise, 0, 0, 0, WIDTH, 1, 1);
 
     // Noise output is in range [-1, 1], remap to [0, 1]
     for (int i = 0; i < WIDTH; i++)

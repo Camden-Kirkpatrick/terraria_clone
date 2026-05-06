@@ -13,11 +13,11 @@
 
 #define MIN_CAM_ZOOM 10.0f
 #define MAX_CAM_ZOOM 200.0f
-#define DEFAULT_CAM_ZOOM 100.0f
+#define DEFAULT_CAM_ZOOM MIN_CAM_ZOOM
 #define INC_CAM_ZOOM 0.25f
 #define MIN_CAM_SPEED 1.0f
-#define MAX_CAM_SPEED 200.0f
-#define DEFAULT_CAM_SPEED 15.0f
+#define MAX_CAM_SPEED 1000.0f
+#define DEFAULT_CAM_SPEED 100.0f
 #define INC_CAM_SPEED 0.25f
 
 struct GameData
@@ -40,10 +40,10 @@ bool initGame()
 	assetManager.loadAll();
 
 	// Generate the world
-	generateWorld(gameData.gameMap, 5000, 250);
+	generateWorld(gameData.gameMap, 100'000, 250);
 
 	// Camera setup
-	gameData.camera.target = { 0, 60 };         // the world-space point the camera looks at
+	gameData.camera.target = { 100, 50 };      // the world-space point the camera looks at
 	gameData.camera.rotation = 0.0f;            // no rotation
 	gameData.camera.zoom = DEFAULT_CAM_ZOOM;    // 1 world unit = 100 screen pixels
 	gameData.cameraSpeed = DEFAULT_CAM_SPEED;
@@ -99,7 +99,6 @@ bool updateGame()
 		case KEY_EIGHT: currentBlock = Block::woodLog;     break;
 		case KEY_NINE:  currentBlock = Block::leaves;      break;
 		case KEY_ZERO:  currentBlock = Block::woodenChest; break;
-		case KEY_R:     initGame(); break;
 	}
 
 
@@ -358,6 +357,30 @@ bool updateGame()
 
 	ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
 	ImGui::SliderFloat("Camera speed:", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
+	ImGui::Separator();
+
+	ImGui::SliderInt("Dirt mountain octaves:", &worldNoise.dirtMountainOctaves, 1, 8);
+	ImGui::SliderFloat("Dirt mountain frequency:", &worldNoise.dirtMountainFrequency, 0.0001f, 0.1f, "%.4f");
+	ImGui::SliderInt("Stone mountain octaves:", &worldNoise.stoneMountainOctaves, 1, 8);
+	ImGui::SliderFloat("Stone mountain frequency:", &worldNoise.stoneMountainFrequency, 0.0001f, 0.1f, "%.4f");
+	ImGui::Separator();
+
+	ImGui::SliderInt("Dirt plain octaves:", &worldNoise.dirtPlainOctaves, 1, 8);
+	ImGui::SliderFloat("Dirt plain frequency:", &worldNoise.dirtPlainFrequency, 0.0001f, 0.1f, "%.4f");
+	ImGui::SliderInt("Stone plain octaves:", &worldNoise.stonePlainOctaves, 1, 8);
+	ImGui::SliderFloat("Stone plain frequency:", &worldNoise.stonePlainFrequency, 0.0001f, 0.1f, "%.4f");
+	ImGui::Separator();
+
+	ImGui::SliderInt("Biome octaves:", &worldNoise.biomeOctaves, 1, 8);
+	ImGui::SliderFloat("Biome frequency:", &worldNoise.biomeFrequency, 0.00001f, 0.5f, "%.5f");
+	ImGui::Separator();
+
+	if (ImGui::Button("Reset world"))
+	{
+		initGame();
+	}
+
+
 
 	ImGui::End();
 

@@ -3,7 +3,7 @@
 #define WIN_HEIGHT 600
 #define FPS 240
 
-bool initGame();
+bool initGame(bool resetNoise);
 
 bool updateGame();
 

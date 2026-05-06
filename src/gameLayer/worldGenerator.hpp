@@ -1,6 +1,8 @@
 #pragma once
 #include "gameMap.hpp"
 
+#define DEFAULT_SEED 2112
+
 struct WorldNoise
 {
 	int dirtMountainOctaves = 1;
@@ -18,5 +20,6 @@ struct WorldNoise
 };
 
 extern WorldNoise worldNoise;
+extern int seed;
 
-void generateWorld(GameMap& gameMap, const int WIDTH = 900, const int HEIGHT = 500, int seed = 2112);
+void generateWorld(GameMap& gameMap, const int WIDTH = 900, const int HEIGHT = 500, int seed = DEFAULT_SEED, bool resetNoise = true);

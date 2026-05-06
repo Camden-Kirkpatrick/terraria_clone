@@ -3,14 +3,31 @@
 #include <FastNoiseSIMD.h>
 
 WorldNoise worldNoise;
+int seed = DEFAULT_SEED;
 
 float lerp(float a, float b, float t)
 {
     return a + (b - a) * t;
 }
 
-void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed)
+void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed, bool resetNoise)
 {   
+    if (resetNoise)
+    {
+        worldNoise.dirtMountainOctaves = 1;
+        worldNoise.dirtMountainFrequency = 0.02f;
+        worldNoise.stoneMountainOctaves = 4;
+        worldNoise.stoneMountainFrequency = 0.01f;
+
+        worldNoise.dirtPlainOctaves = 1;
+        worldNoise.dirtPlainFrequency = 0.0025f;
+        worldNoise.stonePlainOctaves = 1;
+        worldNoise.stonePlainFrequency = 0.005f;
+
+        worldNoise.biomeOctaves = 1;
+        worldNoise.biomeFrequency = 0.00025f;
+    }
+
     gameMap.create(WIDTH, HEIGHT);
 
     std::ranlux24_base rng(seed++);
@@ -110,12 +127,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
-        //// Lerp: find where the stone surface sits in this column (y=0 is top, so smaller = higher up)
-        //int stoneHeight = lerp(MIN_STONE_PLAIN_HEIGHT, MAX_STONE_PLAIN_HEIGHT, stonePlainNoise[x]);
-        //// Lerp: find how many blocks thick the dirt layer is for this column
-        //int dirtThickness = lerp(MIN_DIRT_PLAIN_THICKNESS, MAX_DIRT_PLAIN_THICKNESS, dirtPlainNoise[x]);
-        //// The dirt surface sits above the stone surface by dirtThickness blocks (subtract because y=0 is top)
-        //int dirtHeight = stoneHeight - dirtThickness;
 
         // Lerp: find the heights for stone in the different biomes
         int stonePlainHeight = lerp(MIN_STONE_PLAIN_HEIGHT, MAX_STONE_PLAIN_HEIGHT, stonePlainNoise[x]);

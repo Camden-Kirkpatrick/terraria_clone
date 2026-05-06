@@ -30,7 +30,7 @@ int main()
 	ImGui::SetupImGuiCatppuccinMochaStyle();
 #pragma endregion
 
-	if (!initGame())
+	if (!initGame(true))
 	{
 		return 1;
 	}

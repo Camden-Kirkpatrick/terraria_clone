@@ -34,13 +34,16 @@ struct GameData
 
 AssetManager assetManager; // global asset manager instance to load and store textures
 
-bool initGame()
+bool initGame(bool resetNoise)
 {
 	// Load assets (textures)
 	assetManager.loadAll();
 
+	if (resetNoise)
+		seed = DEFAULT_SEED;
+
 	// Generate the world
-	generateWorld(gameData.gameMap, 100'000, 250);
+	generateWorld(gameData.gameMap, 100'000, 250, seed, resetNoise);
 
 	// Camera setup
 	gameData.camera.target = { 100, 50 };      // the world-space point the camera looks at
@@ -359,6 +362,9 @@ bool updateGame()
 	ImGui::SliderFloat("Camera speed:", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 	ImGui::Separator();
 
+	ImGui::InputInt("Seed:", &seed);
+	ImGui::Separator();
+
 	ImGui::SliderInt("Dirt mountain octaves:", &worldNoise.dirtMountainOctaves, 1, 8);
 	ImGui::SliderFloat("Dirt mountain frequency:", &worldNoise.dirtMountainFrequency, 0.0001f, 0.1f, "%.4f");
 	ImGui::SliderInt("Stone mountain octaves:", &worldNoise.stoneMountainOctaves, 1, 8);
@@ -377,7 +383,12 @@ bool updateGame()
 
 	if (ImGui::Button("Reset world"))
 	{
-		initGame();
+		initGame(true);
+	}
+
+	if (ImGui::Button("Regenerate world"))
+	{
+		initGame(false);
 	}
 
 

@@ -11,9 +11,12 @@
 #include <fstream>
 #include <iostream>
 
+#define WORLD_WIDTH 100'000
+#define WORLD_HEIGHT 250
+
 #define MIN_CAM_ZOOM 10.0f
 #define MAX_CAM_ZOOM 200.0f
-#define DEFAULT_CAM_ZOOM MIN_CAM_ZOOM
+#define DEFAULT_CAM_ZOOM 25.0f
 #define INC_CAM_ZOOM 0.25f
 #define MIN_CAM_SPEED 1.0f
 #define MAX_CAM_SPEED 1000.0f
@@ -34,7 +37,7 @@ struct GameData
 
 AssetManager assetManager; // global asset manager instance to load and store textures
 
-bool initGame(bool resetNoise)
+bool initGame(bool resetNoise, bool resetCamera)
 {
 	// Load assets (textures)
 	assetManager.loadAll();
@@ -43,13 +46,16 @@ bool initGame(bool resetNoise)
 		seed = DEFAULT_SEED;
 
 	// Generate the world
-	generateWorld(gameData.gameMap, 100'000, 250, seed, resetNoise);
+	generateWorld(gameData.gameMap, WORLD_WIDTH, WORLD_HEIGHT, seed, resetNoise);
 
 	// Camera setup
-	gameData.camera.target = { 100, 50 };      // the world-space point the camera looks at
-	gameData.camera.rotation = 0.0f;            // no rotation
-	gameData.camera.zoom = DEFAULT_CAM_ZOOM;    // 1 world unit = 100 screen pixels
-	gameData.cameraSpeed = DEFAULT_CAM_SPEED;
+	if (resetCamera)
+	{
+		gameData.camera.target = { 50, 75 };       // the world-space point the camera looks at
+		gameData.camera.rotation = 0.0f;            // no rotation
+		gameData.camera.zoom = DEFAULT_CAM_ZOOM;    // 1 world unit = 100 screen pixels
+		gameData.cameraSpeed = DEFAULT_CAM_SPEED;
+	}
 	
 	return true;
 }
@@ -356,44 +362,48 @@ bool updateGame()
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
 	EndMode2D();
 
+#pragma region game_controls
 	ImGui::Begin("Game control");
 
-	ImGui::SliderFloat("Camera zoom:", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
-	ImGui::SliderFloat("Camera speed:", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
+	ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
+	ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 	ImGui::Separator();
 
-	ImGui::InputInt("Seed:", &seed);
+	ImGui::Text("Seed:"); ImGui::SameLine(); ImGui::InputInt("##seed", &seed);
 	ImGui::Separator();
 
-	ImGui::SliderInt("Dirt mountain octaves:", &worldNoise.dirtMountainOctaves, 1, 8);
-	ImGui::SliderFloat("Dirt mountain frequency:", &worldNoise.dirtMountainFrequency, 0.0001f, 0.1f, "%.4f");
-	ImGui::SliderInt("Stone mountain octaves:", &worldNoise.stoneMountainOctaves, 1, 8);
-	ImGui::SliderFloat("Stone mountain frequency:", &worldNoise.stoneMountainFrequency, 0.0001f, 0.1f, "%.4f");
+	ImGui::Text("Mountain settings");
+	//ImGui::SliderInt("Dirt mountain octaves:", &worldNoise.dirtMountainOctaves, 1, 8);
+	ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine(); ImGui::SliderFloat("##dirtMtnFreq", &worldNoise.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f");
+	//ImGui::SliderInt("Stone mountain octaves:", &worldNoise.stoneMountainOctaves, 1, 8);
+	ImGui::Text("Stone mountain frequency:"); ImGui::SameLine(); ImGui::SliderFloat("##stnMtnFreq", &worldNoise.stoneMountainFrequency, 0.00001f, 0.1f, "%.5f");
 	ImGui::Separator();
 
-	ImGui::SliderInt("Dirt plain octaves:", &worldNoise.dirtPlainOctaves, 1, 8);
-	ImGui::SliderFloat("Dirt plain frequency:", &worldNoise.dirtPlainFrequency, 0.0001f, 0.1f, "%.4f");
-	ImGui::SliderInt("Stone plain octaves:", &worldNoise.stonePlainOctaves, 1, 8);
-	ImGui::SliderFloat("Stone plain frequency:", &worldNoise.stonePlainFrequency, 0.0001f, 0.1f, "%.4f");
+	ImGui::Text("Plains settings");
+	//ImGui::SliderInt("Dirt plain octaves:", &worldNoise.dirtPlainOctaves, 1, 8);
+	ImGui::Text("Dirt plain frequency:"); ImGui::SameLine(); ImGui::SliderFloat("##dirtPlnFreq", &worldNoise.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f");
+	//ImGui::SliderInt("Stone plain octaves:", &worldNoise.stonePlainOctaves, 1, 8);
+	ImGui::Text("Stone plain frequency:"); ImGui::SameLine(); ImGui::SliderFloat("##stnPlnFreq", &worldNoise.stonePlainFrequency, 0.00001f, 0.1f, "%.5f");
 	ImGui::Separator();
 
-	ImGui::SliderInt("Biome octaves:", &worldNoise.biomeOctaves, 1, 8);
-	ImGui::SliderFloat("Biome frequency:", &worldNoise.biomeFrequency, 0.00001f, 0.5f, "%.5f");
+	ImGui::Text("Biome settings");
+	//ImGui::Text("Biome octaves:");   ImGui::SameLine(); ImGui::SliderInt("##biomeOct", &worldNoise.biomeOctaves, 1, 20);
+	ImGui::Text("Biome frequency:"); ImGui::SameLine(); ImGui::SliderFloat("##biomeFreq", &worldNoise.biomeFrequency, 0.00001f, 0.001f, "%.5f");
 	ImGui::Separator();
 
-	if (ImGui::Button("Reset world"))
+	if (ImGui::Button("Reset world settings"))
 	{
-		initGame(true);
+		resetWorldNoise();
+		initGame(false, false);
 	}
 
 	if (ImGui::Button("Regenerate world"))
 	{
-		initGame(false);
+		initGame(false, false);
 	}
 
-
-
 	ImGui::End();
+#pragma endregion
 
 	DrawFPS(10, 10); // FPS counter
 
@@ -401,6 +411,8 @@ bool updateGame()
 
 	return true;
 }
+
+
 
 void closeGame()
 {

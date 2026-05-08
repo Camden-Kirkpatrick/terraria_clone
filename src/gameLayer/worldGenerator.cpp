@@ -5,34 +5,37 @@
 WorldNoise worldNoise;
 int seed = DEFAULT_SEED;
 
+void resetWorldNoise()
+{
+    worldNoise.dirtMountainOctaves = 1;
+    worldNoise.dirtMountainFrequency = 0.02f;
+    worldNoise.stoneMountainOctaves = 1;
+    worldNoise.stoneMountainFrequency = 0.01f;
+
+    worldNoise.dirtPlainOctaves = 1;
+    worldNoise.dirtPlainFrequency = 0.0025f;
+    worldNoise.stonePlainOctaves = 1;
+    worldNoise.stonePlainFrequency = 0.005f;
+
+    worldNoise.biomeOctaves = 1;
+    worldNoise.biomeFrequency = 0.00025f;
+}
+
 float lerp(float a, float b, float t)
 {
     return a + (b - a) * t;
 }
 
 void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed, bool resetNoise)
-{   
+{
     if (resetNoise)
-    {
-        worldNoise.dirtMountainOctaves = 1;
-        worldNoise.dirtMountainFrequency = 0.02f;
-        worldNoise.stoneMountainOctaves = 4;
-        worldNoise.stoneMountainFrequency = 0.01f;
-
-        worldNoise.dirtPlainOctaves = 1;
-        worldNoise.dirtPlainFrequency = 0.0025f;
-        worldNoise.stonePlainOctaves = 1;
-        worldNoise.stonePlainFrequency = 0.005f;
-
-        worldNoise.biomeOctaves = 1;
-        worldNoise.biomeFrequency = 0.00025f;
-    }
+        resetWorldNoise();
 
     gameMap.create(WIDTH, HEIGHT);
 
     std::ranlux24_base rng(seed++);
 
-    // One noise generator per terrain layer - different seeds produce independent shapes
+    // Noise generators for different layers, and one for biomes
     std::unique_ptr<FastNoiseSIMD> dirtNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> stoneNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> biomeNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
@@ -41,7 +44,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     dirtNoiseGenerator->SetSeed(seed++);
     stoneNoiseGenerator->SetSeed(seed++);
     biomeNoiseGenerator->SetSeed(seed++);
-    
+
 
 #pragma region generate_noise
     // Noise for mountains
@@ -63,7 +66,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     float* dirtMountainNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
     float* stoneMountainNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
 
-    // Sample a 1D horizontal slice (ySize=1, zSize=1) — one height value per column
+    // Sample a 1D horizontal slice (ySize=1, zSize=1) - one height value per column
     dirtNoiseGenerator->FillNoiseSet(dirtMountainNoise, 0, 0, 0, WIDTH, 1, 1);
     stoneNoiseGenerator->FillNoiseSet(stoneMountainNoise, 0, 0, 0, WIDTH, 1, 1);
 
@@ -110,8 +113,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 #pragma endregion
 
-
-    const int MIN_DIRT_MOUNTAIN_THICKNESS = -5;  // Negative allows stone to poke through dirt layer
+#pragma region world_gen_constants
+    const int MIN_DIRT_MOUNTAIN_THICKNESS = 0;   // Negative allows stone to poke through dirt layer
     const int MAX_DIRT_MOUNTAIN_THICKNESS = 50;  // Maximum blocks of dirt above stone
     const int MIN_STONE_MOUNTAIN_HEIGHT = 80;    // Stone layer is at least 80 blocks from the top
     const int MAX_STONE_MOUNTAIN_HEIGHT = 150;   // The top of the stone layer is at most 150 blocks from the top
@@ -121,24 +124,39 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     const int MIN_STONE_PLAIN_HEIGHT = 80;
     const int MAX_STONE_PLAIN_HEIGHT = 85;
 
-    const int GOLD_THRESHOLD = 60;      // Gold can generate 60 blocks from the top of the stone layer
+    const int GOLD_THRESHOLD = 60; // Gold can generate 60 blocks from the top of the stone layer
     const float GOLD_CHANCE = 0.01f;
+
+    const int IRON_THRESHOLD = GOLD_THRESHOLD;
+    const float IRON_CHANCE = 0.02f;
+
+    const int RUBY_THRESHOLD = GOLD_THRESHOLD;
+    const float RUBY_CHANCE = 0.001f;
+
+    const int CLAY_THRESHOLD = 120;
+    const float CLAY_CHANCE = 0.8f;
+
+    // When the biome noise is in this range, deserts will generate
+    const float DESERT_MIN_THRESHOLD = 0.25f;
+    const float DESERT_MAX_THRESHOLD = 0.5f;
+#pragma endregion
 
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
-
         // Lerp: find the heights for stone in the different biomes
         int stonePlainHeight = lerp(MIN_STONE_PLAIN_HEIGHT, MAX_STONE_PLAIN_HEIGHT, stonePlainNoise[x]);
         int stoneMountainHeight = lerp(MIN_STONE_MOUNTAIN_HEIGHT, MAX_STONE_MOUNTAIN_HEIGHT, stoneMountainNoise[x]);
         // Lerp: find the thicknesses for dirt in the different biomes
         int dirtPlainThickness = lerp(MIN_DIRT_PLAIN_THICKNESS, MAX_DIRT_PLAIN_THICKNESS, dirtPlainNoise[x]);
         int dirtMountainThickness = lerp(MIN_DIRT_MOUNTAIN_THICKNESS, MAX_DIRT_MOUNTAIN_THICKNESS, dirtMountainNoise[x]);
-         
+
         // Lerp: find the stone height and dirt thickness based on the biome
+        // Biome noise close to 0 generates plain-like terrain
+        // Biome noise close to 1 generates mountain-like terrain
         int stoneHeight = lerp(stonePlainHeight, stoneMountainHeight, biomeNoise[x]);
         int dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, biomeNoise[x]);
-        
+
         int dirtHeight = stoneHeight - dirtThickness;
 
         // Set the block type based on the current depth
@@ -146,44 +164,75 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         {
             Block b;
 
+#pragma region grassy_biome
+            // Generate grassy biome
             // When y is deeper than the stone surface, stone can generate
-            if (y > stoneHeight)
+            if (y > stoneHeight && (biomeNoise[x] <= DESERT_MIN_THRESHOLD || biomeNoise[x] >= DESERT_MAX_THRESHOLD))
             {
+                b.type = Block::stone;
                 // Gold can generate further down in the stone layer
                 if (y > stoneHeight + GOLD_THRESHOLD)
                 {
                     // GOLD_CHANCE chance for gold to generate instead of stone
                     if (getRandomChance(rng, GOLD_CHANCE))
                         b.type = Block::gold;
-                    else
-                        b.type = Block::stone;
+                    // If gold doesn't generate, see if iron will
+                    else if (getRandomChance(rng, IRON_CHANCE))
+                        b.type = Block::iron;
                 }
-                // Not deep enough to generate gold 
-                else
-                    b.type = Block::stone; 
             }
 
             // When y is above the dirtHeight threshold, dirt can generate
-            else if (y > dirtHeight)   b.type = Block::dirt;
+            else if (y > dirtHeight && (biomeNoise[x] <= DESERT_MIN_THRESHOLD || biomeNoise[x] >= DESERT_MAX_THRESHOLD))
+            {
+                b.type = Block::dirt;
+                // Clay can generate further down in the dirt layer
+                if (y > CLAY_THRESHOLD)
+                {
+                    // CLAY_CHANCE chance for clay to generate instead of dirt
+                    if (getRandomChance(rng, CLAY_CHANCE))
+                        b.type = Block::clay;
+                }
+            }
+                
             // When y is exactly equal to the dirtHeight threshold, grass generates
-            else if (y == dirtHeight)  b.type = Block::grassBlock;
+            else if (y == dirtHeight && (biomeNoise[x] <= DESERT_MIN_THRESHOLD || biomeNoise[x] >= DESERT_MAX_THRESHOLD))
+                b.type = Block::grassBlock;
+#pragma endregion
 
-            // Each block will use a random texture variation.
-            b.randIndex = std::rand() % 4;
+#pragma region desert_biome
+            // Generate desert biome
+            if (y > stoneHeight && biomeNoise[x] > DESERT_MIN_THRESHOLD && biomeNoise[x] < DESERT_MAX_THRESHOLD)
+            {
+                b.type = getRandomChance(rng, 0.333f) ? Block::sandStone : Block::sand;
+                if (y > stoneHeight + IRON_THRESHOLD)
+                {
+                    if (getRandomChance(rng, RUBY_CHANCE))
+                        b.type = Block::rubyBlock;
+                }
+            }
 
-            // Set the map to use the correct block
+            else if (y >= dirtHeight && biomeNoise[x] > DESERT_MIN_THRESHOLD && biomeNoise[x] < DESERT_MAX_THRESHOLD)
+                b.type = Block::sand;
+#pragma endregion
+
+
+            // Each block will use one of 4 random texture variations
+            b.randIndex = getRandomInt(rng, 0, 3);
+
+            // Store the block in the map
             gameMap.getBlockUnsafe(x, y) = b;
 
             // Use the correct background based on the block placed
             gameMap.getWallBlockUnsafe(x, y) = b;
 
-            // Ensure that gold has a stone background behind it
-            if (b.type == Block::gold)
+            // Ensure that gold and iron have a stone background behind them, and clay has a dirt background
+            if (b.type == Block::gold || b.type == Block::iron)
                 gameMap.getWallBlockUnsafe(x, y).type = Block::stone;
+            else if (b.type == Block::clay)
+                gameMap.getWallBlockUnsafe(x, y).type = Block::dirt;
         }
     }
-
-    
 
     FastNoiseSIMD::FreeNoiseSet(dirtPlainNoise);
     FastNoiseSIMD::FreeNoiseSet(stonePlainNoise);

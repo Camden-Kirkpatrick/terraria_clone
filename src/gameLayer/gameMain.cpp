@@ -7,7 +7,6 @@
 #include <raylib.h>
 #include <raymath.h>
 #include <imgui.h>
-#include <rlImGui.h>
 #include <fstream>
 #include <iostream>
 
@@ -20,7 +19,7 @@
 #define INC_CAM_ZOOM 0.25f
 #define MIN_CAM_SPEED 1.0f
 #define MAX_CAM_SPEED 1000.0f
-#define DEFAULT_CAM_SPEED 100.0f
+#define DEFAULT_CAM_SPEED 50.0f
 #define INC_CAM_SPEED 0.25f
 
 struct GameData
@@ -32,10 +31,10 @@ struct GameData
 	{
 		blockLayer = 0,
 		wallLayer = 1,
-	} hoverMode = blockLayer; // determines whether we are placing/breaking normal blocks or wall blocks
+	} hoverMode = blockLayer; // Determines whether we are placing/breaking normal blocks or wall blocks
 } gameData;
 
-AssetManager assetManager; // global asset manager instance to load and store textures
+AssetManager assetManager; // Global asset manager instance to load and store textures
 
 bool initGame(bool resetNoise, bool resetCamera)
 {
@@ -51,9 +50,9 @@ bool initGame(bool resetNoise, bool resetCamera)
 	// Camera setup
 	if (resetCamera)
 	{
-		gameData.camera.target = { 50, 75 };       // the world-space point the camera looks at
-		gameData.camera.rotation = 0.0f;            // no rotation
-		gameData.camera.zoom = DEFAULT_CAM_ZOOM;    // 1 world unit = 100 screen pixels
+		gameData.camera.target = { WORLD_WIDTH / 2, 75 };       // The world-space point the camera looks at
+		gameData.camera.rotation = 0.0f;                        // No rotation
+		gameData.camera.zoom = DEFAULT_CAM_ZOOM;                // 1 world unit = 100 screen pixels
 		gameData.cameraSpeed = DEFAULT_CAM_SPEED;
 	}
 	
@@ -63,9 +62,9 @@ bool initGame(bool resetNoise, bool resetCamera)
 bool updateGame()
 {
 	float deltaTime = GetFrameTime();
-	if (deltaTime > 0.05f) deltaTime = 0.05f; // clamp to 20fps minimum
+	if (deltaTime > 0.05f) deltaTime = 0.05f; // Clamp to 20fps minimum
 
-	// offset is the screen-space pixel that the target maps to.
+	// Offset is the screen-space pixel that the target maps to.
 	// Keeping it at the screen center means the camera's target always appears in the middle of the window.
 	// This is recalculated every frame so it adjusts automatically if the window is resized.
 	gameData.camera.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
@@ -373,21 +372,20 @@ bool updateGame()
 	ImGui::Separator();
 
 	ImGui::Text("Mountain settings");
-	//ImGui::SliderInt("Dirt mountain octaves:", &worldNoise.dirtMountainOctaves, 1, 8);
+	ImGui::Text("Dirt mountain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtMtnOct", &worldNoise.dirtMountainOctaves, 1, 20);
 	ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine(); ImGui::SliderFloat("##dirtMtnFreq", &worldNoise.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f");
-	//ImGui::SliderInt("Stone mountain octaves:", &worldNoise.stoneMountainOctaves, 1, 8);
+	ImGui::Text("Stone mountain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnMtnOct", &worldNoise.stoneMountainOctaves, 1, 20);
 	ImGui::Text("Stone mountain frequency:"); ImGui::SameLine(); ImGui::SliderFloat("##stnMtnFreq", &worldNoise.stoneMountainFrequency, 0.00001f, 0.1f, "%.5f");
 	ImGui::Separator();
 
 	ImGui::Text("Plains settings");
-	//ImGui::SliderInt("Dirt plain octaves:", &worldNoise.dirtPlainOctaves, 1, 8);
+	ImGui::Text("Dirt plain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtPlnOct", &worldNoise.dirtPlainOctaves, 1, 20);
 	ImGui::Text("Dirt plain frequency:"); ImGui::SameLine(); ImGui::SliderFloat("##dirtPlnFreq", &worldNoise.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f");
-	//ImGui::SliderInt("Stone plain octaves:", &worldNoise.stonePlainOctaves, 1, 8);
+	ImGui::Text("Stone plain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnPlnOct", &worldNoise.stonePlainOctaves, 1, 20);
 	ImGui::Text("Stone plain frequency:"); ImGui::SameLine(); ImGui::SliderFloat("##stnPlnFreq", &worldNoise.stonePlainFrequency, 0.00001f, 0.1f, "%.5f");
 	ImGui::Separator();
 
 	ImGui::Text("Biome settings");
-	//ImGui::Text("Biome octaves:");   ImGui::SameLine(); ImGui::SliderInt("##biomeOct", &worldNoise.biomeOctaves, 1, 20);
 	ImGui::Text("Biome frequency:"); ImGui::SameLine(); ImGui::SliderFloat("##biomeFreq", &worldNoise.biomeFrequency, 0.00001f, 0.001f, "%.5f");
 	ImGui::Separator();
 

@@ -9,12 +9,12 @@ void resetWorldNoise()
 {
     worldNoise.dirtMountainOctaves = 1;
     worldNoise.dirtMountainFrequency = 0.02f;
-    worldNoise.stoneMountainOctaves = 1;
+    worldNoise.stoneMountainOctaves = 4;
     worldNoise.stoneMountainFrequency = 0.01f;
 
     worldNoise.dirtPlainOctaves = 1;
     worldNoise.dirtPlainFrequency = 0.0025f;
-    worldNoise.stonePlainOctaves = 1;
+    worldNoise.stonePlainOctaves = 4;
     worldNoise.stonePlainFrequency = 0.005f;
 
     worldNoise.biomeOctaves = 1;

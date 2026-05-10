@@ -133,7 +133,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     const int RUBY_THRESHOLD = GOLD_THRESHOLD;
     const float RUBY_CHANCE = 0.001f;
 
-    const int CLAY_THRESHOLD = 120;
+    const int CLAY_THRESHOLD = 105;
     const float CLAY_CHANCE = 0.8f;
 
     // When the biome noise is in this range, deserts will generate

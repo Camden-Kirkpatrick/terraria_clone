@@ -82,12 +82,12 @@ struct Block
 		57, // sandStone
 		56, // woodPlank
 		65, // stoneBricks
-		-1, // clay
+		54, // clay (use the dirt wall)
 		-1, // woodLog
 		-1, // leaves
-		-1, // copper
-		-1, // iron
-		-1, // gold
+		55, // copper (use the stone wall)
+		55, // iron   (use the stone wall)
+		55, // gold   (use the stone wall)
 		60, // copperBlock
 		61, // ironBlock
 		62, // goldBlock

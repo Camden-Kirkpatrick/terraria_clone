@@ -227,10 +227,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             gameMap.getWallBlockUnsafe(x, y) = b;
 
             // Ensure that gold and iron have a stone background behind them, and clay has a dirt background
-            if (b.type == Block::gold || b.type == Block::iron)
-                gameMap.getWallBlockUnsafe(x, y).type = Block::stone;
-            else if (b.type == Block::clay)
-                gameMap.getWallBlockUnsafe(x, y).type = Block::dirt;
+            //if (b.type == Block::gold || b.type == Block::iron)
+            //    gameMap.getWallBlockUnsafe(x, y).type = Block::stone;
+            //else if (b.type == Block::clay)
+            //    gameMap.getWallBlockUnsafe(x, y).type = Block::dirt;
         }
     }
 

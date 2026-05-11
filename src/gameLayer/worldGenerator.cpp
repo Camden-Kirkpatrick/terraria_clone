@@ -124,13 +124,13 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     const int MIN_STONE_PLAIN_HEIGHT = 80;
     const int MAX_STONE_PLAIN_HEIGHT = 85;
 
-    const int GOLD_THRESHOLD = 60; // Gold can generate 60 blocks from the top of the stone layer
+    // Ores can generate 60 blocks below the stone layer
+    const int ORE_THRESHOLD = 60;
     const float GOLD_CHANCE = 0.01f;
-
-    const int IRON_THRESHOLD = GOLD_THRESHOLD;
     const float IRON_CHANCE = 0.02f;
+    const float COPPER_CHANCE = 0.03f;
 
-    const int RUBY_THRESHOLD = GOLD_THRESHOLD;
+    const int RUBY_THRESHOLD = 80;
     const float RUBY_CHANCE = 0.001f;
 
     const int CLAY_THRESHOLD = 105;
@@ -171,7 +171,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             {
                 b.type = Block::stone;
                 // Gold can generate further down in the stone layer
-                if (y > stoneHeight + GOLD_THRESHOLD)
+                if (y > stoneHeight + ORE_THRESHOLD)
                 {
                     // GOLD_CHANCE chance for gold to generate instead of stone
                     if (getRandomChance(rng, GOLD_CHANCE))
@@ -205,10 +205,19 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             if (y > stoneHeight && biomeNoise[x] > DESERT_MIN_THRESHOLD && biomeNoise[x] < DESERT_MAX_THRESHOLD)
             {
                 b.type = getRandomChance(rng, 0.333f) ? Block::sandStone : Block::sand;
-                if (y > stoneHeight + IRON_THRESHOLD)
+                if (y > stoneHeight + RUBY_THRESHOLD)
                 {
                     if (getRandomChance(rng, RUBY_CHANCE))
                         b.type = Block::rubyBlock;
+                    // Copper still has a chance to generate
+                    else if (getRandomChance(rng, COPPER_CHANCE))
+                        b.type = Block::copper;
+                }
+                // Not deep enough for rubies, but copper could still generate
+                else if (y > stoneHeight + ORE_THRESHOLD)
+                {
+                    if (getRandomChance(rng, COPPER_CHANCE))
+                        b.type = Block::copper;
                 }
             }
 
@@ -225,12 +234,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
             // Use the correct background based on the block placed
             gameMap.getWallBlockUnsafe(x, y) = b;
-
-            // Ensure that gold and iron have a stone background behind them, and clay has a dirt background
-            //if (b.type == Block::gold || b.type == Block::iron)
-            //    gameMap.getWallBlockUnsafe(x, y).type = Block::stone;
-            //else if (b.type == Block::clay)
-            //    gameMap.getWallBlockUnsafe(x, y).type = Block::dirt;
         }
     }
 

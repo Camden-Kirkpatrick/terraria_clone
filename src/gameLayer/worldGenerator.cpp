@@ -19,6 +19,9 @@ void resetWorldNoise()
 
     worldNoise.biomeOctaves = 1;
     worldNoise.biomeFrequency = 0.00025f;
+
+    worldNoise.caveOctaves = 1;
+    worldNoise.caveFrequency = 0.02f;
 }
 
 float lerp(float a, float b, float t)
@@ -39,11 +42,13 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     std::unique_ptr<FastNoiseSIMD> dirtNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> stoneNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> biomeNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
+    std::unique_ptr<FastNoiseSIMD> caveNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
 
     // Each generator gets a unique seed so their shapes don't match
     dirtNoiseGenerator->SetSeed(seed++);
     stoneNoiseGenerator->SetSeed(seed++);
     biomeNoiseGenerator->SetSeed(seed++);
+    caveNoiseGenerator->SetSeed(seed++);
 
 
 #pragma region generate_noise
@@ -99,6 +104,17 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     biomeNoiseGenerator->FillNoiseSet(biomeNoise, 0, 0, 0, WIDTH, 1, 1);
 
+
+    // Noise for caves
+    caveNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    caveNoiseGenerator->SetFractalOctaves(worldNoise.caveOctaves);
+    caveNoiseGenerator->SetFrequency(worldNoise.caveFrequency);
+
+    float* caveNoise = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
+
+    caveNoiseGenerator->FillNoiseSet(caveNoise, 0, 0, 0, HEIGHT, WIDTH, 1);
+
+
     // Noise output is in range [-1, 1], remap to [0, 1]
     for (int i = 0; i < WIDTH; i++)
     {
@@ -110,16 +126,22 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
         biomeNoise[i] = (biomeNoise[i] + 1) / 2;
     }
+    for (int i = 0; i < WIDTH * HEIGHT; i++)
+        caveNoise[i] = (caveNoise[i] + 1) / 2;
 
+    auto getCaveNoise = [&](int x, int y)
+    {
+        return caveNoise[WIDTH * y + x];
+    };
 #pragma endregion
 
 #pragma region world_gen_constants
-    const int MIN_DIRT_MOUNTAIN_THICKNESS = 0;   // Negative allows stone to poke through dirt layer
+    const int MIN_DIRT_MOUNTAIN_THICKNESS = 1;   // Minimum amount of dirt above stone
     const int MAX_DIRT_MOUNTAIN_THICKNESS = 50;  // Maximum blocks of dirt above stone
     const int MIN_STONE_MOUNTAIN_START = 80;    // Stone layer is at least 80 blocks from the top
     const int MAX_STONE_MOUNTAIN_START = 150;   // The top of the stone layer is at most 150 blocks from the top
 
-    const int MIN_DIRT_PLAIN_THICKNESS = 0;
+    const int MIN_DIRT_PLAIN_THICKNESS = 1;
     const int MAX_DIRT_PLAIN_THICKNESS = 5;
     const int MIN_STONE_PLAIN_START = 80;
     const int MAX_STONE_PLAIN_START = 85;
@@ -202,9 +224,9 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 #pragma endregion
 
 #pragma region desert_biome
-            float distToEdge;
-            float blendZone;
-            float chance;
+            float distToEdge = 0.0f;
+            float blendZone = 0.0f;
+            float blendChance = 0.0f;
 
             if (biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
             {
@@ -216,13 +238,12 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 // Probability of placing grassy biome blocks instead of desert blocks.
                 // High near the desert boundary, zero in the interior.
                 // e.g. distToEdge=0.000 (boundary) -> chance=1.0, distToEdge=0.008 (halfway) -> chance=0.47, distToEdge=0.015+ (interior) -> chance=0.0
-                float chance = 1.0f - (distToEdge / blendZone);
-                chance = 1.0f - (distToEdge / blendZone);
+                blendChance = 1.0f - (distToEdge / blendZone);
             }
 
             if (y > stoneStart && biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
             {
-                if (getRandomChance(rng, chance))
+                if (getRandomChance(rng, blendChance))
                     b.type = Block::stone;
                 else if (getRandomChance(rng, 0.5f))
                     b.type = Block::sand;
@@ -233,7 +254,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 {
                     if (getRandomChance(rng, RUBY_CHANCE))
                         b.type = Block::sandRuby;
-                    else if (getRandomChance(rng, chance))
+                    else if (getRandomChance(rng, blendChance))
                     {
                         if (getRandomChance(rng, GOLD_CHANCE))
                             b.type = Block::gold;
@@ -247,7 +268,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 // Not deep enough for rubies, but copper could still generate
                 else if (y > ORE_THRESHOLD)
                 {
-                    if (getRandomChance(rng, chance))
+                    if (getRandomChance(rng, blendChance))
                     {
                         if (getRandomChance(rng, GOLD_CHANCE))
                             b.type = Block::gold;
@@ -263,22 +284,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             {
                 b.type = Block::sand;
 
-                //if (biomeNoise[x] < NEAR_BIOME_EDGE_MIN || biomeNoise[x] > NEAR_BIOME_EDGE_MAX)
-                //{
-                //    float chance = 0.5f;
-                //    if (biomeNoise[x] < NEAR_BIOME_EDGE_MIN - 0.005f || biomeNoise[x] > NEAR_BIOME_EDGE_MAX + 0.005f)
-                //        chance = 0.75f;
-
-                //    if (getRandomChance(rng, chance))
-                //    {
-                //        if (y == dirtHeight)
-                //            b.type = Block::grassBlock;
-                //        else
-                //            b.type = Block::dirt;
-                //     
-                //}
-
-                if (getRandomChance(rng, chance))
+                if (getRandomChance(rng, blendChance))
                 {
                     if (y == dirtStart)
                         b.type = Block::grassBlock;
@@ -298,6 +304,38 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
             // Use the correct background based on the block placed
             gameMap.getWallBlockUnsafe(x, y) = b;
+
+            // Prevent caves from opening up to the void / edge of the map
+            if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
+
+            // Cave generation
+            else if (getCaveNoise(x, y) < 0.15f)
+            {
+                b.type = Block::air;
+                gameMap.getBlockUnsafe(x, y) = b;
+
+                // The background shouldn't be air in caves
+                Block background;
+                background.randIndex = getRandomInt(rng, 0, 3);
+                // If we are in the stone layer in the desert
+                if (y > stoneStart && biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
+                {
+                    if (getRandomChance(rng, blendChance))
+                        background.type = Block::stone;
+                    else if (getRandomChance(rng, 0.5f))
+                        background.type = Block::sand;
+                    else
+                        background.type = Block::sandStone;
+
+                    gameMap.getWallBlockUnsafe(x, y) = background;
+                }
+                // If we are in the stone layer in the grasslands
+                else if (y > stoneStart)
+                {
+                    background.type = Block::stone;
+                    gameMap.getWallBlockUnsafe(x, y) = background;
+                }
+            }
         }
     }
 
@@ -306,4 +344,5 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     FastNoiseSIMD::FreeNoiseSet(dirtMountainNoise);
     FastNoiseSIMD::FreeNoiseSet(stoneMountainNoise);
     FastNoiseSIMD::FreeNoiseSet(biomeNoise);
+    FastNoiseSIMD::FreeNoiseSet(caveNoise);
 }

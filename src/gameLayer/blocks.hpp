@@ -78,14 +78,14 @@ struct Block
 		55, // stone
 		-1, // grass
 		64, // sand
-		64, // sandRuby (use the sand wall)
+		57, // sandRuby (use the sand stone wall)
 		57, // sandStone
 		56, // woodPlank
 		65, // stoneBricks
 		54, // clay (use the dirt wall)
 		-1, // woodLog
 		-1, // leaves
-		55, // copper (use the stone wall)
+		57, // copper (use the sand stone wall)
 		55, // iron   (use the stone wall)
 		55, // gold   (use the stone wall)
 		60, // copperBlock

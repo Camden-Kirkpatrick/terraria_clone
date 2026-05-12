@@ -166,8 +166,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         {
             Block b;
 
-#pragma region grassy_biome
-            // Generate grassy biome
+#pragma region grasslands_biome
             // When y is deeper than the stone surface, stone can generate
             if (y > stoneStart && (biomeNoise[x] <= MIN_DESERT_THRESHOLD || biomeNoise[x] >= MAX_DESERT_THRESHOLD))
             {
@@ -203,10 +202,23 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 #pragma endregion
 
 #pragma region desert_biome
-            // Generate desert biome
-            float distToEdge = std::min(biomeNoise[x] - MIN_DESERT_THRESHOLD, MAX_DESERT_THRESHOLD - biomeNoise[x]);
-            float blendZone = 0.015f;
-            float chance = std::max(0.0f, 1.0f - (distToEdge / blendZone));
+            float distToEdge;
+            float blendZone;
+            float chance;
+
+            if (biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
+            {
+                // How close are we the the nearest edge of the desert
+                distToEdge = std::min(biomeNoise[x] - MIN_DESERT_THRESHOLD, MAX_DESERT_THRESHOLD - biomeNoise[x]);
+                // This is the width (in noise units) of the band near each boundary where blending happens
+                // With 0.015, only columns whose noise is within 0.015 of a boundary will receive any grassy-biome blocks
+                blendZone = 0.015f;
+                // Probability of placing grassy biome blocks instead of desert blocks.
+                // High near the desert boundary, zero in the interior.
+                // e.g. distToEdge=0.000 (boundary) -> chance=1.0, distToEdge=0.008 (halfway) -> chance=0.47, distToEdge=0.015+ (interior) -> chance=0.0
+                float chance = 1.0f - (distToEdge / blendZone);
+                chance = 1.0f - (distToEdge / blendZone);
+            }
 
             if (y > stoneStart && biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
             {

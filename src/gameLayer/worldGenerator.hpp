@@ -24,4 +24,4 @@ extern int seed;
 
 void resetWorldNoise();
 float lerp(float a, float b, float t);
-void generateWorld(GameMap& gameMap, const int WIDTH = 900, const int HEIGHT = 500, int seed = DEFAULT_SEED, bool resetNoise = true);
+void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed = DEFAULT_SEED, bool resetNoise = true);

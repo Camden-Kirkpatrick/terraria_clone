@@ -47,6 +47,8 @@ bool initGame(bool resetNoise, bool resetCamera)
 	// Generate the world
 	generateWorld(gameData.gameMap, WORLD_WIDTH, WORLD_HEIGHT, seed, resetNoise);
 
+	//generateWorld(gameData.gameMap, WORLD_WIDTH, WORLD_HEIGHT, seed);
+
 	// Camera setup
 	if (resetCamera)
 	{
@@ -373,40 +375,40 @@ bool updateGame()
 		initGame(false, false);
 	ImGui::Separator();
 
-	ImGui::Text("Mountain settings");
-	//ImGui::Text("Dirt mountain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtMtnOct", &worldNoise.dirtMountainOctaves, 1, 20);
-	ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine(); 
-	if (ImGui::SliderFloat("##dirtMtnFreq", &worldNoise.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f"))
-		initGame(false, false);
+	//ImGui::Text("Mountain settings");
+	////ImGui::Text("Dirt mountain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtMtnOct", &worldNoise.dirtMountainOctaves, 1, 20);
+	//ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine(); 
+	//if (ImGui::SliderFloat("##dirtMtnFreq", &worldNoise.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f"))
+	//	initGame(false, false);
 
-	//ImGui::Text("Stone mountain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnMtnOct", &worldNoise.stoneMountainOctaves, 1, 20);
-	ImGui::Text("Stone mountain frequency:"); ImGui::SameLine();
-	if (ImGui::SliderFloat("##stnMtnFreq", &worldNoise.stoneMountainFrequency, 0.00001f, 0.1f, "%.5f"))
-		initGame(false, false);
-	ImGui::Separator();
+	////ImGui::Text("Stone mountain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnMtnOct", &worldNoise.stoneMountainOctaves, 1, 20);
+	//ImGui::Text("Stone mountain frequency:"); ImGui::SameLine();
+	//if (ImGui::SliderFloat("##stnMtnFreq", &worldNoise.stoneMountainFrequency, 0.00001f, 0.1f, "%.5f"))
+	//	initGame(false, false);
+	//ImGui::Separator();
 
-	ImGui::Text("Plains settings");
-	//ImGui::Text("Dirt plain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtPlnOct", &worldNoise.dirtPlainOctaves, 1, 20);
-	ImGui::Text("Dirt plain frequency:"); ImGui::SameLine();
-	if (ImGui::SliderFloat("##dirtPlnFreq", &worldNoise.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f"))
-		initGame(false, false);
-	//ImGui::Text("Stone plain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnPlnOct", &worldNoise.stonePlainOctaves, 1, 20);
-	ImGui::Text("Stone plain frequency:"); ImGui::SameLine();
-	if (ImGui::SliderFloat("##stnPlnFreq", &worldNoise.stonePlainFrequency, 0.00001f, 0.1f, "%.5f"))
-		initGame(false, false);
-	ImGui::Separator();
+	//ImGui::Text("Plains settings");
+	////ImGui::Text("Dirt plain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtPlnOct", &worldNoise.dirtPlainOctaves, 1, 20);
+	//ImGui::Text("Dirt plain frequency:"); ImGui::SameLine();
+	//if (ImGui::SliderFloat("##dirtPlnFreq", &worldNoise.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f"))
+	//	initGame(false, false);
+	////ImGui::Text("Stone plain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnPlnOct", &worldNoise.stonePlainOctaves, 1, 20);
+	//ImGui::Text("Stone plain frequency:"); ImGui::SameLine();
+	//if (ImGui::SliderFloat("##stnPlnFreq", &worldNoise.stonePlainFrequency, 0.00001f, 0.1f, "%.5f"))
+	//	initGame(false, false);
+	//ImGui::Separator();
 
-	ImGui::Text("Biome settings");
-	ImGui::Text("Biome frequency:"); ImGui::SameLine();
-	if(ImGui::SliderFloat("##biomeFreq", &worldNoise.biomeFrequency, 0.00001f, 0.001f, "%.5f"))
-		initGame(false, false);
-	ImGui::Separator();
+	//ImGui::Text("Biome settings");
+	//ImGui::Text("Biome frequency:"); ImGui::SameLine();
+	//if(ImGui::SliderFloat("##biomeFreq", &worldNoise.biomeFrequency, 0.00001f, 0.001f, "%.5f"))
+	//	initGame(false, false);
+	//ImGui::Separator();
 
-	if (ImGui::Button("Reset world settings"))
-	{
-		resetWorldNoise();
-		initGame(false, false);
-	}
+	//if (ImGui::Button("Reset world settings"))
+	//{
+	//	resetWorldNoise();
+	//	initGame(false, false);
+	//}
 
 	ImGui::End();
 #pragma endregion

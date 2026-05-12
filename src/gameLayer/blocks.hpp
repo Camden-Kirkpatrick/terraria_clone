@@ -78,7 +78,7 @@ struct Block
 		55, // stone
 		-1, // grass
 		64, // sand
-		-1, // sandRuby
+		64, // sandRuby
 		57, // sandStone
 		56, // woodPlank
 		65, // stoneBricks

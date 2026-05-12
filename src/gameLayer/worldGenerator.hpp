@@ -17,6 +17,9 @@ struct WorldNoise
 
 	int biomeOctaves;
 	float biomeFrequency;
+
+	int caveOctaves;
+	float caveFrequency;
 };
 
 extern WorldNoise worldNoise;

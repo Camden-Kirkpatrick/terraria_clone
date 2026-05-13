@@ -138,23 +138,23 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 #pragma region world_gen_constants
     const int MIN_DIRT_MOUNTAIN_THICKNESS = 1;   // Minimum amount of dirt above stone
     const int MAX_DIRT_MOUNTAIN_THICKNESS = 50;  // Maximum blocks of dirt above stone
-    const int MIN_STONE_MOUNTAIN_START = 80;     // Stone layer is at least 80 blocks from the top
-    const int MAX_STONE_MOUNTAIN_START = 150;    // The top of the stone layer is at most 150 blocks from the top
+    const int MIN_STONE_MOUNTAIN_START = 330;     // Stone layer is at least 80 blocks from the top
+    const int MAX_STONE_MOUNTAIN_START = 400;    // The top of the stone layer is at most 150 blocks from the top
 
     const int MIN_DIRT_PLAIN_THICKNESS = 1;
     const int MAX_DIRT_PLAIN_THICKNESS = 5;
-    const int MIN_STONE_PLAIN_START = 80;
-    const int MAX_STONE_PLAIN_START = 85;
+    const int MIN_STONE_PLAIN_START = 330;
+    const int MAX_STONE_PLAIN_START = 335;
 
-    const int ORE_THRESHOLD = 125;
+    const int ORE_THRESHOLD = 375;
     const float GOLD_CHANCE = 0.01f;
     const float IRON_CHANCE = 0.02f;
     const float COPPER_CHANCE = 0.03f;
 
-    const int RUBY_THRESHOLD = 200;
+    const int RUBY_THRESHOLD = 450;
     const float RUBY_CHANCE = 0.001f;
 
-    const int CLAY_THRESHOLD = 105;
+    const int CLAY_THRESHOLD = 355;
     const float CLAY_CHANCE = 0.8f;
 
     // When the biome noise is in this range, deserts will generate

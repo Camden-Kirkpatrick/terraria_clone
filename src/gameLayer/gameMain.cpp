@@ -11,7 +11,7 @@
 #include <iostream>
 
 #define WORLD_WIDTH 5000
-#define WORLD_HEIGHT 250
+#define WORLD_HEIGHT 500
 
 #define MIN_CAM_ZOOM 10.0f
 #define MAX_CAM_ZOOM 200.0f
@@ -47,12 +47,10 @@ bool initGame(bool resetNoise, bool resetCamera)
 	// Generate the world
 	generateWorld(gameData.gameMap, WORLD_WIDTH, WORLD_HEIGHT, seed, resetNoise);
 
-	//generateWorld(gameData.gameMap, WORLD_WIDTH, WORLD_HEIGHT, seed);
-
 	// Camera setup
 	if (resetCamera)
 	{
-		gameData.camera.target = { WORLD_WIDTH / 2, 75 };       // The world-space point the camera looks at
+		gameData.camera.target = { WORLD_WIDTH / 2, 325 };       // The world-space point the camera looks at
 		gameData.camera.rotation = 0.0f;                        // No rotation
 		gameData.camera.zoom = DEFAULT_CAM_ZOOM;                // 1 world unit = 100 screen pixels
 		gameData.cameraSpeed = DEFAULT_CAM_SPEED;

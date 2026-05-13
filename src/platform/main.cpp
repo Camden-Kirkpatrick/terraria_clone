@@ -62,7 +62,6 @@ int main()
 
 		EndDrawing();
 	}
-
 #pragma region imgui
 	rlImGuiShutdown();
 #pragma endregion

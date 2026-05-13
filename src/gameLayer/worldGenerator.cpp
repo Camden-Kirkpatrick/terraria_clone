@@ -38,7 +38,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     std::ranlux24_base rng(seed++);
 
-    // Noise generators for different layers, and one for biomes
+    // Noise generators for different layers, biomes, and caves
     std::unique_ptr<FastNoiseSIMD> dirtNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> stoneNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> biomeNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
@@ -138,8 +138,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 #pragma region world_gen_constants
     const int MIN_DIRT_MOUNTAIN_THICKNESS = 1;   // Minimum amount of dirt above stone
     const int MAX_DIRT_MOUNTAIN_THICKNESS = 50;  // Maximum blocks of dirt above stone
-    const int MIN_STONE_MOUNTAIN_START = 80;    // Stone layer is at least 80 blocks from the top
-    const int MAX_STONE_MOUNTAIN_START = 150;   // The top of the stone layer is at most 150 blocks from the top
+    const int MIN_STONE_MOUNTAIN_START = 80;     // Stone layer is at least 80 blocks from the top
+    const int MAX_STONE_MOUNTAIN_START = 150;    // The top of the stone layer is at most 150 blocks from the top
 
     const int MIN_DIRT_PLAIN_THICKNESS = 1;
     const int MAX_DIRT_PLAIN_THICKNESS = 5;
@@ -161,8 +161,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     const float MIN_DESERT_THRESHOLD = 0.2f;
     const float MAX_DESERT_THRESHOLD = 0.4f;
 
-    const float NEAR_BIOME_EDGE_MIN = 0.21f;
-    const float NEAR_BIOME_EDGE_MAX = 0.39f;
+    const float CAVE_THRESHOLD = 0.15f;
+
 #pragma endregion
 
     // Go through every block in the map
@@ -241,8 +241,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 blendChance = 1.0f - (distToEdge / blendZone);
             }
 
+            // If we are in the stone layer and in the desert, use the correct blocks
             if (y > stoneStart && biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
             {
+                // Stone can generate near biome edges
                 if (getRandomChance(rng, blendChance))
                     b.type = Block::stone;
                 else if (getRandomChance(rng, 0.5f))
@@ -250,24 +252,16 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 else
                     b.type = Block::sandStone;
 
+                // Rubies can generate deep in the stone layer
                 if (y > RUBY_THRESHOLD)
                 {
                     if (getRandomChance(rng, RUBY_CHANCE))
                         b.type = Block::sandRuby;
-                    else if (getRandomChance(rng, blendChance))
-                    {
-                        if (getRandomChance(rng, GOLD_CHANCE))
-                            b.type = Block::gold;
-                        else if (getRandomChance(rng, IRON_CHANCE))
-                            b.type = Block::iron;
-                    }
-                    // Copper still has a chance to generate
-                    else if (getRandomChance(rng, COPPER_CHANCE))
-                        b.type = Block::copper;
                 }
-                // Not deep enough for rubies, but copper could still generate
+                // Not deep enough for rubies, but other ores could still generate
                 else if (y > ORE_THRESHOLD)
                 {
+                    // Other ores can generate near biome edges
                     if (getRandomChance(rng, blendChance))
                     {
                         if (getRandomChance(rng, GOLD_CHANCE))
@@ -275,15 +269,18 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                         else if (getRandomChance(rng, IRON_CHANCE))
                             b.type = Block::iron;
                     }
+                    // Copper can generate in the desert
                     else if (getRandomChance(rng, COPPER_CHANCE))
                         b.type = Block::copper;
                 }
             }
 
+            // If we are higher up in the desert, sand generates instead of dirt and grass
             else if (y >= dirtStart && biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
             {
                 b.type = Block::sand;
 
+                // Grass and dirt blocks can generate near biome edges
                 if (getRandomChance(rng, blendChance))
                 {
                     if (y == dirtStart)
@@ -308,16 +305,17 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             // Prevent caves from opening up to the void / edge of the map
             if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
 
+#pragma region generate_caves
             // Cave generation
-            else if (getCaveNoise(x, y) < 0.15f)
+            else if (getCaveNoise(x, y) < CAVE_THRESHOLD)
             {
                 b.type = Block::air;
                 gameMap.getBlockUnsafe(x, y) = b;
 
-                // The background shouldn't be air in caves
+                // The background block shouldn't be air in caves, but the foreground block should be air
                 Block background;
                 background.randIndex = getRandomInt(rng, 0, 3);
-                // If we are in the stone layer in the desert
+                // If we are in the stone layer in the desert, use the correct background blocks
                 if (y > stoneStart && biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
                 {
                     if (getRandomChance(rng, blendChance))
@@ -329,16 +327,18 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
                     gameMap.getWallBlockUnsafe(x, y) = background;
                 }
-                // If we are in the stone layer in the grasslands
+                // If we are in the stone layer in the grasslands, use the correct background block
                 else if (y > stoneStart)
                 {
                     background.type = Block::stone;
                     gameMap.getWallBlockUnsafe(x, y) = background;
                 }
             }
+#pragma endregion
         }
     }
 
+    // Free resources
     FastNoiseSIMD::FreeNoiseSet(dirtPlainNoise);
     FastNoiseSIMD::FreeNoiseSet(stonePlainNoise);
     FastNoiseSIMD::FreeNoiseSet(dirtMountainNoise);

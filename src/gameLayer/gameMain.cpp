@@ -402,8 +402,17 @@ bool updateGame()
 		initGame(false, false);
 	ImGui::Separator();
 
+	ImGui::Text("Cave settings");
 	ImGui::Text("Cave frequency:"); ImGui::SameLine();
 	if(ImGui::SliderFloat("##caveFreq", &worldNoise.caveFrequency, 0.00001f, 0.1f, "%.5f"))
+		initGame(false, false);
+
+	ImGui::Text("Min cave threshold:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##minCaveThresh", &worldNoise.minCaveThreshold, 0.0f, 1.0f, "%.5f"))
+		initGame(false, false);
+
+	ImGui::Text("Max cave threshold:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##maxCaveThresh", &worldNoise.maxCaveThreshold, 0.0f, 1.0f, "%.5f"))
 		initGame(false, false);
 	ImGui::Separator();
 

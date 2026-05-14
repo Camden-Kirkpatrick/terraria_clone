@@ -20,6 +20,9 @@ struct WorldNoise
 
 	int caveOctaves;
 	float caveFrequency;
+
+	float minCaveThreshold;
+	float maxCaveThreshold;
 };
 
 extern WorldNoise worldNoise;

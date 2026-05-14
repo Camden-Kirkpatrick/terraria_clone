@@ -22,6 +22,9 @@ void resetWorldNoise()
 
     worldNoise.caveOctaves = 1;
     worldNoise.caveFrequency = 0.02f;
+
+    worldNoise.minCaveThreshold = 0.65f;
+    worldNoise.maxCaveThreshold = 0.8f;
 }
 
 float lerp(float a, float b, float t)
@@ -38,6 +41,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     std::ranlux24_base rng(seed++);
 
+#pragma region generate_noise
     // Noise generators for different layers, biomes, and caves
     std::unique_ptr<FastNoiseSIMD> dirtNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> stoneNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
@@ -51,7 +55,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     caveNoiseGenerator->SetSeed(seed++);
 
 
-#pragma region generate_noise
     // Noise for mountains
     // Dirt:
     // 1 octave = smooth gentle hills
@@ -138,7 +141,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 #pragma region world_gen_constants
     const int MIN_DIRT_MOUNTAIN_THICKNESS = 1;   // Minimum amount of dirt above stone
     const int MAX_DIRT_MOUNTAIN_THICKNESS = 50;  // Maximum blocks of dirt above stone
-    const int MIN_STONE_MOUNTAIN_START = 330;     // Stone layer is at least 80 blocks from the top
+    const int MIN_STONE_MOUNTAIN_START = 330;    // Stone layer is at least 80 blocks from the top
     const int MAX_STONE_MOUNTAIN_START = 400;    // The top of the stone layer is at most 150 blocks from the top
 
     const int MIN_DIRT_PLAIN_THICKNESS = 1;
@@ -152,7 +155,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     const float COPPER_CHANCE = 0.03f;
 
     const int RUBY_THRESHOLD = 450;
-    const float RUBY_CHANCE = 0.001f;
+    const float RUBY_CHANCE = 0.002f;
 
     const int CLAY_THRESHOLD = 355;
     const float CLAY_CHANCE = 0.8f;
@@ -161,7 +164,9 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     const float MIN_DESERT_THRESHOLD = 0.2f;
     const float MAX_DESERT_THRESHOLD = 0.4f;
 
-    const float CAVE_THRESHOLD = 0.15f;
+    // When the cave noise is in this range, caves will generate
+    //float MIN_CAVE_THRESHOLD = 0.65f;
+    //float MAX_CAVE_THRESHOLD = 0.8f;
 
 #pragma endregion
 
@@ -307,7 +312,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 #pragma region generate_caves
             // Cave generation
-            else if (getCaveNoise(x, y) < CAVE_THRESHOLD)
+            else if (getCaveNoise(x, y) < worldNoise.maxCaveThreshold && getCaveNoise(x, y) > worldNoise.minCaveThreshold)
             {
                 b.type = Block::air;
                 gameMap.getBlockUnsafe(x, y) = b;

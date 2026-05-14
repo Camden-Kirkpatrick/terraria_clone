@@ -166,12 +166,24 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
+#pragma region linerar_interpolation
         // Lerp: find the heights for the stone layer
         int stonePlainStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
         int stoneMountainStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
         // Lerp: find the thicknesses for the dirt layer
         int dirtPlainThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
         int dirtMountainThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
+
+        // NOTE: Plain and mountain settings are NOT isolated to their own biomes.
+        // Because lerp(a, b, t) = a*(1-t) + b*t, both inputs always contribute to the result
+        // unless biomeNoise[x] is exactly 0 or 1 (which essentially never happens with simplex noise).
+        // So changing a "plain" setting still affects mountain columns (weighted by 1 - biomeNoise[x]),
+        // and changing a "mountain" setting still affects plain columns (weighted by biomeNoise[x]).
+        // The effect is more visible for mountain settings because their min/max ranges are much
+        // wider than the plain ranges (e.g. stoneMountainStart spans 70 blocks vs 5 for stonePlainStart),
+        // so the same blend weight produces a larger absolute shift.
+        // The same leak applies to the plain/mountain noise frequency and octaves: they only shape
+        // their own noise array, but those arrays feed back into this lerp and bleed across biomes.
 
         // Lerp: find the stone height and dirt thickness based on the biome
         // Biome noise close to 0 generates plain-like terrain
@@ -180,6 +192,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         int dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, biomeNoise[x]);
         // Dirt generates dirtThickness blocks above the stone layer
         int dirtStart = stoneStart - dirtThickness;
+#pragma endregion
 
         // Set the block type based on the current depth
         for (int y = 0; y < HEIGHT; y++)

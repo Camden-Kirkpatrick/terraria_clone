@@ -67,15 +67,11 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     // Noise for mountains
     // Dirt:
-    // 1 octave = smooth gentle hills
-    // Higher frequency = samples further apart on the noise curve = rapid value changes = narrow steep hills
     dirtNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
     dirtNoiseGenerator->SetFractalOctaves(worldGen.dirtMountainOctaves);
     dirtNoiseGenerator->SetFrequency(worldGen.dirtMountainFrequency);
 
     // Stone:
-    // 4 octaves = rougher jagged terrain
-    // Lower frequency = samples closer together on the noise curve = gradual value changes = broad wide hills
     stoneNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
     stoneNoiseGenerator->SetFractalOctaves(worldGen.stoneMountainOctaves);
     stoneNoiseGenerator->SetFrequency(worldGen.stoneMountainFrequency);
@@ -170,10 +166,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
-        // Lerp: find the heights for stone in the different biomes
+        // Lerp: find the heights for the stone layer
         int stonePlainStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
         int stoneMountainStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
-        // Lerp: find the thicknesses for dirt in the different biomes
+        // Lerp: find the thicknesses for the dirt layer
         int dirtPlainThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
         int dirtMountainThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
 
@@ -182,7 +178,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         // Biome noise close to 1 generates mountain-like terrain
         int stoneStart = lerp(stonePlainStart, stoneMountainStart, biomeNoise[x]);
         int dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, biomeNoise[x]);
-
+        // Dirt generates dirtThickness blocks above the stone layer
         int dirtStart = stoneStart - dirtThickness;
 
         // Set the block type based on the current depth
@@ -201,7 +197,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     // GOLD_CHANCE chance for gold to generate instead of stone
                     if (getRandomChance(rng, GOLD_CHANCE))
                         b.type = Block::gold;
-                    // If gold doesn't generate, see if iron will
+                    // If gold doesn't generate, iron has a chance to
                     else if (getRandomChance(rng, IRON_CHANCE))
                         b.type = Block::iron;
                 }

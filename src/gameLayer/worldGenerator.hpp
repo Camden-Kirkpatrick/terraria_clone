@@ -12,13 +12,19 @@ struct WorldNoise
 
 	int minDirtMountainThickness;   // Minimum amount of dirt above stone
 	int maxDirtMountainThickness;   // Maximum blocks of dirt above stone
-	int minStoneMountainStart;      // Stone layer is at least 80 blocks from the top
-	int maxStoneMountainStart;      // The top of the stone layer is at most 150 blocks from the top
+	int minStoneMountainStart;      // Stone layer is at least this many blocks from the top
+	int maxStoneMountainStart;      // The top of the stone layer is at most this many blocks from the top
 
 	int dirtPlainOctaves;
 	float dirtPlainFrequency;
 	int stonePlainOctaves;
 	float stonePlainFrequency;
+
+	// Same settings as the ones above, but for plains instead of mountains
+	int minDirtPlainThickness;
+	int maxDirtPlainThickness;
+	int minStonePlainStart;
+	int maxStonePlainStart;
 
 	int biomeOctaves;
 	float biomeFrequency;

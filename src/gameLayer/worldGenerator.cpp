@@ -22,6 +22,11 @@ void resetWorldNoise()
     worldNoise.stonePlainOctaves = 4;
     worldNoise.stonePlainFrequency = 0.005f;
 
+    worldNoise.minDirtPlainThickness = 1;
+    worldNoise.maxDirtPlainThickness = 6;
+    worldNoise.minStonePlainStart = 330;
+    worldNoise.maxStonePlainStart = 335;
+
     worldNoise.biomeOctaves = 1;
     worldNoise.biomeFrequency = 0.00025f;
 
@@ -149,10 +154,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     //const int MIN_STONE_MOUNTAIN_START = 330;    // Stone layer is at least 80 blocks from the top
     //const int MAX_STONE_MOUNTAIN_START = 400;    // The top of the stone layer is at most 150 blocks from the top
 
-    const int MIN_DIRT_PLAIN_THICKNESS = 1;
-    const int MAX_DIRT_PLAIN_THICKNESS = 5;
-    const int MIN_STONE_PLAIN_START = 330;
-    const int MAX_STONE_PLAIN_START = 335;
+    //const int MIN_DIRT_PLAIN_THICKNESS = 1;
+    //const int MAX_DIRT_PLAIN_THICKNESS = 5;
+    //const int MIN_STONE_PLAIN_START = 330;
+    //const int MAX_STONE_PLAIN_START = 335;
 
     const int ORE_THRESHOLD = 375;
     const float GOLD_CHANCE = 0.01f;
@@ -179,10 +184,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     for (int x = 0; x < WIDTH; x++)
     {
         // Lerp: find the heights for stone in the different biomes
-        int stonePlainStart = lerp(MIN_STONE_PLAIN_START, MAX_STONE_PLAIN_START, stonePlainNoise[x]);
+        int stonePlainStart = lerp(worldNoise.minStonePlainStart, worldNoise.maxStonePlainStart, stonePlainNoise[x]);
         int stoneMountainStart = lerp(worldNoise.minStoneMountainStart, worldNoise.maxStoneMountainStart, stoneMountainNoise[x]);
         // Lerp: find the thicknesses for dirt in the different biomes
-        int dirtPlainThickness = lerp(MIN_DIRT_PLAIN_THICKNESS, MAX_DIRT_PLAIN_THICKNESS, dirtPlainNoise[x]);
+        int dirtPlainThickness = lerp(worldNoise.minDirtPlainThickness, worldNoise.maxDirtPlainThickness, dirtPlainNoise[x]);
         int dirtMountainThickness = lerp(worldNoise.minDirtMountainThickness, worldNoise.maxDirtMountainThickness, dirtMountainNoise[x]);
 
         // Lerp: find the stone height and dirt thickness based on the biome

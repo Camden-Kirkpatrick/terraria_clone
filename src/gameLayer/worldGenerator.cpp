@@ -271,10 +271,9 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 {
                     if (getRandomChance(rng, worldGen.rubyChance))
                         b.type = Block::sandRuby;
-                }
-                // Not deep enough for rubies, but other ores could still generate
-                else if (y > worldGen.oreThreshold)
-                {
+                    // Copper still has a chance to generate
+                    else if (getRandomChance(rng, worldGen.copperChance))
+                        b.type = Block::copper;
                     // Other ores can generate near biome edges
                     if (getRandomChance(rng, blendChance))
                     {
@@ -283,9 +282,19 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                         else if (getRandomChance(rng, worldGen.ironChance))
                             b.type = Block::iron;
                     }
-                    // Copper can generate in the desert
-                    else if (getRandomChance(rng, worldGen.copperChance))
+                }
+                // Not deep enough for rubies, but copper and other ores could still generate
+                else if (y > worldGen.oreThreshold)
+                {
+                    if (getRandomChance(rng, worldGen.copperChance))
                         b.type = Block::copper;
+                    else if (getRandomChance(rng, blendChance))
+                    {
+                        if (getRandomChance(rng, worldGen.goldChance))
+                            b.type = Block::gold;
+                        else if (getRandomChance(rng, worldGen.ironChance))
+                            b.type = Block::iron;
+                    }
                 }
             }
 

@@ -8,6 +8,8 @@
 [![Watch the video](https://img.youtube.com/vi/oxETT8wUXEo/maxresdefault.jpg)](https://www.youtube.com/watch?v=oxETT8wUXEo)
 ## Video (v1.2.0)
 [![Watch the video](https://img.youtube.com/vi/VrONU5dpWRQ/maxresdefault.jpg)](https://youtu.be/VrONU5dpWRQ)
+## Video (v1.3.0)
+[![Watch the video](https://img.youtube.com/vi/4QnyahOjVzM/maxresdefault.jpg)](https://www.youtube.com/watch?v=4QnyahOjVzM)
 
 
 ## Features

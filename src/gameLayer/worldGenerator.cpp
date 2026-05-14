@@ -37,6 +37,9 @@ void resetWorldGen()
     // When the biome noise is in this range, deserts will generate
     worldGen.minDesertThreshold = 0.2f;
     worldGen.maxDesertThreshold = 0.4f;
+    // This is the width (in noise units) of the band near each boundary where blending happens
+    // With 0.015, only columns whose noise is within 0.015 of a boundary will receive any grassy-biome blocks
+    worldGen.blendZone = 0.015f;
 
     // Cave settings
     worldGen.caveOctaves = 1;
@@ -206,7 +209,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 #pragma region grasslands_biome
             // When y is deeper than the stone surface, stone can generate
-            if (y > stoneStart && (biomeNoise[x] <= MIN_DESERT_THRESHOLD || biomeNoise[x] >= MAX_DESERT_THRESHOLD))
+            if (y > stoneStart && (biomeNoise[x] <= worldGen.minDesertThreshold || biomeNoise[x] >= worldGen.maxDesertThreshold))
             {
                 b.type = Block::stone;
                 // Gold can generate further down in the stone layer
@@ -222,7 +225,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             }
 
             // When y is above the dirtHeight threshold, dirt can generate
-            else if (y > dirtStart && (biomeNoise[x] <= MIN_DESERT_THRESHOLD || biomeNoise[x] >= MAX_DESERT_THRESHOLD))
+            else if (y > dirtStart && (biomeNoise[x] <= worldGen.minDesertThreshold || biomeNoise[x] >= worldGen.maxDesertThreshold))
             {
                 b.type = Block::dirt;
                 // Clay can generate further down in the dirt layer
@@ -235,7 +238,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             }
                 
             // When y is exactly equal to the dirtHeight threshold, grass generates
-            else if (y == dirtStart && (biomeNoise[x] <= MIN_DESERT_THRESHOLD || biomeNoise[x] >= MAX_DESERT_THRESHOLD))
+            else if (y == dirtStart && (biomeNoise[x] <= worldGen.minDesertThreshold || biomeNoise[x] >= worldGen.maxDesertThreshold))
                 b.type = Block::grassBlock;
 #pragma endregion
 
@@ -244,21 +247,18 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             float blendZone = 0.0f;
             float blendChance = 0.0f;
 
-            if (biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
+            if (biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
             {
                 // How close are we the the nearest edge of the desert
-                distToEdge = std::min(biomeNoise[x] - MIN_DESERT_THRESHOLD, MAX_DESERT_THRESHOLD - biomeNoise[x]);
-                // This is the width (in noise units) of the band near each boundary where blending happens
-                // With 0.015, only columns whose noise is within 0.015 of a boundary will receive any grassy-biome blocks
-                blendZone = 0.015f;
+                distToEdge = std::min(biomeNoise[x] - worldGen.minDesertThreshold, worldGen.maxDesertThreshold - biomeNoise[x]);
                 // Probability of placing grassy biome blocks instead of desert blocks.
                 // High near the desert boundary, zero in the interior.
-                // e.g. distToEdge=0.000 (boundary) -> chance=1.0, distToEdge=0.008 (halfway) -> chance=0.47, distToEdge=0.015+ (interior) -> chance=0.0
-                blendChance = 1.0f - (distToEdge / blendZone);
+                // e.g. distToEdge=0.000 (boundary) -> chance=1.0, distToEdge=blendZone/2 (halfway) -> chance=0.5, distToEdge=blendZone (interior) -> chance=0.0
+                blendChance = 1.0f - (distToEdge / worldGen.blendZone);
             }
 
             // If we are in the stone layer and in the desert, use the correct blocks
-            if (y > stoneStart && biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
+            if (y > stoneStart && biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
             {
                 // Stone can generate near biome edges
                 if (getRandomChance(rng, blendChance))
@@ -292,7 +292,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             }
 
             // If we are higher up in the desert, sand generates instead of dirt and grass
-            else if (y >= dirtStart && biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
+            else if (y >= dirtStart && biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
             {
                 b.type = Block::sand;
 
@@ -332,7 +332,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 Block background;
                 background.randIndex = getRandomInt(rng, 0, 3);
                 // If we are in the stone layer in the desert, use the correct background blocks
-                if (y > stoneStart && biomeNoise[x] > MIN_DESERT_THRESHOLD && biomeNoise[x] < MAX_DESERT_THRESHOLD)
+                if (y > stoneStart && biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
                 {
                     if (getRandomChance(rng, blendChance))
                         background.type = Block::stone;

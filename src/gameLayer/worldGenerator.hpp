@@ -34,6 +34,7 @@ struct WorldGen
 	float biomeFrequency;
 	float minDesertThreshold;
 	float maxDesertThreshold;
+	float blendZone;
 
 	// Cave settings
 	int caveOctaves;

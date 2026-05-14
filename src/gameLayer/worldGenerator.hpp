@@ -60,5 +60,6 @@ extern WorldGen worldGen;
 extern int seed;
 
 void resetWorldGen();
+void flatWorld();
 float lerp(float a, float b, float t);
 void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed = DEFAULT_SEED, bool resetWorldGen = true);

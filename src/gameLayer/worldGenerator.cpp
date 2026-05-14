@@ -42,7 +42,7 @@ void resetWorldGen()
     worldGen.blendZone = 0.015f;
 
     // Cave settings
-    worldGen.caveOctaves = 1;
+    worldGen.caveOctaves = 4;
     worldGen.caveFrequency = 0.02f;
     // When the cave noise is in this range, caves will generate
     worldGen.minCaveThreshold = 0.65f;
@@ -60,6 +60,19 @@ void resetWorldGen()
     // Clay
     worldGen.clayThreshold = 355;
     worldGen.clayChance = 0.8f;
+}
+
+void flatWorld()
+{
+    worldGen.minDirtMountainThickness = 1;
+    worldGen.maxDirtMountainThickness = 1;
+    worldGen.minStoneMountainStart = 330;
+    worldGen.maxStoneMountainStart = 330;
+
+    worldGen.minDirtPlainThickness = 1;
+    worldGen.maxDirtPlainThickness = 1;
+    worldGen.minStonePlainStart = 330;
+    worldGen.maxStonePlainStart = 330;
 }
 
 float lerp(float a, float b, float t)

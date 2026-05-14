@@ -10,7 +10,7 @@
 #include <fstream>
 #include <iostream>
 
-#define WORLD_WIDTH 1000
+#define WORLD_WIDTH 500
 #define WORLD_HEIGHT 500
 
 #define MIN_CAM_ZOOM 10.0f
@@ -361,8 +361,8 @@ bool updateGame()
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
 	EndMode2D();
 
-#pragma region game_controls
-	ImGui::Begin("Game control");
+#pragma region game_menu
+	ImGui::Begin("Game Menu");
 
 	ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
 	ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
@@ -483,10 +483,16 @@ bool updateGame()
 		initGame(false, false);
 
 
-
 	if (ImGui::Button("Reset world generation settings"))
 	{
 		resetWorldGen();
+		initGame(false, false);
+	}
+
+	if (ImGui::Button("Generate flat world"))
+	{
+		resetWorldGen();
+		flatWorld();
 		initGame(false, false);
 	}
 

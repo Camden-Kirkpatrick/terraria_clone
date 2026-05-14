@@ -41,6 +41,19 @@ struct WorldGen
 	float caveFrequency;
 	float minCaveThreshold;
 	float maxCaveThreshold;
+
+	// Special block settings
+	// Ores
+	int oreThreshold;
+	float goldChance;
+	float ironChance;
+	float copperChance;
+	// Rubies
+	int rubyThreshold;
+	float rubyChance;
+	// Clay
+	int clayThreshold;
+	float clayChance;
 };
 
 extern WorldGen worldGen;

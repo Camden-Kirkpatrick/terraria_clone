@@ -47,6 +47,19 @@ void resetWorldGen()
     // When the cave noise is in this range, caves will generate
     worldGen.minCaveThreshold = 0.65f;
     worldGen.maxCaveThreshold = 0.8f;
+
+    // Special block settings
+    // Ores
+    worldGen.oreThreshold = 375;
+    worldGen.goldChance = 0.01f;
+    worldGen.ironChance = 0.02f;
+    worldGen.copperChance = 0.03f;
+    // Rubies
+    worldGen.rubyThreshold = 450;
+    worldGen.rubyChance = 0.002f;
+    // Clay
+    worldGen.clayThreshold = 355;
+    worldGen.clayChance = 0.8f;
 }
 
 float lerp(float a, float b, float t)
@@ -156,21 +169,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     };
 #pragma endregion
 
-#pragma region world_gen_constants
-
-    const int ORE_THRESHOLD = 375;
-    const float GOLD_CHANCE = 0.01f;
-    const float IRON_CHANCE = 0.02f;
-    const float COPPER_CHANCE = 0.03f;
-
-    const int RUBY_THRESHOLD = 450;
-    const float RUBY_CHANCE = 0.002f;
-
-    const int CLAY_THRESHOLD = 355;
-    const float CLAY_CHANCE = 0.8f;
-
-#pragma endregion
-
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
@@ -213,13 +211,13 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             {
                 b.type = Block::stone;
                 // Gold can generate further down in the stone layer
-                if (y > ORE_THRESHOLD)
+                if (y > worldGen.oreThreshold)
                 {
-                    // GOLD_CHANCE chance for gold to generate instead of stone
-                    if (getRandomChance(rng, GOLD_CHANCE))
+                    // worldGen.goldChance chance for gold to generate instead of stone
+                    if (getRandomChance(rng, worldGen.goldChance))
                         b.type = Block::gold;
                     // If gold doesn't generate, iron has a chance to
-                    else if (getRandomChance(rng, IRON_CHANCE))
+                    else if (getRandomChance(rng, worldGen.ironChance))
                         b.type = Block::iron;
                 }
             }
@@ -229,10 +227,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             {
                 b.type = Block::dirt;
                 // Clay can generate further down in the dirt layer
-                if (y > CLAY_THRESHOLD)
+                if (y > worldGen.clayThreshold)
                 {
-                    // CLAY_CHANCE chance for clay to generate instead of dirt
-                    if (getRandomChance(rng, CLAY_CHANCE))
+                    // worldGen.clayChance chance for clay to generate instead of dirt
+                    if (getRandomChance(rng, worldGen.clayChance))
                         b.type = Block::clay;
                 }
             }
@@ -249,7 +247,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
             if (biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
             {
-                // How close are we the the nearest edge of the desert
+                // How close are we to the nearest edge of the desert
                 distToEdge = std::min(biomeNoise[x] - worldGen.minDesertThreshold, worldGen.maxDesertThreshold - biomeNoise[x]);
                 // Probability of placing grassy biome blocks instead of desert blocks.
                 // High near the desert boundary, zero in the interior.
@@ -269,24 +267,24 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     b.type = Block::sandStone;
 
                 // Rubies can generate deep in the stone layer
-                if (y > RUBY_THRESHOLD)
+                if (y > worldGen.rubyThreshold)
                 {
-                    if (getRandomChance(rng, RUBY_CHANCE))
+                    if (getRandomChance(rng, worldGen.rubyChance))
                         b.type = Block::sandRuby;
                 }
                 // Not deep enough for rubies, but other ores could still generate
-                else if (y > ORE_THRESHOLD)
+                else if (y > worldGen.oreThreshold)
                 {
                     // Other ores can generate near biome edges
                     if (getRandomChance(rng, blendChance))
                     {
-                        if (getRandomChance(rng, GOLD_CHANCE))
+                        if (getRandomChance(rng, worldGen.goldChance))
                             b.type = Block::gold;
-                        else if (getRandomChance(rng, IRON_CHANCE))
+                        else if (getRandomChance(rng, worldGen.ironChance))
                             b.type = Block::iron;
                     }
                     // Copper can generate in the desert
-                    else if (getRandomChance(rng, COPPER_CHANCE))
+                    else if (getRandomChance(rng, worldGen.copperChance))
                         b.type = Block::copper;
                 }
             }

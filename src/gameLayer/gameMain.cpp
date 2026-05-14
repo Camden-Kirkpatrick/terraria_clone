@@ -362,6 +362,7 @@ bool updateGame()
 	EndMode2D();
 
 #pragma region game_menu
+#if PRODUCTION_BUILD == 0 || MENU
 	ImGui::Begin("Game Menu");
 
 	ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
@@ -497,6 +498,7 @@ bool updateGame()
 	}
 
 	ImGui::End();
+#endif
 #pragma endregion
 
 	DrawFPS(10, 10); // FPS counter

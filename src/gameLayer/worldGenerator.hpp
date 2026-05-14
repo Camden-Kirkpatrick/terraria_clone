@@ -3,7 +3,7 @@
 
 #define DEFAULT_SEED 1234
 
-struct WorldNoise
+struct WorldGen
 {
 	int dirtMountainOctaves;
 	float dirtMountainFrequency;
@@ -37,9 +37,9 @@ struct WorldNoise
 	float maxCaveThreshold;
 };
 
-extern WorldNoise worldNoise;
+extern WorldGen worldGen;
 extern int seed;
 
-void resetWorldNoise();
+void resetWorldGen();
 float lerp(float a, float b, float t);
-void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed = DEFAULT_SEED, bool resetNoise = true);
+void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed = DEFAULT_SEED, bool resetWorldGen = true);

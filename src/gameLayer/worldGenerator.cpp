@@ -2,39 +2,39 @@
 #include "randomStuff.hpp"
 #include <FastNoiseSIMD.h>
 
-WorldNoise worldNoise;
+WorldGen worldGen;
 int seed = DEFAULT_SEED;
 
-void resetWorldNoise()
+void resetWorldGen()
 {
-    worldNoise.dirtMountainOctaves = 1;
-    worldNoise.dirtMountainFrequency = 0.02f;
-    worldNoise.stoneMountainOctaves = 4;
-    worldNoise.stoneMountainFrequency = 0.01f;
+    worldGen.dirtMountainOctaves = 1;
+    worldGen.dirtMountainFrequency = 0.02f;
+    worldGen.stoneMountainOctaves = 4;
+    worldGen.stoneMountainFrequency = 0.01f;
 
-    worldNoise.minDirtMountainThickness = 1;
-    worldNoise.maxDirtMountainThickness = 50;
-    worldNoise.minStoneMountainStart = 330;
-    worldNoise.maxStoneMountainStart = 400;
+    worldGen.minDirtMountainThickness = 1;
+    worldGen.maxDirtMountainThickness = 50;
+    worldGen.minStoneMountainStart = 330;
+    worldGen.maxStoneMountainStart = 400;
 
-    worldNoise.dirtPlainOctaves = 1;
-    worldNoise.dirtPlainFrequency = 0.0025f;
-    worldNoise.stonePlainOctaves = 4;
-    worldNoise.stonePlainFrequency = 0.005f;
+    worldGen.dirtPlainOctaves = 1;
+    worldGen.dirtPlainFrequency = 0.0025f;
+    worldGen.stonePlainOctaves = 4;
+    worldGen.stonePlainFrequency = 0.005f;
 
-    worldNoise.minDirtPlainThickness = 1;
-    worldNoise.maxDirtPlainThickness = 6;
-    worldNoise.minStonePlainStart = 330;
-    worldNoise.maxStonePlainStart = 335;
+    worldGen.minDirtPlainThickness = 1;
+    worldGen.maxDirtPlainThickness = 6;
+    worldGen.minStonePlainStart = 330;
+    worldGen.maxStonePlainStart = 335;
 
-    worldNoise.biomeOctaves = 1;
-    worldNoise.biomeFrequency = 0.00025f;
+    worldGen.biomeOctaves = 1;
+    worldGen.biomeFrequency = 0.00025f;
 
-    worldNoise.caveOctaves = 1;
-    worldNoise.caveFrequency = 0.02f;
+    worldGen.caveOctaves = 1;
+    worldGen.caveFrequency = 0.02f;
 
-    worldNoise.minCaveThreshold = 0.65f;
-    worldNoise.maxCaveThreshold = 0.8f;
+    worldGen.minCaveThreshold = 0.65f;
+    worldGen.maxCaveThreshold = 0.8f;
 }
 
 float lerp(float a, float b, float t)
@@ -42,10 +42,10 @@ float lerp(float a, float b, float t)
     return a + (b - a) * t;
 }
 
-void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed, bool resetNoise)
+void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed, bool resetWrldGen)
 {
-    if (resetNoise)
-        resetWorldNoise();
+    if (resetWrldGen)
+        resetWorldGen();
 
     gameMap.create(WIDTH, HEIGHT);
 
@@ -70,15 +70,15 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // 1 octave = smooth gentle hills
     // Higher frequency = samples further apart on the noise curve = rapid value changes = narrow steep hills
     dirtNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    dirtNoiseGenerator->SetFractalOctaves(worldNoise.dirtMountainOctaves);
-    dirtNoiseGenerator->SetFrequency(worldNoise.dirtMountainFrequency);
+    dirtNoiseGenerator->SetFractalOctaves(worldGen.dirtMountainOctaves);
+    dirtNoiseGenerator->SetFrequency(worldGen.dirtMountainFrequency);
 
     // Stone:
     // 4 octaves = rougher jagged terrain
     // Lower frequency = samples closer together on the noise curve = gradual value changes = broad wide hills
     stoneNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    stoneNoiseGenerator->SetFractalOctaves(worldNoise.stoneMountainOctaves);
-    stoneNoiseGenerator->SetFrequency(worldNoise.stoneMountainFrequency);
+    stoneNoiseGenerator->SetFractalOctaves(worldGen.stoneMountainOctaves);
+    stoneNoiseGenerator->SetFrequency(worldGen.stoneMountainFrequency);
 
     // One float per world column, each will be filled with a value in roughly [-1, 1]
     float* dirtMountainNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
@@ -92,13 +92,13 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // Noise for plains
     // Dirt:
     dirtNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    dirtNoiseGenerator->SetFractalOctaves(worldNoise.dirtPlainOctaves);
-    dirtNoiseGenerator->SetFrequency(worldNoise.dirtPlainFrequency);
+    dirtNoiseGenerator->SetFractalOctaves(worldGen.dirtPlainOctaves);
+    dirtNoiseGenerator->SetFrequency(worldGen.dirtPlainFrequency);
 
     // Stone:
     stoneNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    stoneNoiseGenerator->SetFractalOctaves(worldNoise.stonePlainOctaves);
-    stoneNoiseGenerator->SetFrequency(worldNoise.stonePlainFrequency);
+    stoneNoiseGenerator->SetFractalOctaves(worldGen.stonePlainOctaves);
+    stoneNoiseGenerator->SetFrequency(worldGen.stonePlainFrequency);
 
     float* dirtPlainNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
     float* stonePlainNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
@@ -109,9 +109,9 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     // Noise for switching between biomes
     biomeNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    biomeNoiseGenerator->SetFractalOctaves(worldNoise.biomeOctaves);
+    biomeNoiseGenerator->SetFractalOctaves(worldGen.biomeOctaves);
     // Lower frequency = larger biome regions, slower transitions between plains and mountains
-    biomeNoiseGenerator->SetFrequency(worldNoise.biomeFrequency);
+    biomeNoiseGenerator->SetFrequency(worldGen.biomeFrequency);
 
     float* biomeNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
 
@@ -120,8 +120,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     // Noise for caves
     caveNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    caveNoiseGenerator->SetFractalOctaves(worldNoise.caveOctaves);
-    caveNoiseGenerator->SetFrequency(worldNoise.caveFrequency);
+    caveNoiseGenerator->SetFractalOctaves(worldGen.caveOctaves);
+    caveNoiseGenerator->SetFrequency(worldGen.caveFrequency);
 
     float* caveNoise = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
 
@@ -149,15 +149,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 #pragma endregion
 
 #pragma region world_gen_constants
-    //const int MIN_DIRT_MOUNTAIN_THICKNESS = 1;   // Minimum amount of dirt above stone
-    //const int MAX_DIRT_MOUNTAIN_THICKNESS = 50;  // Maximum blocks of dirt above stone
-    //const int MIN_STONE_MOUNTAIN_START = 330;    // Stone layer is at least 80 blocks from the top
-    //const int MAX_STONE_MOUNTAIN_START = 400;    // The top of the stone layer is at most 150 blocks from the top
-
-    //const int MIN_DIRT_PLAIN_THICKNESS = 1;
-    //const int MAX_DIRT_PLAIN_THICKNESS = 5;
-    //const int MIN_STONE_PLAIN_START = 330;
-    //const int MAX_STONE_PLAIN_START = 335;
 
     const int ORE_THRESHOLD = 375;
     const float GOLD_CHANCE = 0.01f;
@@ -174,21 +165,17 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     const float MIN_DESERT_THRESHOLD = 0.2f;
     const float MAX_DESERT_THRESHOLD = 0.4f;
 
-    
-    //float MIN_CAVE_THRESHOLD = 0.65f;
-    //float MAX_CAVE_THRESHOLD = 0.8f;
-
 #pragma endregion
 
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
         // Lerp: find the heights for stone in the different biomes
-        int stonePlainStart = lerp(worldNoise.minStonePlainStart, worldNoise.maxStonePlainStart, stonePlainNoise[x]);
-        int stoneMountainStart = lerp(worldNoise.minStoneMountainStart, worldNoise.maxStoneMountainStart, stoneMountainNoise[x]);
+        int stonePlainStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
+        int stoneMountainStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
         // Lerp: find the thicknesses for dirt in the different biomes
-        int dirtPlainThickness = lerp(worldNoise.minDirtPlainThickness, worldNoise.maxDirtPlainThickness, dirtPlainNoise[x]);
-        int dirtMountainThickness = lerp(worldNoise.minDirtMountainThickness, worldNoise.maxDirtMountainThickness, dirtMountainNoise[x]);
+        int dirtPlainThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
+        int dirtMountainThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
 
         // Lerp: find the stone height and dirt thickness based on the biome
         // Biome noise close to 0 generates plain-like terrain
@@ -322,7 +309,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 #pragma region generate_caves
             // Cave generation
-            else if (getCaveNoise(x, y) < worldNoise.maxCaveThreshold && getCaveNoise(x, y) > worldNoise.minCaveThreshold)
+            else if (getCaveNoise(x, y) < worldGen.maxCaveThreshold && getCaveNoise(x, y) > worldGen.minCaveThreshold)
             {
                 b.type = Block::air;
                 gameMap.getBlockUnsafe(x, y) = b;

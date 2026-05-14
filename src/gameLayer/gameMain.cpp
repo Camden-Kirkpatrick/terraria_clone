@@ -36,16 +36,16 @@ struct GameData
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
 
-bool initGame(bool resetNoise, bool resetCamera)
+bool initGame(bool resetWorldGen, bool resetCamera)
 {
 	// Load assets (textures)
 	assetManager.loadAll();
 
-	if (resetNoise)
+	if (resetWorldGen)
 		seed = DEFAULT_SEED;
 
 	// Generate the world
-	generateWorld(gameData.gameMap, WORLD_WIDTH, WORLD_HEIGHT, seed, resetNoise);
+	generateWorld(gameData.gameMap, WORLD_WIDTH, WORLD_HEIGHT, seed, resetWorldGen);
 
 	// Camera setup
 	if (resetCamera)
@@ -368,82 +368,86 @@ bool updateGame()
 	ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 	ImGui::Separator();
 
+
 	ImGui::Text("Seed:"); ImGui::SameLine();
 	if(ImGui::InputInt("##seed", &seed))
 		initGame(false, false);
 	ImGui::Separator();
 
+
 	ImGui::Text("Mountain settings");
-	//ImGui::Text("Dirt mountain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtMtnOct", &worldNoise.dirtMountainOctaves, 1, 20);
+	//ImGui::Text("Dirt mountain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtMtnOct", &worldGen.dirtMountainOctaves, 1, 20);
 	ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine(); 
-	if (ImGui::SliderFloat("##dirtMtnFreq", &worldNoise.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f"))
+	if (ImGui::SliderFloat("##dirtMtnFreq", &worldGen.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f"))
 		initGame(false, false);
 	ImGui::Text("Min dirt mountain thickness:"); ImGui::SameLine();
-	if (ImGui::SliderInt("##minDirtMtnThick", &worldNoise.minDirtMountainThickness, 1, 50))
+	if (ImGui::SliderInt("##minDirtMtnThick", &worldGen.minDirtMountainThickness, 1, 50))
 		initGame(false, false);
 	ImGui::Text("Max dirt mountain thickness:"); ImGui::SameLine();
-	if (ImGui::SliderInt("##maxDirtMtnThick", &worldNoise.maxDirtMountainThickness, 1, 50))
+	if (ImGui::SliderInt("##maxDirtMtnThick", &worldGen.maxDirtMountainThickness, 1, 50))
 		initGame(false, false);
 
-	//ImGui::Text("Stone mountain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnMtnOct", &worldNoise.stoneMountainOctaves, 1, 20);
+	//ImGui::Text("Stone mountain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnMtnOct", &worldGen.stoneMountainOctaves, 1, 20);
 	ImGui::Text("Stone mountain frequency:"); ImGui::SameLine();
-	if (ImGui::SliderFloat("##stnMtnFreq", &worldNoise.stoneMountainFrequency, 0.00001f, 0.1f, "%.5f"))
+	if (ImGui::SliderFloat("##stnMtnFreq", &worldGen.stoneMountainFrequency, 0.00001f, 0.1f, "%.5f"))
 		initGame(false, false);
 	ImGui::Text("Min stone mountain start:"); ImGui::SameLine();
-	if (ImGui::SliderInt("##minStoneMtnStart", &worldNoise.minStoneMountainStart, 330, 400))
+	if (ImGui::SliderInt("##minStoneMtnStart", &worldGen.minStoneMountainStart, 330, 400))
 		initGame(false, false);
 	ImGui::Text("Max stone mountain start:"); ImGui::SameLine();
-	if (ImGui::SliderInt("##maxStoneMtnStart", &worldNoise.maxStoneMountainStart, 330, 400))
+	if (ImGui::SliderInt("##maxStoneMtnStart", &worldGen.maxStoneMountainStart, 330, 400))
 		initGame(false, false);
 	ImGui::Separator();
+
 
 	ImGui::Text("Plains settings");
-	//ImGui::Text("Dirt plain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtPlnOct", &worldNoise.dirtPlainOctaves, 1, 20);
+	//ImGui::Text("Dirt plain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtPlnOct", &worldGen.dirtPlainOctaves, 1, 20);
 	ImGui::Text("Dirt plain frequency:"); ImGui::SameLine();
-	if (ImGui::SliderFloat("##dirtPlnFreq", &worldNoise.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f"))
+	if (ImGui::SliderFloat("##dirtPlnFreq", &worldGen.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f"))
 		initGame(false, false);
 	ImGui::Text("Min dirt plain thickness:"); ImGui::SameLine();
-	if (ImGui::SliderInt("##minDirtPlnThick", &worldNoise.minDirtPlainThickness, 1, 50))
+	if (ImGui::SliderInt("##minDirtPlnThick", &worldGen.minDirtPlainThickness, 1, 50))
 		initGame(false, false);
 	ImGui::Text("Max dirt plain thickness:"); ImGui::SameLine();
-	if (ImGui::SliderInt("##maxDirtPlnThick", &worldNoise.maxDirtPlainThickness, 1, 50))
+	if (ImGui::SliderInt("##maxDirtPlnThick", &worldGen.maxDirtPlainThickness, 1, 50))
 		initGame(false, false);
 
-	//ImGui::Text("Stone plain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnPlnOct", &worldNoise.stonePlainOctaves, 1, 20);
+	//ImGui::Text("Stone plain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnPlnOct", &worldGen.stonePlainOctaves, 1, 20);
 	ImGui::Text("Stone plain frequency:"); ImGui::SameLine();
-	if (ImGui::SliderFloat("##stnPlnFreq", &worldNoise.stonePlainFrequency, 0.00001f, 0.1f, "%.5f"))
+	if (ImGui::SliderFloat("##stnPlnFreq", &worldGen.stonePlainFrequency, 0.00001f, 0.1f, "%.5f"))
 		initGame(false, false);
 	ImGui::Text("Min stone plain start:"); ImGui::SameLine();
-	if (ImGui::SliderInt("##minStonePlnStart", &worldNoise.minStonePlainStart, 330, 400))
+	if (ImGui::SliderInt("##minStonePlnStart", &worldGen.minStonePlainStart, 330, 400))
 		initGame(false, false);
 	ImGui::Text("Max stone plain start:"); ImGui::SameLine();
-	if (ImGui::SliderInt("##maxStonePlnStart", &worldNoise.maxStonePlainStart, 330, 400))
+	if (ImGui::SliderInt("##maxStonePlnStart", &worldGen.maxStonePlainStart, 330, 400))
 		initGame(false, false);
 	ImGui::Separator();
+
 
 	ImGui::Text("Biome settings");
 	ImGui::Text("Biome frequency:"); ImGui::SameLine();
-	if(ImGui::SliderFloat("##biomeFreq", &worldNoise.biomeFrequency, 0.00001f, 0.001f, "%.5f"))
+	if(ImGui::SliderFloat("##biomeFreq", &worldGen.biomeFrequency, 0.00001f, 0.001f, "%.5f"))
 		initGame(false, false);
 	ImGui::Separator();
+
 
 	ImGui::Text("Cave settings");
 	ImGui::Text("Cave frequency:"); ImGui::SameLine();
-	if(ImGui::SliderFloat("##caveFreq", &worldNoise.caveFrequency, 0.00001f, 0.1f, "%.5f"))
+	if(ImGui::SliderFloat("##caveFreq", &worldGen.caveFrequency, 0.00001f, 0.1f, "%.5f"))
 		initGame(false, false);
-
 	ImGui::Text("Min cave threshold:"); ImGui::SameLine();
-	if (ImGui::SliderFloat("##minCaveThresh", &worldNoise.minCaveThreshold, 0.0f, 1.0f, "%.5f"))
+	if (ImGui::SliderFloat("##minCaveThresh", &worldGen.minCaveThreshold, 0.0f, 1.0f, "%.5f"))
 		initGame(false, false);
-
 	ImGui::Text("Max cave threshold:"); ImGui::SameLine();
-	if (ImGui::SliderFloat("##maxCaveThresh", &worldNoise.maxCaveThreshold, 0.0f, 1.0f, "%.5f"))
+	if (ImGui::SliderFloat("##maxCaveThresh", &worldGen.maxCaveThreshold, 0.0f, 1.0f, "%.5f"))
 		initGame(false, false);
 	ImGui::Separator();
 
-	if (ImGui::Button("Reset world settings"))
+
+	if (ImGui::Button("Reset world generation settings"))
 	{
-		resetWorldNoise();
+		resetWorldGen();
 		initGame(false, false);
 	}
 

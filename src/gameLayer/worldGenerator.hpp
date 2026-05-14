@@ -10,6 +10,11 @@ struct WorldNoise
 	int stoneMountainOctaves;
 	float stoneMountainFrequency;
 
+	int minDirtMountainThickness;   // Minimum amount of dirt above stone
+	int maxDirtMountainThickness;   // Maximum blocks of dirt above stone
+	int minStoneMountainStart;      // Stone layer is at least 80 blocks from the top
+	int maxStoneMountainStart;      // The top of the stone layer is at most 150 blocks from the top
+
 	int dirtPlainOctaves;
 	float dirtPlainFrequency;
 	int stonePlainOctaves;
@@ -21,6 +26,7 @@ struct WorldNoise
 	int caveOctaves;
 	float caveFrequency;
 
+	// When the cave noise is in this range, caves will generate
 	float minCaveThreshold;
 	float maxCaveThreshold;
 };

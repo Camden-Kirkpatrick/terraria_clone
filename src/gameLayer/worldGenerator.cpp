@@ -12,6 +12,11 @@ void resetWorldNoise()
     worldNoise.stoneMountainOctaves = 4;
     worldNoise.stoneMountainFrequency = 0.01f;
 
+    worldNoise.minDirtMountainThickness = 1;
+    worldNoise.maxDirtMountainThickness = 50;
+    worldNoise.minStoneMountainStart = 330;
+    worldNoise.maxStoneMountainStart = 400;
+
     worldNoise.dirtPlainOctaves = 1;
     worldNoise.dirtPlainFrequency = 0.0025f;
     worldNoise.stonePlainOctaves = 4;
@@ -139,10 +144,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 #pragma endregion
 
 #pragma region world_gen_constants
-    const int MIN_DIRT_MOUNTAIN_THICKNESS = 1;   // Minimum amount of dirt above stone
-    const int MAX_DIRT_MOUNTAIN_THICKNESS = 50;  // Maximum blocks of dirt above stone
-    const int MIN_STONE_MOUNTAIN_START = 330;    // Stone layer is at least 80 blocks from the top
-    const int MAX_STONE_MOUNTAIN_START = 400;    // The top of the stone layer is at most 150 blocks from the top
+    //const int MIN_DIRT_MOUNTAIN_THICKNESS = 1;   // Minimum amount of dirt above stone
+    //const int MAX_DIRT_MOUNTAIN_THICKNESS = 50;  // Maximum blocks of dirt above stone
+    //const int MIN_STONE_MOUNTAIN_START = 330;    // Stone layer is at least 80 blocks from the top
+    //const int MAX_STONE_MOUNTAIN_START = 400;    // The top of the stone layer is at most 150 blocks from the top
 
     const int MIN_DIRT_PLAIN_THICKNESS = 1;
     const int MAX_DIRT_PLAIN_THICKNESS = 5;
@@ -164,7 +169,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     const float MIN_DESERT_THRESHOLD = 0.2f;
     const float MAX_DESERT_THRESHOLD = 0.4f;
 
-    // When the cave noise is in this range, caves will generate
+    
     //float MIN_CAVE_THRESHOLD = 0.65f;
     //float MAX_CAVE_THRESHOLD = 0.8f;
 
@@ -175,10 +180,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         // Lerp: find the heights for stone in the different biomes
         int stonePlainStart = lerp(MIN_STONE_PLAIN_START, MAX_STONE_PLAIN_START, stonePlainNoise[x]);
-        int stoneMountainStart = lerp(MIN_STONE_MOUNTAIN_START, MAX_STONE_MOUNTAIN_START, stoneMountainNoise[x]);
+        int stoneMountainStart = lerp(worldNoise.minStoneMountainStart, worldNoise.maxStoneMountainStart, stoneMountainNoise[x]);
         // Lerp: find the thicknesses for dirt in the different biomes
         int dirtPlainThickness = lerp(MIN_DIRT_PLAIN_THICKNESS, MAX_DIRT_PLAIN_THICKNESS, dirtPlainNoise[x]);
-        int dirtMountainThickness = lerp(MIN_DIRT_MOUNTAIN_THICKNESS, MAX_DIRT_MOUNTAIN_THICKNESS, dirtMountainNoise[x]);
+        int dirtMountainThickness = lerp(worldNoise.minDirtMountainThickness, worldNoise.maxDirtMountainThickness, dirtMountainNoise[x]);
 
         // Lerp: find the stone height and dirt thickness based on the biome
         // Biome noise close to 0 generates plain-like terrain

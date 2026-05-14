@@ -379,9 +379,25 @@ bool updateGame()
 	if (ImGui::SliderFloat("##dirtMtnFreq", &worldNoise.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f"))
 		initGame(false, false);
 
+	ImGui::Text("Min dirt mountain thickness:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##minDirtMountThick", &worldNoise.minDirtMountainThickness, 1, 50))
+		initGame(false, false);
+
+	ImGui::Text("Max dirt mountain thickness:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##maxDirtMountThick", &worldNoise.maxDirtMountainThickness, 1, 50))
+		initGame(false, false);
+
 	//ImGui::Text("Stone mountain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnMtnOct", &worldNoise.stoneMountainOctaves, 1, 20);
 	ImGui::Text("Stone mountain frequency:"); ImGui::SameLine();
 	if (ImGui::SliderFloat("##stnMtnFreq", &worldNoise.stoneMountainFrequency, 0.00001f, 0.1f, "%.5f"))
+		initGame(false, false);
+
+	ImGui::Text("Min stone mountain start:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##minStoneMountStart", &worldNoise.minStoneMountainStart, 330, 400))
+		initGame(false, false);
+
+	ImGui::Text("Max stone mountain start:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##maxStoneMountStart", &worldNoise.maxStoneMountainStart, 330, 400))
 		initGame(false, false);
 	ImGui::Separator();
 

@@ -7,32 +7,41 @@ int seed = DEFAULT_SEED;
 
 void resetWorldGen()
 {
-    worldGen.dirtMountainOctaves = 1;
-    worldGen.dirtMountainFrequency = 0.02f;
-    worldGen.stoneMountainOctaves = 4;
-    worldGen.stoneMountainFrequency = 0.01f;
+    // Mountain settings
+    // Noise generation settings
+    worldGen.dirtMountainOctaves = 1;              // 1 octave = smooth gentle hills
+    worldGen.dirtMountainFrequency = 0.02f;        // Higher frequency = samples further apart on the noise curve = rapid value changes = narrow steep hills
+    worldGen.stoneMountainOctaves = 4;             // 4 octaves = more jagged terrain (also affects the dirt on top of it)
+    worldGen.stoneMountainFrequency = 0.01f;       // Lower frequency = samples close together on the noise curve = slow value changes = gradual hills
+    // Terrain generation settings
+    worldGen.minDirtMountainThickness = 1;         // Minimum amount of dirt above stone
+    worldGen.maxDirtMountainThickness = 50;        // Maximum blocks of dirt above stone
+    worldGen.minStoneMountainStart = 330;          // Stone layer is at least this many blocks from the top
+    worldGen.maxStoneMountainStart = 400;          // The top of the stone layer is at most this many blocks from the top
 
-    worldGen.minDirtMountainThickness = 1;
-    worldGen.maxDirtMountainThickness = 50;
-    worldGen.minStoneMountainStart = 330;
-    worldGen.maxStoneMountainStart = 400;
-
+    // Plain settings
+    // Noise generation settings
     worldGen.dirtPlainOctaves = 1;
     worldGen.dirtPlainFrequency = 0.0025f;
     worldGen.stonePlainOctaves = 4;
     worldGen.stonePlainFrequency = 0.005f;
-
+    // Terrain generation settings
     worldGen.minDirtPlainThickness = 1;
     worldGen.maxDirtPlainThickness = 6;
     worldGen.minStonePlainStart = 330;
     worldGen.maxStonePlainStart = 335;
 
+    // Biome settings
     worldGen.biomeOctaves = 1;
     worldGen.biomeFrequency = 0.00025f;
+    // When the biome noise is in this range, deserts will generate
+    worldGen.minDesertThreshold = 0.2f;
+    worldGen.maxDesertThreshold = 0.4f;
 
+    // Cave settings
     worldGen.caveOctaves = 1;
     worldGen.caveFrequency = 0.02f;
-
+    // When the cave noise is in this range, caves will generate
     worldGen.minCaveThreshold = 0.65f;
     worldGen.maxCaveThreshold = 0.8f;
 }
@@ -156,10 +165,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     const int CLAY_THRESHOLD = 355;
     const float CLAY_CHANCE = 0.8f;
-
-    // When the biome noise is in this range, deserts will generate
-    const float MIN_DESERT_THRESHOLD = 0.2f;
-    const float MAX_DESERT_THRESHOLD = 0.4f;
 
 #pragma endregion
 

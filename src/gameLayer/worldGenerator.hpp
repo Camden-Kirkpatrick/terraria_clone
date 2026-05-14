@@ -5,35 +5,39 @@
 
 struct WorldGen
 {
-	int dirtMountainOctaves;       // 1 octave = smooth gentle hills
-	float dirtMountainFrequency;   // Higher frequency = samples further apart on the noise curve = rapid value changes = narrow steep hills
-	int stoneMountainOctaves;      // 4 octaves = more jagged terrain (also affects the dirt on top of it)
-	float stoneMountainFrequency;  // Lower frequency = samples close together on the noise curve = slow value changes = gradual hills
-
-	int minDirtMountainThickness;   // Minimum amount of dirt above stone
-	int maxDirtMountainThickness;   // Maximum blocks of dirt above stone
-	int minStoneMountainStart;      // Stone layer is at least this many blocks from the top
-	int maxStoneMountainStart;      // The top of the stone layer is at most this many blocks from the top
-
-	// Same settings as the ones above, but for plains instead of mountains
+	// Mountain settings
+	// Noise generation settings
+	int dirtMountainOctaves;
+	float dirtMountainFrequency;
+	int stoneMountainOctaves;
+	float stoneMountainFrequency;
+	// Terrain generation settings
+	int minDirtMountainThickness;
+	int maxDirtMountainThickness;
+	int minStoneMountainStart;
+	int maxStoneMountainStart;
+	
+	// Plain settings
+	// Noise generation settings
 	int dirtPlainOctaves;
 	float dirtPlainFrequency;
 	int stonePlainOctaves;
 	float stonePlainFrequency;
-
-	// Same settings as the ones above, but for plains instead of mountains
+	// Terrain generation settings
 	int minDirtPlainThickness;
 	int maxDirtPlainThickness;
 	int minStonePlainStart;
 	int maxStonePlainStart;
 
+	// Biome settings
 	int biomeOctaves;
 	float biomeFrequency;
+	float minDesertThreshold;
+	float maxDesertThreshold;
 
+	// Cave settings
 	int caveOctaves;
 	float caveFrequency;
-
-	// When the cave noise is in this range, caves will generate
 	float minCaveThreshold;
 	float maxCaveThreshold;
 };

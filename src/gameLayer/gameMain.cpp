@@ -429,6 +429,15 @@ bool updateGame()
 	ImGui::Text("Biome frequency:"); ImGui::SameLine();
 	if(ImGui::SliderFloat("##biomeFreq", &worldGen.biomeFrequency, 0.00001f, 0.001f, "%.5f"))
 		initGame(false, false);
+	ImGui::Text("Min desert threshold:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##minDesThresh", &worldGen.minDesertThreshold, 0.0f, 1.0f, "%.5f"))
+		initGame(false, false);
+	ImGui::Text("Max desert threshold:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##maxDesThresh", &worldGen.maxDesertThreshold, 0.0f, 1.0f, "%.5f"))
+		initGame(false, false);
+	ImGui::Text("Blend zone:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##blendZone", &worldGen.blendZone, 0.0f, 1.0f, "%.5f"))
+		initGame(false, false);
 	ImGui::Separator();
 
 

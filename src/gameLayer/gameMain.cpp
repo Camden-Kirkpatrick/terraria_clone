@@ -454,6 +454,36 @@ bool updateGame()
 	ImGui::Separator();
 
 
+	ImGui::Text("Special material settings");
+	ImGui::Text("Ore threshold:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##oreThresh", &worldGen.oreThreshold, 0, 499))
+		initGame(false, false);
+	ImGui::Text("Gold chance:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##gldChance", &worldGen.goldChance, 0.0f, 1.0f, "%.5f"))
+		initGame(false, false);
+	ImGui::Text("Iron chance:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##irnChance", &worldGen.ironChance, 0.0f, 1.0f, "%.5f"))
+		initGame(false, false);
+	ImGui::Text("Copper chance:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##copChance", &worldGen.copperChance, 0.0f, 1.0f, "%.5f"))
+		initGame(false, false);
+
+	ImGui::Text("Ruby threshold:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##rubThresh", &worldGen.rubyThreshold, 0, 499))
+		initGame(false, false);
+	ImGui::Text("Ruby chance:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##rubChance", &worldGen.rubyChance, 0.0f, 1.0f, "%.5f"))
+		initGame(false, false);
+
+	ImGui::Text("Clay threshold:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##clyThresh", &worldGen.clayThreshold, 0, 499))
+		initGame(false, false);
+	ImGui::Text("Clay chance:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##clyChance", &worldGen.clayChance, 0.0f, 1.0f, "%.5f"))
+		initGame(false, false);
+
+
+
 	if (ImGui::Button("Reset world generation settings"))
 	{
 		resetWorldGen();

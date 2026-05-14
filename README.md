@@ -21,7 +21,8 @@
 - [ ] Improve world generation
 - [ ] Add entities
 - [ ] Add a player
-- [ ] Add caves
+- [x] Add caves
+- [ ] Improve cave generation
 - [ ] Tree generation
 - [ ] Add more biomes
   - [ ] Tundra

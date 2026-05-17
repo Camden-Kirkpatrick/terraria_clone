@@ -42,8 +42,8 @@ void resetWorldGen()
     worldGen.blendZone = 0.015f;
 
     // Cave settings
-    worldGen.caveOctaves = 4;
-    worldGen.caveFrequency = 0.02f;
+    worldGen.caveOctaves = 6;
+    worldGen.caveFrequency = 0.004f;
     // When the cave noise is in this range, caves will generate
     worldGen.minCaveThreshold = 0.65f;
     worldGen.maxCaveThreshold = 0.8f;
@@ -153,13 +153,45 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 
     // Noise for caves
+    // Two independent cave shape noises. The final cave noise at each tile is a
+    // lerp between these two, weighted by caveSelectorNoise. Each is sampled
+    // across the full WIDTH x HEIGHT grid (caves are 2D, unlike terrain heights).
+    //
+    // Noise #1: low frequency + high octaves = large caves with fine, rough edges.
+    // Noise #2: high frequency + medium octaves = small, dense, scattered caves.
+    // Different frequencies decorrelate the two shapes even though they share
+    // the same FastNoise generator/seed.
+
+    // Noise #1
     caveNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
     caveNoiseGenerator->SetFractalOctaves(worldGen.caveOctaves);
     caveNoiseGenerator->SetFrequency(worldGen.caveFrequency);
 
-    float* caveNoise = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
+    float* caveNoise1 = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
 
-    caveNoiseGenerator->FillNoiseSet(caveNoise, 0, 0, 0, HEIGHT, WIDTH, 1);
+    caveNoiseGenerator->FillNoiseSet(caveNoise1, 0, 0, 0, HEIGHT, WIDTH, 1);
+
+    // Noise #2
+    caveNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    caveNoiseGenerator->SetFractalOctaves(3);
+    caveNoiseGenerator->SetFrequency(0.02f);
+
+    float* caveNoise2 = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
+
+    caveNoiseGenerator->FillNoiseSet(caveNoise2, 0, 0, 0, HEIGHT, WIDTH, 1);
+
+    // Cave selector noise
+    // Slow-frequency selector that picks which cave shape dominates in each region.
+    // Lower frequency than the cave noises so a region commits to one style across
+    // many tiles instead of flickering. Value near 0 = mostly caveNoise1's shape,
+    // value near 1 = mostly caveNoise2's shape, in-between = smooth blend.
+    caveNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    caveNoiseGenerator->SetFractalOctaves(1);
+    caveNoiseGenerator->SetFrequency(0.0025f);
+
+    float* caveSelectorNoise = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
+
+    caveNoiseGenerator->FillNoiseSet(caveSelectorNoise, 0, 0, 0, HEIGHT, WIDTH, 1);
 
 
     // Noise output is in range [-1, 1], remap to [0, 1]
@@ -174,11 +206,29 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         biomeNoise[i] = (biomeNoise[i] + 1) / 2;
     }
     for (int i = 0; i < WIDTH * HEIGHT; i++)
-        caveNoise[i] = (caveNoise[i] + 1) / 2;
-
-    auto getCaveNoise = [&](int x, int y)
     {
-        return caveNoise[WIDTH * y + x];
+        caveNoise1[i] = (caveNoise1[i] + 1) / 2;
+        caveNoise2[i] = (caveNoise2[i] + 1) / 2;
+        caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
+    }
+   
+    auto getCaveNoise1 = [&](int x, int y)
+    {
+        return caveNoise1[WIDTH * y + x];
+    };
+    auto getCaveNoise2 = [&](int x, int y)
+    {
+        return caveNoise2[WIDTH * y + x];
+    };
+    auto getCaveSelectorNoise = [&](int x, int y)
+    {
+        return caveSelectorNoise[WIDTH * y + x];
+    };
+    // Blend the two cave shapes per-tile using the selector as the lerp weight.
+    // Then a single band threshold on the result carves the actual caves.
+    auto getFinalCaveNoise = [&](int x, int y)
+    {
+        return lerp(getCaveNoise1(x, y), getCaveNoise2(x, y), getCaveSelectorNoise(x, y));
     };
 #pragma endregion
 
@@ -338,12 +388,19 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             // Use the correct background based on the block placed
             gameMap.getWallBlockUnsafe(x, y) = b;
 
+#pragma region generate_caves
+            // Band threshold: cave appears only when the *blended* noise lands in the
+            // cave band. AND-ing two separate band checks would give intersection
+            // (both noises agree); lerp-then-threshold gives a smooth morph between
+            // two cave styles across regions.
+            bool generateCave = (
+                getFinalCaveNoise(x, y) < worldGen.maxCaveThreshold && getFinalCaveNoise(x, y) > worldGen.minCaveThreshold
+            );
+
             // Prevent caves from opening up to the void / edge of the map
             if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
-
-#pragma region generate_caves
             // Cave generation
-            else if (getCaveNoise(x, y) < worldGen.maxCaveThreshold && getCaveNoise(x, y) > worldGen.minCaveThreshold)
+            else if (generateCave)
             {
                 b.type = Block::air;
                 gameMap.getBlockUnsafe(x, y) = b;
@@ -380,5 +437,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     FastNoiseSIMD::FreeNoiseSet(dirtMountainNoise);
     FastNoiseSIMD::FreeNoiseSet(stoneMountainNoise);
     FastNoiseSIMD::FreeNoiseSet(biomeNoise);
-    FastNoiseSIMD::FreeNoiseSet(caveNoise);
+    FastNoiseSIMD::FreeNoiseSet(caveNoise1);
+    FastNoiseSIMD::FreeNoiseSet(caveNoise2);
+    FastNoiseSIMD::FreeNoiseSet(caveSelectorNoise);
 }

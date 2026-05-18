@@ -235,8 +235,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     int numWorms = getRandomInt(rng, 1, 10);
 
-    std::vector<float> wx(numWorms);
-    std::vector<float> wy(numWorms);
+    std::vector<float> wormX(numWorms);
+    std::vector<float> wormY(numWorms);
 
     std::vector<int> dirX(numWorms);
     std::vector<int> dirY(numWorms);
@@ -252,8 +252,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     for (int i = 0; i < numWorms; i++)
     {
-        wx[i] = (float)getRandomInt(rng, 10, WIDTH - 10);
-        wy[i] = (float)getRandomInt(rng, 375, HEIGHT - 10);
+        wormX[i] = (float)getRandomInt(rng, 10, WIDTH - 10);
+        wormY[i] = (float)getRandomInt(rng, 375, HEIGHT - 10);
 
         dirX[i] = getRandomInt(rng, -1, 1);
         dirY[i] = getRandomInt(rng, -1, 1);
@@ -468,48 +468,73 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         }
     }
 
+    // Worm pass: each worm wanders through the world carving out a tunnel.
+    // Worms have a continuous heading angle (in radians) that drifts slightly
+    // every step, so their paths form smooth curves instead of locking onto
+    // a fixed direction. At each step the worm stamps a circular disk
+    // of air; consecutive disks overlap, producing a continuous tunnel.
     for (int i = 0; i < numWorms; i++)
     {
         Block b;
         b.type = Block::air;
 
-        int r = 3;   // tunnel radius - bump up for bigger tunnels
+        int r = getRandomInt(rng, 1, 5);   // Tunnel radius in tiles - bump up for wider tunnels
 
         for (int step = 0; step < wormLength[i]; step++)
         {
             // Nudge the heading by a small random angle each step.
-            float turn = getRandomInt(rng, -10, 10) * 0.01f;
+            // Smaller range = smoother sweeping curves, larger = twistier tunnels.
+            // The nudges accumulate over many steps into a gradual wander.
+            float turn = getRandomInt(rng, -20, 20) * 0.01f;
             wormAngle[i] += turn;
 
-            // Convert heading angle to a movement vector (length 1)
-            float fx = cosf(wormAngle[i]);
-            float fy = sinf(wormAngle[i]);
+            // Convert the heading angle into a unit movement vector via trig.
+            // (cos, sin) is the point on the unit circle at this angle, so the
+            // vector always has length 1 - the worm moves 1 tile per step
+            // regardless of direction.
+            float moveX = cosf(wormAngle[i]);
+            float moveY = sinf(wormAngle[i]);
 
-            // Current center tile (floor the float position to an int)
-            int cx = (int)wx[i];
-            int cy = (int)wy[i];
+            // The worm's position (center of a circle) is stored as a float so it can move at any
+            // angle (e.g. (0.87, 0.5) per step at 30°). The map is a grid, so
+            // we truncate to ints when we actually need to touch tiles.
+            int cx = (int)wormX[i];
+            int cy = (int)wormY[i];
 
-            // Carve a disk of radius r around (cx, cy)
-            for (int dy = -r; dy <= r; dy++)
+            // Carve a disk of radius r around (cx, cy).
+            // The two loops walk a (2r+1) x (2r+1) square of offsets around
+            // the center; the circle test below skips the corner tiles so
+            // what's left is a roughly round disk.
+            for (int offsetY = -r; offsetY <= r; offsetY++)
             {
-                for (int dx = -r; dx <= r; dx++)
+                for (int offsetX = -r; offsetX <= r; offsetX++)
                 {
-                    if (dx * dx + dy * dy > r * r) continue;
+                    // Pythagoras: squared distance from the center.
+                    // Skip tiles farther than r from the center (the square's
+                    // four corners). Comparing squared values avoids a sqrt.
+                    if (offsetX * offsetX + offsetY * offsetY > r * r) continue;
 
-                    int px = cx + dx;
-                    int py = cy + dy;
+                    // Absolute world tile = disk center + offset
+                    int tileX = cx + offsetX;
+                    int tileY = cy + offsetY;
 
-                    if (px > 0 && px < WIDTH - 1 && py > 0 && py < HEIGHT - 1
-                        && gameMap.getBlockUnsafe(px, py).type != Block::air)
+                    // Stay one tile inside the map edges so worms can't dig
+                    // out into the void, and skip tiles that are already air
+                    // (no point overwriting air with air, e.g. inside caves).
+                    if (tileX > 0 && tileX < WIDTH - 1 && tileY > 0 && tileY < HEIGHT - 1
+                        && gameMap.getBlockUnsafe(tileX, tileY).type != Block::air)
                     {
-                        gameMap.getBlockUnsafe(px, py) = b;
+                        gameMap.getBlockUnsafe(tileX, tileY) = b;
                     }
                 }
             }
 
-            // Move the worm by its heading vector (sub-tile precision)
-            wx[i] += fx;
-            wy[i] += fy;
+            // Advance the worm by its heading vector. Because wormX/Y are
+            // floats, fractional movement (e.g. moveY = 0.296) accumulates
+            // across steps instead of getting rounded away each time - this
+            // is what lets the worm travel at non-cardinal angles.
+            wormX[i] += moveX;
+            wormY[i] += moveY;
         }
     }
 

@@ -235,8 +235,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     int numWorms = getRandomInt(rng, 1, 10);
 
-    std::vector<int> wx(numWorms);
-    std::vector<int> wy(numWorms);
+    std::vector<float> wx(numWorms);
+    std::vector<float> wy(numWorms);
 
     std::vector<int> dirX(numWorms);
     std::vector<int> dirY(numWorms);
@@ -246,10 +246,14 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     std::vector<int> wormLength(numWorms);
 
+    std::vector<int> wormRadius(numWorms);
+
+    std::vector<float> wormAngle(numWorms);
+
     for (int i = 0; i < numWorms; i++)
     {
-        wx[i] = getRandomInt(rng, 10, WIDTH - 10);
-        wy[i] = getRandomInt(rng, 375, HEIGHT - 10);
+        wx[i] = (float)getRandomInt(rng, 10, WIDTH - 10);
+        wy[i] = (float)getRandomInt(rng, 375, HEIGHT - 10);
 
         dirX[i] = getRandomInt(rng, -1, 1);
         dirY[i] = getRandomInt(rng, -1, 1);
@@ -258,6 +262,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         dirYSteps[i] = getRandomInt(rng, 10, 40);
 
         wormLength[i] = getRandomInt(rng, 50, 500);
+
+        wormRadius[i] = getRandomInt(rng, 2, 4);
+
+        wormAngle[i] = getRandomFloat(rng, 0.0f, 2.0f * 3.14159265f);
     }
 
     // Go through every block in the map
@@ -463,39 +471,46 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     for (int i = 0; i < numWorms; i++)
     {
         Block b;
-        b.type = Block::rubyBlock;
+        b.type = Block::air;
+
+        int r = 3;   // tunnel radius - bump up for bigger tunnels
+
         for (int step = 0; step < wormLength[i]; step++)
         {
-            // Pick a new direction after a certain amount of steps
-            if (dirXSteps[i] == 0)
+            // Nudge the heading by a small random angle each step.
+            float turn = getRandomInt(rng, -10, 10) * 0.01f;
+            wormAngle[i] += turn;
+
+            // Convert heading angle to a movement vector (length 1)
+            float fx = cosf(wormAngle[i]);
+            float fy = sinf(wormAngle[i]);
+
+            // Current center tile (floor the float position to an int)
+            int cx = (int)wx[i];
+            int cy = (int)wy[i];
+
+            // Carve a disk of radius r around (cx, cy)
+            for (int dy = -r; dy <= r; dy++)
             {
-                dirX[i] = getRandomInt(rng, -1, 1);
-                dirXSteps[i] = getRandomInt(rng, 10, 40);
-            }
-            if (dirYSteps[i] == 0)
-            {
-                dirY[i] = getRandomInt(rng, -1, 1);
-                dirYSteps[i] = getRandomInt(rng, 10, 40);
+                for (int dx = -r; dx <= r; dx++)
+                {
+                    if (dx * dx + dy * dy > r * r) continue;
+
+                    int px = cx + dx;
+                    int py = cy + dy;
+
+                    if (px > 0 && px < WIDTH - 1 && py > 0 && py < HEIGHT - 1
+                        && gameMap.getBlockUnsafe(px, py).type != Block::air)
+                    {
+                        gameMap.getBlockUnsafe(px, py) = b;
+                    }
+                }
             }
 
-            // Always move the worm in one direction
-            while (dirX[i] == 0 && dirY[i] == 0)
-            {
-                if (dirX[i] == 0) dirX[i] = getRandomInt(rng, -1, 1);
-                if (dirY[i] == 0) dirY[i] = getRandomInt(rng, -1, 1);
-            }
-
-            // If the current worm position is in bounds, and the block is not already air, put air here
-            if (wx[i] < WIDTH && wx[i] > 0 && wy[i] < HEIGHT && wy[i] > 0 && gameMap.getBlockUnsafe(wx[i], wy[i]).type != Block::air)
-            {
-                gameMap.getBlockUnsafe(wx[i], wy[i]) = b;
-            }
-            // Move the worm 
-            wx[i] += dirX[i];
-            wy[i] += dirY[i];
-            dirXSteps[i]--;
-            dirYSteps[i]--;
-        }        
+            // Move the worm by its heading vector (sub-tile precision)
+            wx[i] += fx;
+            wy[i] += fy;
+        }
     }
 
     // Free resources

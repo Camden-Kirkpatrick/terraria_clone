@@ -1,6 +1,7 @@
 #include "worldGenerator.hpp"
 #include "randomStuff.hpp"
 #include <FastNoiseSIMD.h>
+#include <vector>
 
 WorldGen worldGen;
 int seed = DEFAULT_SEED;
@@ -211,26 +212,53 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         caveNoise2[i] = (caveNoise2[i] + 1) / 2;
         caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
     }
-   
+
     auto getCaveNoise1 = [&](int x, int y)
-    {
-        return caveNoise1[WIDTH * y + x];
-    };
+        {
+            return caveNoise1[WIDTH * y + x];
+        };
     auto getCaveNoise2 = [&](int x, int y)
-    {
-        return caveNoise2[WIDTH * y + x];
-    };
+        {
+            return caveNoise2[WIDTH * y + x];
+        };
     auto getCaveSelectorNoise = [&](int x, int y)
-    {
-        return caveSelectorNoise[WIDTH * y + x];
-    };
+        {
+            return caveSelectorNoise[WIDTH * y + x];
+        };
     // Blend the two cave shapes per-tile using the selector as the lerp weight.
     // Then a single band threshold on the result carves the actual caves.
     auto getFinalCaveNoise = [&](int x, int y)
-    {
-        return lerp(getCaveNoise1(x, y), getCaveNoise2(x, y), getCaveSelectorNoise(x, y));
-    };
+        {
+            return lerp(getCaveNoise1(x, y), getCaveNoise2(x, y), getCaveSelectorNoise(x, y));
+        };
 #pragma endregion
+
+    int numWorms = getRandomInt(rng, 1, 10);
+
+    std::vector<int> wx(numWorms);
+    std::vector<int> wy(numWorms);
+
+    std::vector<int> dirX(numWorms);
+    std::vector<int> dirY(numWorms);
+
+    std::vector<int> dirXSteps(numWorms);
+    std::vector<int> dirYSteps(numWorms);
+
+    std::vector<int> wormLength(numWorms);
+
+    for (int i = 0; i < numWorms; i++)
+    {
+        wx[i] = getRandomInt(rng, 10, WIDTH - 10);
+        wy[i] = getRandomInt(rng, 375, HEIGHT - 10);
+
+        dirX[i] = getRandomInt(rng, -1, 1);
+        dirY[i] = getRandomInt(rng, -1, 1);
+
+        dirXSteps[i] = getRandomInt(rng, 10, 40);
+        dirYSteps[i] = getRandomInt(rng, 10, 40);
+
+        wormLength[i] = getRandomInt(rng, 50, 500);
+    }
 
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
@@ -261,6 +289,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         int dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, biomeNoise[x]);
         // Dirt generates dirtThickness blocks above the stone layer
         int dirtStart = stoneStart - dirtThickness;
+
+        //dirX = getRandomInt(rng, -1, 1);
 #pragma endregion
 
         // Set the block type based on the current depth
@@ -297,7 +327,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                         b.type = Block::clay;
                 }
             }
-                
+
             // When y is exactly equal to the dirtHeight threshold, grass generates
             else if (y == dirtStart && (biomeNoise[x] <= worldGen.minDesertThreshold || biomeNoise[x] >= worldGen.maxDesertThreshold))
                 b.type = Block::grassBlock;
@@ -305,7 +335,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 #pragma region desert_biome
             float distToEdge = 0.0f;
-            float blendZone = 0.0f;
             float blendChance = 0.0f;
 
             if (biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
@@ -375,7 +404,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                         b.type = Block::dirt;
                 }
             }
-                
+
 #pragma endregion
 
 
@@ -395,7 +424,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             // two cave styles across regions.
             bool generateCave = (
                 getFinalCaveNoise(x, y) < worldGen.maxCaveThreshold && getFinalCaveNoise(x, y) > worldGen.minCaveThreshold
-            );
+                );
 
             // Prevent caves from opening up to the void / edge of the map
             if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
@@ -429,6 +458,44 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             }
 #pragma endregion
         }
+    }
+
+    for (int i = 0; i < numWorms; i++)
+    {
+        Block b;
+        b.type = Block::rubyBlock;
+        for (int step = 0; step < wormLength[i]; step++)
+        {
+            // Pick a new direction after a certain amount of steps
+            if (dirXSteps[i] == 0)
+            {
+                dirX[i] = getRandomInt(rng, -1, 1);
+                dirXSteps[i] = getRandomInt(rng, 10, 40);
+            }
+            if (dirYSteps[i] == 0)
+            {
+                dirY[i] = getRandomInt(rng, -1, 1);
+                dirYSteps[i] = getRandomInt(rng, 10, 40);
+            }
+
+            // Always move the worm in one direction
+            while (dirX[i] == 0 && dirY[i] == 0)
+            {
+                if (dirX[i] == 0) dirX[i] = getRandomInt(rng, -1, 1);
+                if (dirY[i] == 0) dirY[i] = getRandomInt(rng, -1, 1);
+            }
+
+            // If the current worm position is in bounds, and the block is not already air, put air here
+            if (wx[i] < WIDTH && wx[i] > 0 && wy[i] < HEIGHT && wy[i] > 0 && gameMap.getBlockUnsafe(wx[i], wy[i]).type != Block::air)
+            {
+                gameMap.getBlockUnsafe(wx[i], wy[i]) = b;
+            }
+            // Move the worm 
+            wx[i] += dirX[i];
+            wy[i] += dirY[i];
+            dirXSteps[i]--;
+            dirYSteps[i]--;
+        }        
     }
 
     // Free resources

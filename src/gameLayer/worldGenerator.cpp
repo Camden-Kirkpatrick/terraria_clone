@@ -63,8 +63,8 @@ void resetWorldGen()
 
     // Tunnel worm settings
     worldGen.curNumWorms = 0;
-    worldGen.minNumWorms = 1;
-    worldGen.maxNumWorms = 20;
+    worldGen.minNumWorms = 25;
+    worldGen.maxNumWorms = 100;
     worldGen.minWormWidth = 1;
     worldGen.maxWormWidth = 5;
     worldGen.minWormTurnAngle = -0.2f;

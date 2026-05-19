@@ -10,7 +10,7 @@
 #include <fstream>
 #include <iostream>
 
-#define WORLD_WIDTH 500
+#define WORLD_WIDTH 10000
 #define WORLD_HEIGHT 500
 
 #define MIN_CAM_ZOOM 10.0f

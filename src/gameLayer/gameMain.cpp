@@ -38,13 +38,6 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 	// Load assets (textures)
 	assetManager.loadAll();
 
-	//if (resetWorldGen)
-	//{
-	//	gameData.worldWidth = DEFAULT_WORLD_WIDTH;
-	//	gameData.worldHeight = DEFAULT_WORLD_HEIGHT;
-	//	seed = DEFAULT_SEED;
-	//}
-
 	// Generate the world
 	generateWorld(gameData.gameMap, worldWidth, worldHeight, seed, resetWorldGen);
 
@@ -275,77 +268,79 @@ bool updateGame()
 			// Get the current block
 			Block& b = gameData.gameMap.getBlockUnsafe(x, y);
 
-			if (b.type != Block::air)
+			if (b.type == Block::air)
+				continue;
+
+			// Set block properties
+			float size = 1; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
+
+			Texture2D textureAtlas = assetManager.textures;
+			Rectangle textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 32);
+
+#pragma region wood_log_leaves
+			// Special handling for wood logs: they have different textures based on adjacent leaves
+			if (b.type == Block::woodLog)
 			{
-				// Set block properties
-				float size = 1; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
+				textureAtlas = assetManager.woodLogs; // wood logs have a separate texture atlas from the other blocks
 
-				Texture2D textureAtlas = assetManager.textures;
-				Rectangle textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 32);
+				bool stump =          (gameData.gameMap.getBlockType(x, y + 1) != Block::woodLog &&
+						                gameData.gameMap.getBlockType(x, y - 1) != Block::woodLog);
 
-				// Special handling for wood logs: they have different textures based on adjacent leaves
-				if (b.type == Block::woodLog)
+				bool betweenLeaves =  (gameData.gameMap.getBlockType(x - 1, y) == Block::leaves &&
+						                gameData.gameMap.getBlockType(x + 1, y) == Block::leaves);
+
+				bool treeBase =		  (gameData.gameMap.getBlockType(x, y + 1) != Block::woodLog &&
+						                gameData.gameMap.getBlockType(x, y - 1) == Block::woodLog);
+
+				bool rightLeaves  =    gameData.gameMap.getBlockType(x + 1, y) == Block::leaves;
+				bool leftLeaves   =    gameData.gameMap.getBlockType(x - 1, y) == Block::leaves;
+				bool topLeaves    =    gameData.gameMap.getBlockType(x, y - 1) == Block::leaves;
+				bool noTopLeaves  =    gameData.gameMap.getBlockType(x, y - 1) == Block::air;
+
+				if (stump)
 				{
-					textureAtlas = assetManager.woodLogs; // wood logs have a separate texture atlas from the other blocks
-
-					bool stump =          (gameData.gameMap.getBlockType(x, y + 1) != Block::woodLog &&
-						                   gameData.gameMap.getBlockType(x, y - 1) != Block::woodLog);
-
-					bool betweenLeaves =  (gameData.gameMap.getBlockType(x - 1, y) == Block::leaves &&
-						                   gameData.gameMap.getBlockType(x + 1, y) == Block::leaves);
-
-					bool treeBase =		  (gameData.gameMap.getBlockType(x, y + 1) != Block::woodLog &&
-						                   gameData.gameMap.getBlockType(x, y - 1) == Block::woodLog);
-
-					bool rightLeaves  =    gameData.gameMap.getBlockType(x + 1, y) == Block::leaves;
-					bool leftLeaves   =    gameData.gameMap.getBlockType(x - 1, y) == Block::leaves;
-					bool topLeaves    =    gameData.gameMap.getBlockType(x, y - 1) == Block::leaves;
-					bool noTopLeaves  =    gameData.gameMap.getBlockType(x, y - 1) == Block::air;
-
-					if (stump)
-					{
-						textureAtlasRect = getTextureAtlas(7, b.randIndex, 32, 32);
-					}
-					else if (topLeaves)
-					{
-						textureAtlasRect = getTextureAtlas(5, b.randIndex, 32, 32);
-					}
-					else if (noTopLeaves)
-					{
-						textureAtlasRect = getTextureAtlas(6, b.randIndex, 32, 32);
-					}
-					else if (treeBase)
-					{
-						textureAtlasRect = getTextureAtlas(4, b.randIndex, 32, 32);
-					}
-					else if (betweenLeaves)
-					{
-						textureAtlasRect = getTextureAtlas(1, b.randIndex, 32, 32);
-					}
-					else if (rightLeaves)
-					{
-						textureAtlasRect = getTextureAtlas(2, b.randIndex, 32, 32);
-					}
-					else if (leftLeaves)
-					{
-						textureAtlasRect = getTextureAtlas(3, b.randIndex, 32, 32);
-					}
-					else // normal woodLog texture
-					{
-						textureAtlasRect = getTextureAtlas(0, b.randIndex, 32, 32);
-					}
+					textureAtlasRect = getTextureAtlas(7, b.randIndex, 32, 32);
 				}
-
-				// Draw the block
-				DrawTexturePro(
-					textureAtlas,					        // The whole texture atlas
-					textureAtlasRect,		                // This is the 32x32 region to read from in the texture atlas
-					{ float(x), float(y), size, size },     // This is where we draw it on screen
-					{ 0, 0 },
-					0.0f,
-					WHITE
-				);
+				else if (topLeaves)
+				{
+					textureAtlasRect = getTextureAtlas(5, b.randIndex, 32, 32);
+				}
+				else if (noTopLeaves)
+				{
+					textureAtlasRect = getTextureAtlas(6, b.randIndex, 32, 32);
+				}
+				else if (treeBase)
+				{
+					textureAtlasRect = getTextureAtlas(4, b.randIndex, 32, 32);
+				}
+				else if (betweenLeaves)
+				{
+					textureAtlasRect = getTextureAtlas(1, b.randIndex, 32, 32);
+				}
+				else if (rightLeaves)
+				{
+					textureAtlasRect = getTextureAtlas(2, b.randIndex, 32, 32);
+				}
+				else if (leftLeaves)
+				{
+					textureAtlasRect = getTextureAtlas(3, b.randIndex, 32, 32);
+				}
+				else // normal woodLog texture
+				{
+					textureAtlasRect = getTextureAtlas(0, b.randIndex, 32, 32);
+				}
 			}
+#pragma endregion
+
+			// Draw the block
+			DrawTexturePro(
+				textureAtlas,					        // The whole texture atlas
+				textureAtlasRect,		                // This is the 32x32 region to read from in the texture atlas
+				{ float(x), float(y), size, size },     // This is where we draw it on screen
+				{ 0, 0 },
+				0.0f,
+				WHITE
+			);
 		}
 	}
 
@@ -554,8 +549,7 @@ bool updateGame()
 
 	if (ImGui::Button("Reset world generation settings"))
 	{
-		resetWorldGen();
-		initGame(false, false);
+		initGame(true, false);
 	}
 
 	if (ImGui::Button("Generate flat world"))
@@ -563,6 +557,11 @@ bool updateGame()
 		resetWorldGen();
 		flatWorld();
 		initGame(false, false);
+	}
+
+	if (ImGui::Button("Go to world spawn"))
+	{
+		initGame(false, true);
 	}
 
 	ImGui::End();

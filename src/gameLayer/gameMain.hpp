@@ -4,7 +4,7 @@
 #define FPS 240
 #define MENU 1 // Enable to allow the user to change various settings
 
-bool initGame(bool resetNoise, bool resetCamera);
+bool initGame(bool resetWorldGen, bool resetCamera);
 
 bool updateGame();
 

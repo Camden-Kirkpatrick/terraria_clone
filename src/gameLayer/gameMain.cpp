@@ -10,9 +10,6 @@
 #include <fstream>
 #include <iostream>
 
-#define WORLD_WIDTH 10000
-#define WORLD_HEIGHT 500
-
 #define MIN_CAM_ZOOM 10.0f
 #define MAX_CAM_ZOOM 200.0f
 #define DEFAULT_CAM_ZOOM 25.0f
@@ -41,18 +38,22 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 	// Load assets (textures)
 	assetManager.loadAll();
 
-	if (resetWorldGen)
-		seed = DEFAULT_SEED;
+	//if (resetWorldGen)
+	//{
+	//	gameData.worldWidth = DEFAULT_WORLD_WIDTH;
+	//	gameData.worldHeight = DEFAULT_WORLD_HEIGHT;
+	//	seed = DEFAULT_SEED;
+	//}
 
 	// Generate the world
-	generateWorld(gameData.gameMap, WORLD_WIDTH, WORLD_HEIGHT, seed, resetWorldGen);
+	generateWorld(gameData.gameMap, worldWidth, worldHeight, seed, resetWorldGen);
 
 	// Camera setup
 	if (resetCamera)
 	{
-		gameData.camera.target = { WORLD_WIDTH / 2, 325 };       // The world-space point the camera looks at
-		gameData.camera.rotation = 0.0f;                        // No rotation
-		gameData.camera.zoom = DEFAULT_CAM_ZOOM;                // 1 world unit = 100 screen pixels
+		gameData.camera.target = { (float)worldWidth / 2, 325 };       // The world-space point the camera looks at
+		gameData.camera.rotation = 0.0f;							   // No rotation
+		gameData.camera.zoom = DEFAULT_CAM_ZOOM;
 		gameData.cameraSpeed = DEFAULT_CAM_SPEED;
 	}
 	
@@ -369,7 +370,6 @@ bool updateGame()
 	ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 	ImGui::Separator();
 
-
 	ImGui::Text("Seed:"); ImGui::SameLine();
 	if(ImGui::InputInt("##seed", &seed))
 		initGame(false, false);
@@ -443,6 +443,10 @@ bool updateGame()
 
 
 	ImGui::Text("Cave settings");
+	if (ImGui::Checkbox("Generate caves", &worldGen.generateCaves))
+	{
+		initGame(false, false);
+	}
 	ImGui::Text("Cave frequency:"); ImGui::SameLine();
 	if(ImGui::SliderFloat("##caveFreq", &worldGen.caveFrequency, 0.00001f, 0.1f, "%.5f"))
 		initGame(false, false);
@@ -456,6 +460,10 @@ bool updateGame()
 
 
 	ImGui::Text("Tunnel settings");
+	if (ImGui::Checkbox("Generate tunnels", &worldGen.generateWorms))
+	{
+		initGame(false, false);
+	}
 	ImGui::Text("Current number of tunnels: %d", worldGen.curNumWorms);
 	ImGui::Text("Min number of tunnels:"); ImGui::SameLine();
 	if (ImGui::SliderInt("##minNumTunls", &worldGen.minNumWorms, 1, 20))

@@ -3,10 +3,15 @@
 #include <FastNoiseSIMD.h>
 
 WorldGen worldGen;
+int worldWidth = DEFAULT_WORLD_WIDTH;
+int worldHeight = DEFAULT_WORLD_HEIGHT;
 int seed = DEFAULT_SEED;
 
 void resetWorldGen()
 {
+    worldWidth = DEFAULT_WORLD_WIDTH;
+    worldHeight = DEFAULT_WORLD_HEIGHT;
+
     // Mountain settings
     // Noise generation settings
     worldGen.dirtMountainOctaves = 1;              // 1 octave = smooth gentle hills
@@ -42,6 +47,7 @@ void resetWorldGen()
     worldGen.blendZone = 0.015f;
 
     // Cave settings
+    worldGen.generateCaves = true;
     worldGen.caveOctaves = 6;
     worldGen.caveFrequency = 0.004f;
     // When the cave noise is in this range, caves will generate
@@ -62,6 +68,7 @@ void resetWorldGen()
     worldGen.clayChance = 0.8f;
 
     // Tunnel worm settings
+    worldGen.generateWorms = true;
     worldGen.curNumWorms = 0;
     worldGen.minNumWorms = 25;
     worldGen.maxNumWorms = 100;
@@ -270,6 +277,27 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         int dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, biomeNoise[x]);
         // Dirt generates dirtThickness blocks above the stone layer
         int dirtStart = stoneStart - dirtThickness;
+
+
+
+
+        //if (biomeNoise[x] < 0.5f)
+        //{
+        //    stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
+        //    dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
+        //}
+        //else
+        //{
+        //    stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
+        //    dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
+        //}
+        //dirtStart = stoneStart - dirtThickness;
+            
+
+
+
+
+
 #pragma endregion
 
         // Set the block type based on the current depth
@@ -401,45 +429,48 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             // cave band. AND-ing two separate band checks would give intersection
             // (both noises agree); lerp-then-threshold gives a smooth morph between
             // two cave styles across regions.
-            bool generateCave = (
-                getFinalCaveNoise(x, y) < worldGen.maxCaveThreshold && getFinalCaveNoise(x, y) > worldGen.minCaveThreshold
-                );
-
-            // Prevent caves from opening up to the void / edge of the map
-            if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
-            // Cave generation
-            else if (generateCave)
+            if (worldGen.generateCaves)
             {
-                b.type = Block::air;
-                gameMap.getBlockUnsafe(x, y) = b;
+                bool generateCave = (
+                    getFinalCaveNoise(x, y) < worldGen.maxCaveThreshold && getFinalCaveNoise(x, y) > worldGen.minCaveThreshold
+                    );
 
-                // The background block shouldn't be air in caves, but the foreground block should be air
-                Block background;
-                background.randIndex = getRandomInt(rng, 0, 3);
-                // If we are in the stone layer in the desert, use the correct background blocks
-                if (y > stoneStart && biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
+                // Prevent caves from opening up to the void / edge of the map
+                if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
+                // Cave generation
+                else if (generateCave)
                 {
-                    if (getRandomChance(rng, blendChance))
+                    b.type = Block::air;
+                    gameMap.getBlockUnsafe(x, y) = b;
+
+                    // The background block shouldn't be air in caves, but the foreground block should be air
+                    Block background;
+                    background.randIndex = getRandomInt(rng, 0, 3);
+                    // If we are in the stone layer in the desert, use the correct background blocks
+                    if (y > stoneStart && biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
+                    {
+                        if (getRandomChance(rng, blendChance))
+                            background.type = Block::stone;
+                        else if (getRandomChance(rng, 0.5f))
+                            background.type = Block::sand;
+                        else
+                            background.type = Block::sandStone;
+
+                        gameMap.getWallBlockUnsafe(x, y) = background;
+                    }
+                    // If we are in the stone layer in the grasslands, use the correct background block
+                    else if (y > stoneStart)
+                    {
                         background.type = Block::stone;
-                    else if (getRandomChance(rng, 0.5f))
-                        background.type = Block::sand;
-                    else
-                        background.type = Block::sandStone;
-
-                    gameMap.getWallBlockUnsafe(x, y) = background;
-                }
-                // If we are in the stone layer in the grasslands, use the correct background block
-                else if (y > stoneStart)
-                {
-                    background.type = Block::stone;
-                    gameMap.getWallBlockUnsafe(x, y) = background;
+                        gameMap.getWallBlockUnsafe(x, y) = background;
+                    }
                 }
             }
 #pragma endregion
         }
     }
     
-#pragma region spawn_worm
+#pragma region spawn_worms
     int numWorms = getRandomInt(rng, worldGen.minNumWorms, worldGen.maxNumWorms);
     worldGen.curNumWorms = numWorms;
 
@@ -506,21 +537,33 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         };
 
 
-
-    // Worm pass: each worm wanders through the world carving out a tunnel.
-    // Worms have a continuous heading angle (in radians) that drifts slightly
-    // every step, so their paths form smooth curves instead of locking onto
-    // a fixed direction. At each step the worm stamps a circular disk
-    // of air; consecutive disks overlap, producing a continuous tunnel.
-    for (int i = 0; i < numWorms; i++)
+    // Worms spawn in a band below the stone layer. If the world is too short
+    // to fit that band, skip the worm pass - getRandomInt asserts when min > max.
+    int wormMinX = 10;
+    int wormMaxX = WIDTH - 10;
+    int wormMinY = 375;
+    int wormMaxY = HEIGHT - 10;
+    if (worldGen.generateWorms && wormMaxX > wormMinX && wormMaxY > wormMinY)
     {
-        float startX = (float)getRandomInt(rng, 10, WIDTH - 10);
-        float startY = (float)getRandomInt(rng, 375, HEIGHT - 10);
-        int length = getRandomInt(rng, 50, 500);
-        int radius = getRandomInt(rng, worldGen.minWormWidth, worldGen.maxWormWidth);
-        float angle = getRandomFloat(rng, 0.0f, 2.0f * 3.14159265f);
+        // Worm pass: each worm wanders through the world carving out a tunnel.
+        // Worms have a continuous heading angle (in radians) that drifts slightly
+        // every step, so their paths form smooth curves instead of locking onto
+        // a fixed direction. At each step the worm stamps a circular disk
+        // of air; consecutive disks overlap, producing a continuous tunnel.
+        for (int i = 0; i < numWorms; i++)
+        {
+            float startX = (float)getRandomInt(rng, wormMinX, wormMaxX);
+            float startY = (float)getRandomInt(rng, wormMinY, wormMaxY);
+            int length = getRandomInt(rng, 50, 500);
+            int radius = getRandomInt(rng, worldGen.minWormWidth, worldGen.maxWormWidth);
+            float angle = getRandomFloat(rng, 0.0f, 2.0f * 3.14159265f);
 
-        spawnWorm(startX, startY, length, radius, angle);
+            spawnWorm(startX, startY, length, radius, angle);
+        }
+    }
+    else
+    {
+        worldGen.curNumWorms = 0;
     }
 #pragma endregion
 

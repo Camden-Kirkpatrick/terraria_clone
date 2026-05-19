@@ -1,6 +1,8 @@
 #pragma once
 #include "gameMap.hpp"
 
+#define DEFAULT_WORLD_WIDTH 500
+#define DEFAULT_WORLD_HEIGHT 500
 #define DEFAULT_SEED 1234
 
 struct WorldGen
@@ -37,6 +39,7 @@ struct WorldGen
 	float blendZone;
 
 	// Cave settings
+	bool generateCaves;
 	int caveOctaves;
 	float caveFrequency;
 	float minCaveThreshold;
@@ -56,6 +59,7 @@ struct WorldGen
 	float clayChance;
 
 	// Tunnel worm settings
+	bool generateWorms;
 	int curNumWorms;
 	int minNumWorms;
 	int maxNumWorms;
@@ -66,9 +70,11 @@ struct WorldGen
 };
 
 extern WorldGen worldGen;
+extern int worldWidth;
+extern int worldHeight;
 extern int seed;
 
 void resetWorldGen();
 void flatWorld();
 float lerp(float a, float b, float t);
-void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed = DEFAULT_SEED, bool resetWorldGen = true);
+void generateWorld(GameMap& gameMap, const int WIDTH = DEFAULT_WORLD_WIDTH, const int HEIGHT = DEFAULT_WORLD_HEIGHT, int seed = DEFAULT_SEED, bool resetWorldGen = true);

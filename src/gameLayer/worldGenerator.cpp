@@ -446,7 +446,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     auto spawnWorm = [&](float startX, float startY, int length, int radius, float angle)
         {
             Block b;
-            b.type = Block::rubyBlock;
+            b.type = Block::air;
 
             for (int step = 0; step < length; step++)
             {

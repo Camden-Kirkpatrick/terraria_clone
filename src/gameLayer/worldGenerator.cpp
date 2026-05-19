@@ -1,7 +1,6 @@
 #include "worldGenerator.hpp"
 #include "randomStuff.hpp"
 #include <FastNoiseSIMD.h>
-#include <vector>
 
 WorldGen worldGen;
 int seed = DEFAULT_SEED;
@@ -242,36 +241,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         };
 #pragma endregion
 
-    int numWorms = getRandomInt(rng, worldGen.minNumWorms, worldGen.maxNumWorms);
-    worldGen.curNumWorms = numWorms;
-
-    std::vector<float> wormX(numWorms);
-    std::vector<float> wormY(numWorms);
-
-    std::vector<int> dirX(numWorms);
-    std::vector<int> dirY(numWorms);
-
-    std::vector<int> wormLength(numWorms);
-
-    std::vector<int> wormRadius(numWorms);
-
-    std::vector<float> wormAngle(numWorms);
-
-    for (int i = 0; i < numWorms; i++)
-    {
-        wormX[i] = (float)getRandomInt(rng, 10, WIDTH - 10);
-        wormY[i] = (float)getRandomInt(rng, 375, HEIGHT - 10);
-
-        dirX[i] = getRandomInt(rng, -1, 1);
-        dirY[i] = getRandomInt(rng, -1, 1);
-
-        wormLength[i] = getRandomInt(rng, 50, 500);
-
-        wormRadius[i] = getRandomInt(rng, 2, 4);
-
-        wormAngle[i] = getRandomFloat(rng, 0.0f, 2.0f * 3.14159265f);
-    }
-
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
@@ -301,8 +270,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         int dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, biomeNoise[x]);
         // Dirt generates dirtThickness blocks above the stone layer
         int dirtStart = stoneStart - dirtThickness;
-
-        //dirX = getRandomInt(rng, -1, 1);
 #pragma endregion
 
         // Set the block type based on the current depth
@@ -471,6 +438,74 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 #pragma endregion
         }
     }
+    
+#pragma region spawn_worm
+    int numWorms = getRandomInt(rng, worldGen.minNumWorms, worldGen.maxNumWorms);
+    worldGen.curNumWorms = numWorms;
+
+    auto spawnWorm = [&](float startX, float startY, int length, int radius, float angle)
+        {
+            Block b;
+            b.type = Block::rubyBlock;
+
+            for (int step = 0; step < length; step++)
+            {
+                // Nudge the heading by a small random angle each step.
+                // Smaller range = smoother sweeping curves, larger = twistier tunnels.
+                // The nudges accumulate over many steps into a gradual wander.
+                float turn = getRandomFloat(rng, worldGen.minWormTurnAngle, worldGen.maxWormTurnAngle);
+                angle += turn;
+
+                // Convert the heading angle into a unit movement vector via trig.
+                // (cos, sin) is the point on the unit circle at this angle, so the
+                // vector always has length 1 - the worm moves 1 tile per step
+                // regardless of direction.
+                float moveX = cosf(angle);
+                float moveY = sinf(angle);
+
+                // The worm's position (center of a circle) is stored as a float so it can move at any
+                // angle (e.g. (0.87, 0.5) per step at 30°). The map is a grid, so
+                // we truncate to ints when we actually need to touch tiles.
+                int cx = (int)startX;
+                int cy = (int)startY;
+
+                // Carve a disk of radius "radius" around (cx, cy).
+                // The two loops walk a (2r+1) x (2r+1) square of offsets around
+                // the center; the circle test below skips the corner tiles so
+                // what's left is a roughly round disk.
+                for (int offsetY = -radius; offsetY <= radius; offsetY++)
+                {
+                    for (int offsetX = -radius; offsetX <= radius; offsetX++)
+                    {
+                        // Pythagoras: squared distance from the center.
+                        // Skip tiles farther than r from the center (the square's
+                        // four corners). Comparing squared values avoids a sqrt.
+                        if (offsetX * offsetX + offsetY * offsetY > radius * radius) continue;
+
+                        // Absolute world tile = disk center + offset
+                        int tileX = cx + offsetX;
+                        int tileY = cy + offsetY;
+
+                        // Stay one tile inside the map edges so worms can't dig
+                        // out into the void, and skip tiles that are already air
+                        // (no point overwriting air with air, e.g. inside caves).
+                        if (tileX > 0 && tileX < WIDTH - 1 && tileY > 0 && tileY < HEIGHT - 1
+                            && gameMap.getBlockUnsafe(tileX, tileY).type != Block::air)
+                        {
+                            gameMap.getBlockUnsafe(tileX, tileY) = b;
+                        }
+                    }
+                }
+                // Advance the worm by its heading vector. Because startX/Y are
+                // floats, fractional movement (e.g. moveY = 0.296) accumulates
+                // across steps instead of getting rounded away each time - this
+                // is what lets the worm travel at non-cardinal angles.
+                startX += moveX;
+                startY += moveY;
+            }
+        };
+
+
 
     // Worm pass: each worm wanders through the world carving out a tunnel.
     // Worms have a continuous heading angle (in radians) that drifts slightly
@@ -479,68 +514,15 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // of air; consecutive disks overlap, producing a continuous tunnel.
     for (int i = 0; i < numWorms; i++)
     {
-        Block b;
-        b.type = Block::air;
+        float startX = (float)getRandomInt(rng, 10, WIDTH - 10);
+        float startY = (float)getRandomInt(rng, 375, HEIGHT - 10);
+        int length = getRandomInt(rng, 50, 500);
+        int radius = getRandomInt(rng, worldGen.minWormWidth, worldGen.maxWormWidth);
+        float angle = getRandomFloat(rng, 0.0f, 2.0f * 3.14159265f);
 
-        int r = getRandomInt(rng, worldGen.minWormWidth, worldGen.maxWormWidth);   // Tunnel radius in tiles - bump up for wider tunnels
-
-        for (int step = 0; step < wormLength[i]; step++)
-        {
-            // Nudge the heading by a small random angle each step.
-            // Smaller range = smoother sweeping curves, larger = twistier tunnels.
-            // The nudges accumulate over many steps into a gradual wander.
-            float turn = getRandomFloat(rng, worldGen.minWormTurnAngle, worldGen.maxWormTurnAngle);
-            wormAngle[i] += turn;
-
-            // Convert the heading angle into a unit movement vector via trig.
-            // (cos, sin) is the point on the unit circle at this angle, so the
-            // vector always has length 1 - the worm moves 1 tile per step
-            // regardless of direction.
-            float moveX = cosf(wormAngle[i]);
-            float moveY = sinf(wormAngle[i]);
-
-            // The worm's position (center of a circle) is stored as a float so it can move at any
-            // angle (e.g. (0.87, 0.5) per step at 30°). The map is a grid, so
-            // we truncate to ints when we actually need to touch tiles.
-            int cx = (int)wormX[i];
-            int cy = (int)wormY[i];
-
-            // Carve a disk of radius r around (cx, cy).
-            // The two loops walk a (2r+1) x (2r+1) square of offsets around
-            // the center; the circle test below skips the corner tiles so
-            // what's left is a roughly round disk.
-            for (int offsetY = -r; offsetY <= r; offsetY++)
-            {
-                for (int offsetX = -r; offsetX <= r; offsetX++)
-                {
-                    // Pythagoras: squared distance from the center.
-                    // Skip tiles farther than r from the center (the square's
-                    // four corners). Comparing squared values avoids a sqrt.
-                    if (offsetX * offsetX + offsetY * offsetY > r * r) continue;
-
-                    // Absolute world tile = disk center + offset
-                    int tileX = cx + offsetX;
-                    int tileY = cy + offsetY;
-
-                    // Stay one tile inside the map edges so worms can't dig
-                    // out into the void, and skip tiles that are already air
-                    // (no point overwriting air with air, e.g. inside caves).
-                    if (tileX > 0 && tileX < WIDTH - 1 && tileY > 0 && tileY < HEIGHT - 1
-                        && gameMap.getBlockUnsafe(tileX, tileY).type != Block::air)
-                    {
-                        gameMap.getBlockUnsafe(tileX, tileY) = b;
-                    }
-                }
-            }
-
-            // Advance the worm by its heading vector. Because wormX/Y are
-            // floats, fractional movement (e.g. moveY = 0.296) accumulates
-            // across steps instead of getting rounded away each time - this
-            // is what lets the worm travel at non-cardinal angles.
-            wormX[i] += moveX;
-            wormY[i] += moveY;
-        }
+        spawnWorm(startX, startY, length, radius, angle);
     }
+#pragma endregion
 
     // Free resources
     FastNoiseSIMD::FreeNoiseSet(dirtPlainNoise);

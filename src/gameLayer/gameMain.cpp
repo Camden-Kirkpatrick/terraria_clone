@@ -370,6 +370,14 @@ bool updateGame()
 	ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 	ImGui::Separator();
 
+	ImGui::Text("World width"); ImGui::SameLine();
+	if (ImGui::SliderInt("##worldWidth", &worldWidth, 25, 10000))
+		initGame(false, false);
+	ImGui::Text("World height"); ImGui::SameLine();
+	if (ImGui::SliderInt("##worldHeight", &worldHeight, 350, 1000))
+		initGame(false, false);
+	ImGui::Separator();
+
 	ImGui::Text("Seed:"); ImGui::SameLine();
 	if(ImGui::InputInt("##seed", &seed))
 		initGame(false, false);

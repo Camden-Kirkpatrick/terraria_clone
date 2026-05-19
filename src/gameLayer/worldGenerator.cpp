@@ -61,6 +61,15 @@ void resetWorldGen()
     // Clay
     worldGen.clayThreshold = 355;
     worldGen.clayChance = 0.8f;
+
+    // Tunnel worm settings
+    worldGen.curNumWorms = 0;
+    worldGen.minNumWorms = 1;
+    worldGen.maxNumWorms = 20;
+    worldGen.minWormWidth = 1;
+    worldGen.maxWormWidth = 5;
+    worldGen.minWormTurnAngle = -0.2f;
+    worldGen.maxWormTurnAngle = 0.2f;
 }
 
 void flatWorld()
@@ -233,16 +242,14 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         };
 #pragma endregion
 
-    int numWorms = getRandomInt(rng, 1, 10);
+    int numWorms = getRandomInt(rng, worldGen.minNumWorms, worldGen.maxNumWorms);
+    worldGen.curNumWorms = numWorms;
 
     std::vector<float> wormX(numWorms);
     std::vector<float> wormY(numWorms);
 
     std::vector<int> dirX(numWorms);
     std::vector<int> dirY(numWorms);
-
-    std::vector<int> dirXSteps(numWorms);
-    std::vector<int> dirYSteps(numWorms);
 
     std::vector<int> wormLength(numWorms);
 
@@ -257,9 +264,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
         dirX[i] = getRandomInt(rng, -1, 1);
         dirY[i] = getRandomInt(rng, -1, 1);
-
-        dirXSteps[i] = getRandomInt(rng, 10, 40);
-        dirYSteps[i] = getRandomInt(rng, 10, 40);
 
         wormLength[i] = getRandomInt(rng, 50, 500);
 
@@ -478,14 +482,14 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         Block b;
         b.type = Block::air;
 
-        int r = getRandomInt(rng, 1, 5);   // Tunnel radius in tiles - bump up for wider tunnels
+        int r = getRandomInt(rng, worldGen.minWormWidth, worldGen.maxWormWidth);   // Tunnel radius in tiles - bump up for wider tunnels
 
         for (int step = 0; step < wormLength[i]; step++)
         {
             // Nudge the heading by a small random angle each step.
             // Smaller range = smoother sweeping curves, larger = twistier tunnels.
             // The nudges accumulate over many steps into a gradual wander.
-            float turn = getRandomInt(rng, -20, 20) * 0.01f;
+            float turn = getRandomFloat(rng, worldGen.minWormTurnAngle, worldGen.maxWormTurnAngle);
             wormAngle[i] += turn;
 
             // Convert the heading angle into a unit movement vector via trig.

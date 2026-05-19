@@ -455,6 +455,58 @@ bool updateGame()
 	ImGui::Separator();
 
 
+	ImGui::Text("Tunnel settings");
+	ImGui::Text("Current number of tunnels: %d", worldGen.curNumWorms);
+	ImGui::Text("Min number of tunnels:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##minNumTunls", &worldGen.minNumWorms, 1, 20))
+	{
+		// min/maxNumWorms use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
+		if (worldGen.minNumWorms > worldGen.maxNumWorms)
+			worldGen.maxNumWorms = worldGen.minNumWorms;
+		initGame(false, false);
+	}
+	ImGui::Text("Max number of tunnels:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##maxNumTunls", &worldGen.maxNumWorms, 1, 20))
+	{
+		if (worldGen.maxNumWorms < worldGen.minNumWorms)
+			worldGen.minNumWorms = worldGen.maxNumWorms;
+		initGame(false, false);
+	}
+
+	ImGui::Text("Min tunnel width:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##minTunlWidth", &worldGen.minWormWidth, 1, 20))
+	{
+		// min/maxWormWidth use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
+		if (worldGen.minWormWidth > worldGen.maxWormWidth)
+			worldGen.maxWormWidth = worldGen.minWormWidth;
+		initGame(false, false);
+	}
+	ImGui::Text("Max worm width:"); ImGui::SameLine();
+	if (ImGui::SliderInt("##maxTunlWidth", &worldGen.maxWormWidth, 1, 20))
+	{
+		if (worldGen.maxWormWidth < worldGen.minWormWidth)
+			worldGen.minWormWidth = worldGen.maxWormWidth;
+		initGame(false, false);
+	}
+
+	ImGui::Text("Min tunnel turn angle:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##minTunlAngle", &worldGen.minWormTurnAngle, -0.2f, 0.2f))
+	{
+		// min/maxWormTurnAngle use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
+		if (worldGen.minWormTurnAngle > worldGen.maxWormTurnAngle)
+			worldGen.maxWormTurnAngle = worldGen.minWormTurnAngle;
+		initGame(false, false);
+	}
+	ImGui::Text("Max tunnel turn angle:"); ImGui::SameLine();
+	if (ImGui::SliderFloat("##maxTunlAngle", &worldGen.maxWormTurnAngle, -0.2f, 0.2f))
+	{
+		if (worldGen.maxWormTurnAngle < worldGen.minWormTurnAngle)
+			worldGen.minWormTurnAngle = worldGen.maxWormTurnAngle;
+		initGame(false, false);
+	}
+	ImGui::Separator();
+
+
 	ImGui::Text("Special material settings");
 	ImGui::Text("Ore threshold:"); ImGui::SameLine();
 	if (ImGui::SliderInt("##oreThresh", &worldGen.oreThreshold, 0, 499))

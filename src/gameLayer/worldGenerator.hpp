@@ -54,6 +54,15 @@ struct WorldGen
 	// Clay
 	int clayThreshold;
 	float clayChance;
+
+	// Tunnel worm settings
+	int curNumWorms;
+	int minNumWorms;
+	int maxNumWorms;
+	int minWormWidth;
+	int maxWormWidth;
+	float minWormTurnAngle;
+	float maxWormTurnAngle;
 };
 
 extern WorldGen worldGen;

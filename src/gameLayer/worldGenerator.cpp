@@ -113,8 +113,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     gameMap.create(WIDTH, HEIGHT);
 
-    std::ranlux24_base rng(seed++);
-    //std::ranlux24_base rng;
+    std::ranlux24_base rng;
 
 #pragma region generate_noise
     // Noise generators for different layers, biomes, and caves
@@ -278,7 +277,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
-        //rng.seed(seed + x * 2654435761u);
+        rng.seed(seed + x);
 
 #pragma region linerar_interpolation
         // Lerp: find the heights for the stone layer
@@ -496,7 +495,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             {
                 bool generateCave = (
                     getFinalCaveNoise(x, y) < worldGen.maxCaveThreshold && getFinalCaveNoise(x, y) > worldGen.minCaveThreshold
-                    );
+                );
 
                 // Prevent caves from opening up to the void / edge of the map
                 if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
@@ -534,7 +533,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     }
     
 #pragma region spawn_worms
-    //rng.seed(seed + 0x9E3779B9u);
+    rng.seed(seed + 2112);
 
     int numWorms = getRandomInt(rng, worldGen.minNumWorms, worldGen.maxNumWorms);
     worldGen.curNumWorms = numWorms;

@@ -43,13 +43,18 @@ void resetWorldGen()
 
     // Biome settings
     worldGen.biomeOctaves = 1;
-    worldGen.biomeFrequency = 0.0005f;
-    // When the biome noise is in this range, deserts will generate
-    worldGen.minDesertThreshold = 0.2f;
-    worldGen.maxDesertThreshold = 0.4f;
+    worldGen.biomeFrequency = 0.001f;
     // This is the width (in noise units) of the band near each boundary where blending happens
     // With 0.015, only columns whose noise is within 0.015 of a boundary will receive any grassy-biome blocks
-    worldGen.biomeBlendZone = 0.015f;
+    worldGen.biomeBlendZone = 0.0015f;
+
+    // Desert settings
+    // When the biome noise is in this range, deserts will generate
+    worldGen.minDesertThreshold = 0.0f;
+    worldGen.maxDesertThreshold = 0.25f;
+    worldGen.desertOctaves = 1;
+    worldGen.desertFrequency = 0.0005;
+    worldGen.desertBlendZone = 0.0015f;
 
     // Cave settings
     worldGen.generateCaves = true;
@@ -116,12 +121,14 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     std::unique_ptr<FastNoiseSIMD> dirtNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> stoneNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> biomeNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
+    std::unique_ptr<FastNoiseSIMD> desertNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> caveNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
 
     // Each generator gets a unique seed so their shapes don't match
     dirtNoiseGenerator->SetSeed(seed++);
     stoneNoiseGenerator->SetSeed(seed++);
     biomeNoiseGenerator->SetSeed(seed++);
+    desertNoiseGenerator->SetSeed(seed++);
     caveNoiseGenerator->SetSeed(seed++);
 
 
@@ -172,6 +179,16 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     float* biomeNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
 
     biomeNoiseGenerator->FillNoiseSet(biomeNoise, 0, 0, 0, WIDTH, 1, 1);
+
+
+    // Noise for deserts
+    desertNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    desertNoiseGenerator->SetFractalOctaves(worldGen.desertOctaves);
+    desertNoiseGenerator->SetFrequency(worldGen.desertFrequency);
+
+    float* desertNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
+
+    desertNoiseGenerator->FillNoiseSet(desertNoise, 0, 0, 0, WIDTH, 1, 1);
 
 
     // Noise for caves
@@ -226,6 +243,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         stoneMountainNoise[i] = (stoneMountainNoise[i] + 1) / 2;
 
         biomeNoise[i] = (biomeNoise[i] + 1) / 2;
+
+        desertNoise[i] = (desertNoise[i] + 1) / 2;
     }
     for (int i = 0; i < WIDTH * HEIGHT; i++)
     {
@@ -234,7 +253,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
     }
 
-    savedBiomeNoise.assign(biomeNoise, biomeNoise + WIDTH);
+    //savedBiomeNoise.assign(biomeNoise, biomeNoise + WIDTH);
 
     auto getCaveNoise1 = [&](int x, int y)
         {
@@ -352,7 +371,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 #pragma region grasslands_biome
             // When y is deeper than the stone surface, stone can generate
-            if (y > stoneStart && (biomeNoise[x] <= worldGen.minDesertThreshold || biomeNoise[x] >= worldGen.maxDesertThreshold))
+            if (y > stoneStart && (desertNoise[x] <= worldGen.minDesertThreshold || desertNoise[x] >= worldGen.maxDesertThreshold))
             {
                 b.type = Block::stone;
                 // Gold can generate further down in the stone layer
@@ -368,7 +387,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             }
 
             // When y is above the dirtHeight threshold, dirt can generate
-            else if (y > dirtStart && (biomeNoise[x] <= worldGen.minDesertThreshold || biomeNoise[x] >= worldGen.maxDesertThreshold))
+            else if (y > dirtStart && (desertNoise[x] <= worldGen.minDesertThreshold || desertNoise[x] >= worldGen.maxDesertThreshold))
             {
                 b.type = Block::dirt;
                 // Clay can generate further down in the dirt layer
@@ -381,7 +400,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             }
 
             // When y is exactly equal to the dirtHeight threshold, grass generates
-            else if (y == dirtStart && (biomeNoise[x] <= worldGen.minDesertThreshold || biomeNoise[x] >= worldGen.maxDesertThreshold))
+            else if (y == dirtStart && (desertNoise[x] <= worldGen.minDesertThreshold || desertNoise[x] >= worldGen.maxDesertThreshold))
                 b.type = Block::grassBlock;
 #pragma endregion
 
@@ -389,18 +408,18 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             float distToEdge = 0.0f;
             float blendChance = 0.0f;
 
-            if (biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
+            if (desertNoise[x] > worldGen.minDesertThreshold && desertNoise[x] < worldGen.maxDesertThreshold)
             {
                 // How close are we to the nearest edge of the desert
-                distToEdge = std::min(biomeNoise[x] - worldGen.minDesertThreshold, worldGen.maxDesertThreshold - biomeNoise[x]);
+                distToEdge = std::min(desertNoise[x] - worldGen.minDesertThreshold, worldGen.maxDesertThreshold - desertNoise[x]);
                 // Probability of placing grassy biome blocks instead of desert blocks.
                 // High near the desert boundary, zero in the interior.
                 // e.g. distToEdge=0.000 (boundary) -> chance=1.0, distToEdge=biomeBlendZone/2 (halfway) -> chance=0.5, distToEdge=biomeBlendZone (interior) -> chance=0.0
-                blendChance = 1.0f - (distToEdge / worldGen.biomeBlendZone);
+                blendChance = 1.0f - (distToEdge / worldGen.desertBlendZone);
             }
 
             // If we are in the stone layer and in the desert, use the correct blocks
-            if (y > stoneStart && biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
+            if (y > stoneStart && desertNoise[x] > worldGen.minDesertThreshold && desertNoise[x] < worldGen.maxDesertThreshold)
             {
                 // Stone can generate near biome edges
                 if (getRandomChance(rng, blendChance))
@@ -443,7 +462,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             }
 
             // If we are higher up in the desert, sand generates instead of dirt and grass
-            else if (y >= dirtStart && biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
+            else if (y >= dirtStart && desertNoise[x] > worldGen.minDesertThreshold && desertNoise[x] < worldGen.maxDesertThreshold)
             {
                 b.type = Block::sand;
 
@@ -456,7 +475,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                         b.type = Block::dirt;
                 }
             }
-
 #pragma endregion
 
 
@@ -492,7 +510,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     Block background;
                     background.randIndex = getRandomInt(rng, 0, 3);
                     // If we are in the stone layer in the desert, use the correct background blocks
-                    if (y > stoneStart && biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
+                    if (y > stoneStart && desertNoise[x] > worldGen.minDesertThreshold && desertNoise[x] < worldGen.maxDesertThreshold)
                     {
                         if (getRandomChance(rng, blendChance))
                             background.type = Block::stone;

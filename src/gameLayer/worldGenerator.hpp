@@ -1,7 +1,7 @@
 #pragma once
 #include "gameMap.hpp"
 
-#define DEFAULT_WORLD_WIDTH 500
+#define DEFAULT_WORLD_WIDTH 2000
 #define DEFAULT_WORLD_HEIGHT 500
 #define DEFAULT_SEED 1234
 
@@ -18,9 +18,12 @@ struct WorldGen
 	int maxDirtMountainThickness;
 	int minStoneMountainStart;
 	int maxStoneMountainStart;
+
+	float terrainBlendZone;
 	
 	// Plain settings
 	// Noise generation settings
+	float plainThreshold;
 	int dirtPlainOctaves;
 	float dirtPlainFrequency;
 	int stonePlainOctaves;
@@ -36,7 +39,7 @@ struct WorldGen
 	float biomeFrequency;
 	float minDesertThreshold;
 	float maxDesertThreshold;
-	float blendZone;
+	float biomeBlendZone;
 
 	// Cave settings
 	bool generateCaves;
@@ -73,6 +76,8 @@ extern WorldGen worldGen;
 extern int worldWidth;
 extern int worldHeight;
 extern int seed;
+
+//extern std::vector<float> savedBiomeNoise;
 
 void resetWorldGen();
 void flatWorld();

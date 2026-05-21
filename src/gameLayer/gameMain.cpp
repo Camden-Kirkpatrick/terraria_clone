@@ -361,6 +361,17 @@ bool updateGame()
 #if PRODUCTION_BUILD == 0 || MENU
 	ImGui::Begin("Game Menu");
 
+	//int cameraX = (int)gameData.camera.target.x;
+	//if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())
+	//{
+	//	float bn = savedBiomeNoise[cameraX];
+	//	const char* branch =
+	//		(bn > worldGen.plainThreshold - worldGen.terrainBlendZone &&
+	//			bn < worldGen.plainThreshold + worldGen.terrainBlendZone) ? "BLEND" :
+	//		(bn < worldGen.plainThreshold) ? "PLAINS" : "MOUNTAINS";
+	//	ImGui::Text("Column %d  biomeNoise=%.5f  branch=%s", cameraX, bn, branch);
+	//}
+
 	ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
 	ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 	ImGui::Separator();
@@ -440,7 +451,7 @@ bool updateGame()
 	if (ImGui::SliderFloat("##maxDesThresh", &worldGen.maxDesertThreshold, 0.0f, 1.0f, "%.5f"))
 		initGame(false, false);
 	ImGui::Text("Blend zone:"); ImGui::SameLine();
-	if (ImGui::SliderFloat("##blendZone", &worldGen.blendZone, 0.0f, 1.0f, "%.5f"))
+	if (ImGui::SliderFloat("##blendZone", &worldGen.biomeBlendZone, 0.0f, 1.0f, "%.5f"))
 		initGame(false, false);
 	ImGui::Separator();
 

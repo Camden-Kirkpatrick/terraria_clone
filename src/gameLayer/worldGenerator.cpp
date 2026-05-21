@@ -7,6 +7,8 @@ int worldWidth = DEFAULT_WORLD_WIDTH;
 int worldHeight = DEFAULT_WORLD_HEIGHT;
 int seed = DEFAULT_SEED;
 
+std::vector<float> savedBiomeNoise;
+
 void resetWorldGen()
 {
     worldWidth = DEFAULT_WORLD_WIDTH;
@@ -24,8 +26,11 @@ void resetWorldGen()
     worldGen.minStoneMountainStart = 330;          // Stone layer is at least this many blocks from the top
     worldGen.maxStoneMountainStart = 400;          // The top of the stone layer is at most this many blocks from the top
 
+    worldGen.terrainBlendZone = 0.05f;
+
     // Plain settings
     // Noise generation settings
+    worldGen.plainThreshold = 0.5f;
     worldGen.dirtPlainOctaves = 1;
     worldGen.dirtPlainFrequency = 0.0025f;
     worldGen.stonePlainOctaves = 4;
@@ -38,13 +43,13 @@ void resetWorldGen()
 
     // Biome settings
     worldGen.biomeOctaves = 1;
-    worldGen.biomeFrequency = 0.00025f;
+    worldGen.biomeFrequency = 0.0005f;
     // When the biome noise is in this range, deserts will generate
     worldGen.minDesertThreshold = 0.2f;
     worldGen.maxDesertThreshold = 0.4f;
     // This is the width (in noise units) of the band near each boundary where blending happens
     // With 0.015, only columns whose noise is within 0.015 of a boundary will receive any grassy-biome blocks
-    worldGen.blendZone = 0.015f;
+    worldGen.biomeBlendZone = 0.015f;
 
     // Cave settings
     worldGen.generateCaves = true;
@@ -104,6 +109,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     gameMap.create(WIDTH, HEIGHT);
 
     std::ranlux24_base rng(seed++);
+    //std::ranlux24_base rng;
 
 #pragma region generate_noise
     // Noise generators for different layers, biomes, and caves
@@ -228,6 +234,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
     }
 
+    savedBiomeNoise.assign(biomeNoise, biomeNoise + WIDTH);
+
     auto getCaveNoise1 = [&](int x, int y)
         {
             return caveNoise1[WIDTH * y + x];
@@ -251,6 +259,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // Go through every block in the map
     for (int x = 0; x < WIDTH; x++)
     {
+        //rng.seed(seed + x * 2654435761u);
+
 #pragma region linerar_interpolation
         // Lerp: find the heights for the stone layer
         int stonePlainStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
@@ -273,12 +283,16 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         // Lerp: find the stone height and dirt thickness based on the biome
         // Biome noise close to 0 generates plain-like terrain
         // Biome noise close to 1 generates mountain-like terrain
-        int stoneStart = lerp(stonePlainStart, stoneMountainStart, biomeNoise[x]);
-        int dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, biomeNoise[x]);
+        //int stoneStart = lerp(stonePlainStart, stoneMountainStart, biomeNoise[x]);
+        //int dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, biomeNoise[x]);
         // Dirt generates dirtThickness blocks above the stone layer
-        int dirtStart = stoneStart - dirtThickness;
+        //int dirtStart = stoneStart - dirtThickness;
 
 
+
+        int stoneStart = 0;
+        int dirtThickness = 0;
+        int dirtStart = 0;
 
 
         //if (biomeNoise[x] < 0.5f)
@@ -291,10 +305,41 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         //    stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
         //    dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
         //}
+
         //dirtStart = stoneStart - dirtThickness;
+
+
+
+
+
+
+        if (biomeNoise[x] > worldGen.plainThreshold - worldGen.terrainBlendZone && biomeNoise[x] < worldGen.plainThreshold + worldGen.terrainBlendZone)
+        {
+            float distToEdge = std::abs(biomeNoise[x] - worldGen.plainThreshold);
+            float ratio = distToEdge / worldGen.terrainBlendZone;
+            float t;
+
+            if (biomeNoise[x] < worldGen.plainThreshold)
+                t = 0.5f - 0.5f * ratio;
+            else
+                t = 0.5f + 0.5f * ratio;
+
+            stoneStart = lerp(stonePlainStart, stoneMountainStart, t);
+            dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, t);
+        }
+        else if (biomeNoise[x] < worldGen.plainThreshold)
+        {
+            stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
+            dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
+        }
+        else
+        {
+            stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
+            dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
+        }
+
+        dirtStart = stoneStart - dirtThickness;
             
-
-
 
 
 
@@ -350,8 +395,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 distToEdge = std::min(biomeNoise[x] - worldGen.minDesertThreshold, worldGen.maxDesertThreshold - biomeNoise[x]);
                 // Probability of placing grassy biome blocks instead of desert blocks.
                 // High near the desert boundary, zero in the interior.
-                // e.g. distToEdge=0.000 (boundary) -> chance=1.0, distToEdge=blendZone/2 (halfway) -> chance=0.5, distToEdge=blendZone (interior) -> chance=0.0
-                blendChance = 1.0f - (distToEdge / worldGen.blendZone);
+                // e.g. distToEdge=0.000 (boundary) -> chance=1.0, distToEdge=biomeBlendZone/2 (halfway) -> chance=0.5, distToEdge=biomeBlendZone (interior) -> chance=0.0
+                blendChance = 1.0f - (distToEdge / worldGen.biomeBlendZone);
             }
 
             // If we are in the stone layer and in the desert, use the correct blocks
@@ -471,6 +516,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     }
     
 #pragma region spawn_worms
+    //rng.seed(seed + 0x9E3779B9u);
+
     int numWorms = getRandomInt(rng, worldGen.minNumWorms, worldGen.maxNumWorms);
     worldGen.curNumWorms = numWorms;
 

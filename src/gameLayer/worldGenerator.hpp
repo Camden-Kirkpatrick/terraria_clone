@@ -37,7 +37,6 @@ struct WorldGen
 	// Biome settings
 	int biomeOctaves;
 	float biomeFrequency;
-	float biomeBlendZone;
 
 	// Desert settings
 	float minDesertThreshold;
@@ -82,7 +81,7 @@ extern int worldWidth;
 extern int worldHeight;
 extern int seed;
 
-//extern std::vector<float> savedBiomeNoise;
+extern std::vector<float> savedBiomeNoise;
 
 void resetWorldGen();
 void flatWorld();

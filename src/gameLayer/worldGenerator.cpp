@@ -44,9 +44,6 @@ void resetWorldGen()
     // Biome settings
     worldGen.biomeOctaves = 1;
     worldGen.biomeFrequency = 0.001f;
-    // This is the width (in noise units) of the band near each boundary where blending happens
-    // With 0.015, only columns whose noise is within 0.015 of a boundary will receive any grassy-biome blocks
-    worldGen.biomeBlendZone = 0.0015f;
 
     // Desert settings
     // When the biome noise is in this range, deserts will generate
@@ -54,7 +51,9 @@ void resetWorldGen()
     worldGen.maxDesertThreshold = 0.25f;
     worldGen.desertOctaves = 1;
     worldGen.desertFrequency = 0.0005;
-    worldGen.desertBlendZone = 0.0015f;
+    // This is the width (in noise units) of the band near each boundary where blending happens
+    // With 0.015, only columns whose noise is within 0.015 of a boundary will receive any grassy-biome blocks
+    worldGen.desertBlendZone = 0.03f;
 
     // Cave settings
     worldGen.generateCaves = true;
@@ -252,7 +251,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
     }
 
-    //savedBiomeNoise.assign(biomeNoise, biomeNoise + WIDTH);
+    savedBiomeNoise.assign(biomeNoise, biomeNoise + WIDTH);
 
     auto getCaveNoise1 = [&](int x, int y)
         {
@@ -280,87 +279,86 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         rng.seed(seed + x);
 
 #pragma region linerar_interpolation
-        // Lerp: find the heights for the stone layer
+        // For this column, compute representative stone-start heights for BOTH biomes.
+                // Each one is a lerp from the biome's [min, max] range driven by its own per-column
+                // noise array. We need both values regardless of which biome this column ends up in
+                // because the blend-zone branch below needs to interpolate between them.
         int stonePlainStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
         int stoneMountainStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
-        // Lerp: find the thicknesses for the dirt layer
+        // Same idea for dirt thickness: compute a value for each biome up front, then pick
+        // or blend below.
         int dirtPlainThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
         int dirtMountainThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
 
-        // NOTE: Plain and mountain settings are NOT isolated to their own biomes.
-        // Because lerp(a, b, t) = a*(1-t) + b*t, both inputs always contribute to the result
-        // unless biomeNoise[x] is exactly 0 or 1 (which essentially never happens with simplex noise).
-        // So changing a "plain" setting still affects mountain columns (weighted by 1 - biomeNoise[x]),
-        // and changing a "mountain" setting still affects plain columns (weighted by biomeNoise[x]).
-        // The effect is more visible for mountain settings because their min/max ranges are much
-        // wider than the plain ranges (e.g. stoneMountainStart spans 70 blocks vs 5 for stonePlainStart),
-        // so the same blend weight produces a larger absolute shift.
-        // The same leak applies to the plain/mountain noise frequency and octaves: they only shape
-        // their own noise array, but those arrays feed back into this lerp and bleed across biomes.
-
-        // Lerp: find the stone height and dirt thickness based on the biome
-        // Biome noise close to 0 generates plain-like terrain
-        // Biome noise close to 1 generates mountain-like terrain
-        //int stoneStart = lerp(stonePlainStart, stoneMountainStart, biomeNoise[x]);
-        //int dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, biomeNoise[x]);
-        // Dirt generates dirtThickness blocks above the stone layer
-        //int dirtStart = stoneStart - dirtThickness;
-
-
-
+        // Final values that will actually be used to place blocks in this column.
+        // Initialized to 0; one of the three branches below will overwrite them.
         int stoneStart = 0;
         int dirtThickness = 0;
         int dirtStart = 0;
 
+        // Three-way decision based on where biomeNoise[x] sits relative to the plains/mountains boundary:
+        //   1. Inside the blend zone   -> smoothly mix plains and mountains
+        //   2. Below plainThreshold    -> pure plains
+        //   3. Above plainThreshold    -> pure mountains
+        // Splitting it this way keeps biomes distinct outside the blend zone (no setting leak)
+        // while still producing smooth transitions at boundaries.
 
-        //if (biomeNoise[x] < 0.5f)
-        //{
-        //    stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
-        //    dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
-        //}
-        //else
-        //{
-        //    stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
-        //    dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
-        //}
-
-        //dirtStart = stoneStart - dirtThickness;
-
-
-
-
-
-
+        // Case 1: blend zone.
+        // Triggers when biomeNoise[x] is within terrainBlendZone of plainThreshold on either side.
+        // e.g. plainThreshold=0.5, terrainBlendZone=0.05 -> blend zone is (0.45, 0.55).
         if (biomeNoise[x] > worldGen.plainThreshold - worldGen.terrainBlendZone && biomeNoise[x] < worldGen.plainThreshold + worldGen.terrainBlendZone)
         {
+            // distToEdge: how far this column's noise is from the boundary (always positive).
+            // 0.0 = exactly on the boundary, terrainBlendZone = at the outer edge of the zone.
             float distToEdge = std::abs(biomeNoise[x] - worldGen.plainThreshold);
+            // Normalize to [0, 1]: 0.0 at the boundary, 1.0 at the outer edge.
+            // This makes the formulas below independent of how wide the blend zone is.
             float ratio = distToEdge / worldGen.terrainBlendZone;
+
+            // t is the blend weight for lerp(plain, mountain, t):
+            //   t = 0 -> pure plains
+            //   t = 0.5 -> exact 50/50 mix (used right at the boundary)
+            //   t = 1 -> pure mountains
+            // We need t to slide smoothly from 0 (outer plains edge) -> 0.5 (boundary) -> 1 (outer mountains edge)
+            // as biomeNoise[x] walks across the blend zone.
+            //
+            // ratio is symmetric around the boundary (same magnitude on both sides), so it can't
+            // tell t which direction to lean. The biomeNoise < plainThreshold check below picks
+            // the correct formula for each side.
             float t;
 
             if (biomeNoise[x] < worldGen.plainThreshold)
+                // Plains side: ratio=0 at boundary -> t=0.5; ratio=1 at outer edge -> t=0.
                 t = 0.5f - 0.5f * ratio;
             else
+                // Mountains side: ratio=0 at boundary -> t=0.5; ratio=1 at outer edge -> t=1.
                 t = 0.5f + 0.5f * ratio;
 
+            // Mix this column's plains and mountains values using the computed blend weight.
             stoneStart = lerp(stonePlainStart, stoneMountainStart, t);
             dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, t);
         }
+        // Case 2: pure plains.
+        // biomeNoise is on the plains side AND outside the blend zone.
+        // Use plain settings only, with no mountain contamination, so plain settings are
+        // fully isolated to plain columns.
         else if (biomeNoise[x] < worldGen.plainThreshold)
         {
             stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
             dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
         }
+        // Case 3: pure mountains.
+        // biomeNoise is on the mountains side AND outside the blend zone.
+        // Use mountain settings only, mirror of the plains branch.
         else
         {
             stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
             dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
         }
 
+        // Dirt sits on top of stone. Smaller y = higher up in the world, so subtracting
+        // dirtThickness from stoneStart gives the y of the highest dirt block (the surface).
         dirtStart = stoneStart - dirtThickness;
-            
-
-
-
 #pragma endregion
 
         // Set the block type based on the current depth

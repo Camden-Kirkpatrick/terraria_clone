@@ -1,7 +1,7 @@
 #pragma once
 #include "gameMap.hpp"
 
-#define DEFAULT_WORLD_WIDTH 2000
+#define DEFAULT_WORLD_WIDTH 10000
 #define DEFAULT_WORLD_HEIGHT 500
 #define DEFAULT_SEED 1234
 

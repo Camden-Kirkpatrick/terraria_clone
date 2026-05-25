@@ -11,9 +11,6 @@ std::vector<float> savedBiomeNoise;
 
 void resetWorldGen()
 {
-    worldWidth = DEFAULT_WORLD_WIDTH;
-    worldHeight = DEFAULT_WORLD_HEIGHT;
-
     // Mountain settings
     // Noise generation settings
     worldGen.dirtMountainOctaves = 1;              // 1 octave = smooth gentle hills
@@ -26,24 +23,24 @@ void resetWorldGen()
     worldGen.minStoneMountainStart = 330;          // Stone layer is at least this many blocks from the top
     worldGen.maxStoneMountainStart = 400;          // The top of the stone layer is at most this many blocks from the top
 
-    worldGen.terrainBlendZone = 0.05f;
+    worldGen.terrainBlendZone = 0.075f;
 
     // Plain settings
     // Noise generation settings
     worldGen.plainThreshold = 0.5f;
     worldGen.dirtPlainOctaves = 1;
-    worldGen.dirtPlainFrequency = 0.0025f;
+    worldGen.dirtPlainFrequency = 0.0035f;
     worldGen.stonePlainOctaves = 4;
-    worldGen.stonePlainFrequency = 0.005f;
+    worldGen.stonePlainFrequency = 0.0075f;
     // Terrain generation settings
     worldGen.minDirtPlainThickness = 1;
-    worldGen.maxDirtPlainThickness = 6;
+    worldGen.maxDirtPlainThickness = 10;
     worldGen.minStonePlainStart = 330;
-    worldGen.maxStonePlainStart = 335;
+    worldGen.maxStonePlainStart = 340;
 
     // Biome settings
     worldGen.biomeOctaves = 1;
-    worldGen.biomeFrequency = 0.001f;
+    worldGen.biomeFrequency = 0.002f;
 
     // Desert settings
     // When the biome noise is in this range, deserts will generate
@@ -80,7 +77,7 @@ void resetWorldGen()
     worldGen.generateWorms = true;
     worldGen.curNumWorms = 0;
     worldGen.minNumWorms = 25;
-    worldGen.maxNumWorms = 100;
+    worldGen.maxNumWorms = 100; 
     worldGen.minWormWidth = 1;
     worldGen.maxWormWidth = 5;
     worldGen.minWormTurnAngle = -0.2f;
@@ -280,9 +277,9 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 #pragma region linerar_interpolation
         // For this column, compute representative stone-start heights for BOTH biomes.
-                // Each one is a lerp from the biome's [min, max] range driven by its own per-column
-                // noise array. We need both values regardless of which biome this column ends up in
-                // because the blend-zone branch below needs to interpolate between them.
+        // Each one is a lerp from the biome's [min, max] range driven by its own per-column
+        // noise array. We need both values regardless of which biome this column ends up in
+        // because the blend-zone branch below needs to interpolate between them.
         int stonePlainStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
         int stoneMountainStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
         // Same idea for dirt thickness: compute a value for each biome up front, then pick
@@ -603,7 +600,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // to fit that band, skip the worm pass - getRandomInt asserts when min > max.
     int wormMinX = 10;
     int wormMaxX = WIDTH - 10;
-    int wormMinY = 375;
+    int wormMinY = 350;
     int wormMaxY = HEIGHT - 10;
     if (worldGen.generateWorms && wormMaxX > wormMinX && wormMaxY > wormMinY)
     {

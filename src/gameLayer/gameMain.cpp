@@ -361,26 +361,26 @@ bool updateGame()
 #if PRODUCTION_BUILD == 0 || MENU
 	ImGui::Begin("Game Menu");
 
-	int cameraX = (int)gameData.camera.target.x;
-	if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())
-	{
-		float bn = savedBiomeNoise[cameraX];
-		const char* branch =
-			(bn > worldGen.plainThreshold - worldGen.terrainBlendZone &&
-				bn < worldGen.plainThreshold + worldGen.terrainBlendZone) ? "BLEND" :
-			(bn < worldGen.plainThreshold) ? "PLAINS" : "MOUNTAINS";
-		ImGui::Text("Column %d  biomeNoise=%.5f  branch=%s", cameraX, bn, branch);
-	}
+	//int cameraX = (int)gameData.camera.target.x;
+	//if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())
+	//{
+	//	float bn = savedBiomeNoise[cameraX];
+	//	const char* branch =
+	//		(bn > worldGen.plainThreshold - worldGen.terrainBlendZone &&
+	//			bn < worldGen.plainThreshold + worldGen.terrainBlendZone) ? "BLEND" :
+	//		(bn < worldGen.plainThreshold) ? "PLAINS" : "MOUNTAINS";
+	//	ImGui::Text("Column %d  biomeNoise=%.5f  branch=%s", cameraX, bn, branch);
+	//}
 
 	ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
 	ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 	ImGui::Separator();
 
 	ImGui::Text("World width"); ImGui::SameLine();
-	if (ImGui::SliderInt("##worldWidth", &worldWidth, 25, 10000))
+	if (ImGui::SliderInt("##worldWidth", &worldWidth, 25, 2000))
 		initGame(false, false);
 	ImGui::Text("World height"); ImGui::SameLine();
-	if (ImGui::SliderInt("##worldHeight", &worldHeight, 350, 1000))
+	if (ImGui::SliderInt("##worldHeight", &worldHeight, 375, 1000))
 		initGame(false, false);
 	ImGui::Separator();
 
@@ -568,7 +568,6 @@ bool updateGame()
 
 	if (ImGui::Button("Generate flat world"))
 	{
-		resetWorldGen();
 		flatWorld();
 		initGame(false, false);
 	}

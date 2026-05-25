@@ -377,7 +377,7 @@ bool updateGame()
 	ImGui::Separator();
 
 	ImGui::Text("World width"); ImGui::SameLine();
-	if (ImGui::SliderInt("##worldWidth", &worldWidth, 25, 2000))
+	if (ImGui::SliderInt("##worldWidth", &worldWidth, 25, 10000))
 		initGame(false, false);
 	ImGui::Text("World height"); ImGui::SameLine();
 	if (ImGui::SliderInt("##worldHeight", &worldHeight, 375, 1000))

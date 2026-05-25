@@ -10,6 +10,8 @@
 [![Watch the video](https://img.youtube.com/vi/VrONU5dpWRQ/maxresdefault.jpg)](https://youtu.be/VrONU5dpWRQ)
 ## Video (v1.3.0)
 [![Watch the video](https://img.youtube.com/vi/4QnyahOjVzM/maxresdefault.jpg)](https://www.youtube.com/watch?v=4QnyahOjVzM)
+## Video (v1.4.0)
+[![Watch the video](https://img.youtube.com/vi/cEhbzT8-38I/maxresdefault.jpg)](https://www.youtube.com/watch?v=cEhbzT8-38I)
 
 
 ## Features
@@ -20,7 +22,7 @@
 - [x] Background wall blocks
 - [x] Culling
 - [x] Edit world generation settings while running
-- [ ] Improve world generation
+- [x] Improve world generation
 - [ ] Add entities
 - [ ] Add a player
 - [x] Add caves

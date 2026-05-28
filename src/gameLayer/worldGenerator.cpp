@@ -78,6 +78,8 @@ void resetWorldGen()
     worldGen.curNumWorms = 0;
     worldGen.minNumWorms = 25;
     worldGen.maxNumWorms = 100; 
+    worldGen.minWormLength = 50;
+    worldGen.maxWormLength = 500;
     worldGen.minWormWidth = 1;
     worldGen.maxWormWidth = 5;
     worldGen.minWormTurnAngle = -0.2f;
@@ -613,7 +615,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         {
             float startX = (float)getRandomInt(rng, wormMinX, wormMaxX);
             float startY = (float)getRandomInt(rng, wormMinY, wormMaxY);
-            int length = getRandomInt(rng, 50, 500);
+            int length = getRandomInt(rng, worldGen.minWormLength, worldGen.maxWormLength);
             int radius = getRandomInt(rng, worldGen.minWormWidth, worldGen.maxWormWidth);
             float angle = getRandomFloat(rng, 0.0f, 2.0f * 3.14159265f);
 

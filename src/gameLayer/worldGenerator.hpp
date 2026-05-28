@@ -70,6 +70,8 @@ struct WorldGen
 	int curNumWorms;
 	int minNumWorms;
 	int maxNumWorms;
+	int minWormLength;
+	int maxWormLength;
 	int minWormWidth;
 	int maxWormWidth;
 	float minWormTurnAngle;

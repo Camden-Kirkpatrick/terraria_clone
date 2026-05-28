@@ -406,6 +406,7 @@ bool updateGame()
 		ImGui::Separator();
 
 
+
 		ImGui::Text("Mountain settings");
 		//ImGui::Text("Dirt mountain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtMtnOct", &worldGen.dirtMountainOctaves, 1, 20);
 		ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine();
@@ -429,6 +430,7 @@ bool updateGame()
 		if (ImGui::SliderInt("##maxStoneMtnStart", &worldGen.maxStoneMountainStart, 330, 400))
 			initGame(false, false);
 		ImGui::Separator();
+
 
 
 		ImGui::Text("Plains settings");
@@ -456,6 +458,7 @@ bool updateGame()
 		ImGui::Separator();
 
 
+
 		ImGui::Text("Biome settings");
 		ImGui::Text("Biome frequency:"); ImGui::SameLine();
 		if (ImGui::SliderFloat("##biomeFreq", &worldGen.biomeFrequency, 0.00001f, 0.01f, "%.5f"))
@@ -475,6 +478,7 @@ bool updateGame()
 		ImGui::Separator();
 
 
+
 		ImGui::Text("Cave settings");
 		if (ImGui::Checkbox("Generate caves", &worldGen.generateCaves))
 		{
@@ -492,6 +496,7 @@ bool updateGame()
 		ImGui::Separator();
 
 
+
 		ImGui::Text("Tunnel settings");
 		if (ImGui::Checkbox("Generate tunnels", &worldGen.generateWorms))
 		{
@@ -499,7 +504,7 @@ bool updateGame()
 		}
 		ImGui::Text("Current number of tunnels: %d", worldGen.curNumWorms);
 		ImGui::Text("Min number of tunnels:"); ImGui::SameLine();
-		if (ImGui::SliderInt("##minNumTunls", &worldGen.minNumWorms, 1, 20))
+		if (ImGui::SliderInt("##minNumTunls", &worldGen.minNumWorms, 1, 100))
 		{
 			// min/maxNumWorms use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
 			if (worldGen.minNumWorms > worldGen.maxNumWorms)
@@ -507,10 +512,26 @@ bool updateGame()
 			initGame(false, false);
 		}
 		ImGui::Text("Max number of tunnels:"); ImGui::SameLine();
-		if (ImGui::SliderInt("##maxNumTunls", &worldGen.maxNumWorms, 1, 20))
+		if (ImGui::SliderInt("##maxNumTunls", &worldGen.maxNumWorms, 1, 100))
 		{
 			if (worldGen.maxNumWorms < worldGen.minNumWorms)
 				worldGen.minNumWorms = worldGen.maxNumWorms;
+			initGame(false, false);
+		}
+
+		ImGui::Text("Min tunnel length:"); ImGui::SameLine();
+		if (ImGui::SliderInt("##minTunlLen", &worldGen.minWormLength, 50, 500))
+		{
+			// min/maxWormWidth use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
+			if (worldGen.minWormLength > worldGen.maxWormLength)
+				worldGen.maxWormLength = worldGen.minWormLength;
+			initGame(false, false);
+		}
+		ImGui::Text("Max tunnel width:"); ImGui::SameLine();
+		if (ImGui::SliderInt("##maxTunlLen", &worldGen.maxWormLength, 50, 500))
+		{
+			if (worldGen.maxWormLength < worldGen.minWormLength)
+				worldGen.minWormLength = worldGen.maxWormLength;
 			initGame(false, false);
 		}
 
@@ -522,7 +543,7 @@ bool updateGame()
 				worldGen.maxWormWidth = worldGen.minWormWidth;
 			initGame(false, false);
 		}
-		ImGui::Text("Max worm width:"); ImGui::SameLine();
+		ImGui::Text("Max tunnel width:"); ImGui::SameLine();
 		if (ImGui::SliderInt("##maxTunlWidth", &worldGen.maxWormWidth, 1, 20))
 		{
 			if (worldGen.maxWormWidth < worldGen.minWormWidth)

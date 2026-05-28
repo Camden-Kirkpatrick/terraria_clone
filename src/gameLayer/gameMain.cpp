@@ -105,7 +105,9 @@ bool updateGame()
 		case KEY_NINE:  gameData.currentBlock = Block::leaves;      break;
 		case KEY_ZERO:  gameData.currentBlock = Block::woodenChest; break;
 
-		case KEY_F1:   showImGui             = !showImGui;         break;
+		case KEY_F1:   showImGui              = !showImGui;         break;
+
+		case KEY_R:	                         initGame(true, false); break;
 	}
 
 
@@ -371,8 +373,9 @@ bool updateGame()
 	if (showImGui)
 	{
 		ImGui::Begin("Game Menu");
-		ImGui::Text("Press F1 to open/close the menu");
+		ImGui::Text("Press 'F1' to open/close the menu");
 		ImGui::Text("Menu must be closed in order to place/break blocks");
+		ImGui::Text("Press 'r' to reset world-gen settings to the default");
 
 		int cameraX = (int)gameData.camera.target.x;
 		if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())

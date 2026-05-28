@@ -29,12 +29,13 @@ struct GameData
 		blockLayer = 0,
 		wallLayer = 1,
 	} hoverMode = blockLayer; // Determines whether we are placing/breaking normal blocks or wall blocks
+	int currentBlock = Block::dirt;
 } gameData;
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
 
 // Prevents breaking/placing blocks behind the ImGui window
-bool showImGui = false;
+bool showImGui = true;
 
 bool initGame(bool resetWorldGen, bool resetCamera)
 {
@@ -90,21 +91,21 @@ bool updateGame()
 
 
 	// Change the block being placed using 0-9
-	static int currentBlock = Block::dirt;
 	int key = GetKeyPressed();
 	switch (key)
 	{
-		case KEY_ONE:   currentBlock = Block::dirt;        break;
-		case KEY_TWO:   currentBlock = Block::grassBlock;  break;
-		case KEY_THREE: currentBlock = Block::stone;       break;
-		case KEY_FOUR:  currentBlock = Block::bricks;      break;
-		case KEY_FIVE:  currentBlock = Block::sand;        break;
-		case KEY_SIX:   currentBlock = Block::glass;       break;
-		case KEY_SEVEN: currentBlock = Block::goldBlock;   break;
-		case KEY_EIGHT: currentBlock = Block::woodLog;     break;
-		case KEY_NINE:  currentBlock = Block::leaves;      break;
-		case KEY_ZERO:  currentBlock = Block::woodenChest; break;
-		case KEY_F10:   showImGui    = !showImGui;         break;
+		case KEY_ONE:   gameData.currentBlock = Block::dirt;        break;
+		case KEY_TWO:   gameData.currentBlock = Block::grassBlock;  break;
+		case KEY_THREE: gameData.currentBlock = Block::stone;       break;
+		case KEY_FOUR:  gameData.currentBlock = Block::bricks;      break;
+		case KEY_FIVE:  gameData.currentBlock = Block::sand;        break;
+		case KEY_SIX:   gameData.currentBlock = Block::glass;       break;
+		case KEY_SEVEN: gameData.currentBlock = Block::goldBlock;   break;
+		case KEY_EIGHT: gameData.currentBlock = Block::woodLog;     break;
+		case KEY_NINE:  gameData.currentBlock = Block::leaves;      break;
+		case KEY_ZERO:  gameData.currentBlock = Block::woodenChest; break;
+
+		case KEY_F1:   showImGui             = !showImGui;         break;
 	}
 
 
@@ -167,7 +168,7 @@ bool updateGame()
 					Block* b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
 					if (b)
 					{
-						b->type = currentBlock;
+						b->type = gameData.currentBlock;
 						b->randIndex = std::rand() % 4; // Pick a random texture when placing a block
 					}
 				}
@@ -176,7 +177,7 @@ bool updateGame()
 					Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
 					if (b)
 					{
-						b->type = currentBlock;
+						b->type = gameData.currentBlock;
 						b->randIndex = std::rand() % 4;
 					}
 				}
@@ -370,6 +371,8 @@ bool updateGame()
 	if (showImGui)
 	{
 		ImGui::Begin("Game Menu");
+		ImGui::Text("Press F1 to open/close the menu");
+		ImGui::Text("Menu must be closed in order to place/break blocks");
 
 		int cameraX = (int)gameData.camera.target.x;
 		if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())
@@ -585,6 +588,53 @@ bool updateGame()
 		if (ImGui::Button("Go to world spawn"))
 		{
 			initGame(false, true);
+		}
+
+		ImGui::End();
+
+
+
+		ImGui::Begin("Block Selection");
+		ImGui::Text("Press F1 to open/close the menu");
+		ImGui::Text("Menu must be closed in order to place/break blocks");
+
+		// Loop over every block type, skipping air (type 0).
+		// i doubles as the block ID and the atlas column index.
+		for (int i = 1; i < Block::BLOCKS_COUNT; i++)
+		{
+			// Get the tile's pixel rect in the atlas (column i, row 0, 32x32).
+			auto atlas = getTextureAtlas(i, 0, 32, 32);
+
+			// Convert pixel coords to UVs (0..1) - what ImageButton expects.
+			atlas.x /= assetManager.textures.width;
+			atlas.width /= assetManager.textures.width;
+			atlas.y /= assetManager.textures.height;
+			atlas.height /= assetManager.textures.height;
+
+			// ImageButton has no label, so every button would share the same ID
+			// and collide on hover/click state. Push i to make each one unique.
+			ImGui::PushID(i);
+
+			// ImTextureID is an opaque void*; raylib/OpenGL stores the GL texture
+			// ID inside it. The intptr_t hop avoids a 64-bit int-to-pointer warning.
+			ImTextureID tex = (ImTextureID)(intptr_t)assetManager.textures.id;
+
+			// 35x35 button showing the atlas sub-region from uv0 to uv1.
+			if (ImGui::ImageButton(tex,
+				{ 35,35 }, { atlas.x, atlas.y },
+				{ atlas.x + atlas.width, atlas.y + atlas.height }))
+			{
+				gameData.currentBlock = i;
+			}
+
+			ImGui::PopID();
+
+			// 10 buttons per row: SameLine keeps the next widget inline; skipping
+			// it every 10th iteration drops to a new row.
+			if (i % 10 != 0)
+			{
+				ImGui::SameLine();
+			}
 		}
 
 		ImGui::End();

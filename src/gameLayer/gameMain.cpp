@@ -17,11 +17,11 @@
 #define MIN_CAM_SPEED 1.0f
 #define MAX_CAM_SPEED 1000.0f
 #define DEFAULT_CAM_SPEED 100.0f
-#define INC_CAM_SPEED 0.25f
+#define INC_CAM_SPEED 0.333f
 
 struct GameData
 { 
-	GameMap gameMap;
+	GameMap gameMap = {};
 	Camera2D camera = {};
 	float cameraSpeed = 0.0f;
 	enum HoverMode

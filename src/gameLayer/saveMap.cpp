@@ -24,3 +24,48 @@ bool saveBlockDataToFile(std::vector<Block> blocks, int w, int h, const char* fi
 
 	return true;
 }
+
+bool loadBlockDataToFile(std::vector<Block>& blocks, int w, int h, const char* fileName)
+{
+	blocks.clear();
+	w = 0;
+	h = 0;
+
+	std::ifstream f(fileName, std::ios::binary);
+
+	if (!f.is_open())
+		return false;
+
+	f.read((char*)&w, sizeof(w));
+	f.read((char*)&h, sizeof(h));
+
+	if (!f || w <= 0 || h <= 0)
+	{
+		f.close();
+		return false;
+	}
+
+	// World is too big; probably corrupt data
+	if (w > 10000 || h > 10000)
+	{
+		f.close();
+		return false;
+	}
+
+	size_t blockCount = w * h;
+	blocks.resize(blockCount);
+
+	f.read)((char*)blocks.data(), sizeof(Block) * blockCount);
+
+	if (!f)
+	{
+		blocks.clear();
+		w = 0;
+		h = 0;
+		f.close();
+		return false;
+	}
+
+	f.close();
+	return true;
+}

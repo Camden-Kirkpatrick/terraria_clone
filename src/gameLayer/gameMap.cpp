@@ -9,16 +9,6 @@ void GameMap::create(int w, int h)
 
 	this->w = w;
 	this->h = h;
-
-	// Reset all the block data (all blocks are air)
-	for (Block& e : mapBlocks)
-	{
-		e = {};
-	}
-	for (Block& e : mapWallBlocks)
-	{
-		e = {};
-	}
 }
 
 Block& GameMap::getBlockUnsafe(int x, int y)

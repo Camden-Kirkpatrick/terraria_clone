@@ -25,7 +25,7 @@ bool saveBlockDataToFile(std::vector<Block> blocks, int w, int h, const char* fi
 	return true;
 }
 
-bool loadBlockDataToFile(std::vector<Block>& blocks, int w, int h, const char* fileName)
+bool loadBlockDataFromFile(std::vector<Block>& blocks, int w, int h, const char* fileName)
 {
 	blocks.clear();
 	w = 0;

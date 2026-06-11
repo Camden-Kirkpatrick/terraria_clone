@@ -15,9 +15,11 @@ bool saveBlockDataToFile(std::vector<Block> blocks, int w, int h, const char* fi
 	if (blocks.size() == 0)
 		return false;
 
+	// Write the dimensions first so the loader knows how many blocks follow
 	f.write((const char*)&w, sizeof(w));
 	f.write((const char*)&h, sizeof(h));
 
+	// Dump the entire block array as one contiguous byte blob
 	f.write((const char*)blocks.data(), sizeof(Block) * blocks.size());
 
 	f.close();
@@ -27,6 +29,7 @@ bool saveBlockDataToFile(std::vector<Block> blocks, int w, int h, const char* fi
 
 bool loadBlockDataFromFile(std::vector<Block>& blocks, int w, int h, const char* fileName)
 {
+	// Reset outputs up front so a failed load leaves the caller with a clean state
 	blocks.clear();
 	w = 0;
 	h = 0;
@@ -39,13 +42,16 @@ bool loadBlockDataFromFile(std::vector<Block>& blocks, int w, int h, const char*
 	f.read((char*)&w, sizeof(w));
 	f.read((char*)&h, sizeof(h));
 
+	// Reject if the header read failed (file too short / not a save file) or if
+	// the dimensions are zero/negative
 	if (!f || w <= 0 || h <= 0)
 	{
 		f.close();
 		return false;
 	}
 
-	// World is too big; probably corrupt data
+	// Guard against absurd dimensions from a corrupt or malicious file, which
+	// would otherwise cause a huge allocation below
 	if (w > 10000 || h > 10000)
 	{
 		f.close();
@@ -57,6 +63,7 @@ bool loadBlockDataFromFile(std::vector<Block>& blocks, int w, int h, const char*
 
 	f.read((char*)blocks.data(), sizeof(Block) * blockCount);
 
+	// Partial read = truncated/corrupt file; wipe the partially-filled vector
 	if (!f)
 	{
 		blocks.clear();

@@ -99,4 +99,10 @@ struct Block
 		-1, // workBench
 		59, // glass
 	};
+
+	void sanitize()
+	{
+		if (type >= BLOCKS_COUNT)
+			type = 0;
+	}
 };

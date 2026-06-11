@@ -55,7 +55,7 @@ bool loadBlockDataFromFile(std::vector<Block>& blocks, int w, int h, const char*
 	size_t blockCount = w * h;
 	blocks.resize(blockCount);
 
-	f.read)((char*)blocks.data(), sizeof(Block) * blockCount);
+	f.read((char*)blocks.data(), sizeof(Block) * blockCount);
 
 	if (!f)
 	{
@@ -65,6 +65,10 @@ bool loadBlockDataFromFile(std::vector<Block>& blocks, int w, int h, const char*
 		f.close();
 		return false;
 	}
+
+	// Ensure all blocks have a valid type
+	for (int i = 0; i < blocks.size(); i++)
+		blocks[i].sanitize();
 
 	f.close();
 	return true;

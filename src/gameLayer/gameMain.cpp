@@ -640,6 +640,7 @@ bool updateGame()
 		ImGui::Begin("Block Selection");
 		ImGui::Text("Press F1 to open/close the menu");
 		ImGui::Text("Menu must be closed in order to place/break blocks");
+		ImGui::Text("Use middle click on your mouse to select the block being hovered over");
 
 		// Loop over every block type, skipping air (type 0).
 		// i doubles as the block ID and the atlas column index.

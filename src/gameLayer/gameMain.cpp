@@ -90,6 +90,19 @@ bool updateGame()
 	else if (gameData.cameraSpeed < MIN_CAM_SPEED) { gameData.cameraSpeed = MIN_CAM_SPEED; }
 
 
+	// This is used to show which block the mouse is hovered on (selection frame)
+	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
+	int blockX = (int)floor(worldPos.x);
+	int blockY = (int)floor(worldPos.y);
+
+	// Select the block the mouse/selection frame is hovering over
+	if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE))
+	{
+		Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
+		gameData.currentBlock = b->type;
+	}
+
+
 	// Change the block being placed using 0-9
 	int key = GetKeyPressed();
 	switch (key)
@@ -110,11 +123,6 @@ bool updateGame()
 		case KEY_R:	                         initGame(true, false); break;
 	}
 
-
-	// This is used to show which block is selected
-	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
-	int blockX = (int)floor(worldPos.x);
-	int blockY= (int)floor(worldPos.y);
 
 	// Holding shift toggles "hover mode" which allows placing blocks on the wall layer instead of the main layer
 	bool shiftDown = IsKeyDown(KEY_LEFT_SHIFT);
@@ -355,6 +363,7 @@ bool updateGame()
 		}
 	}
 
+	// Show the block currently selected
 	DrawTexturePro(
 		assetManager.textures,
 		getTextureAtlas(gameData.currentBlock, 0, 32, 32),

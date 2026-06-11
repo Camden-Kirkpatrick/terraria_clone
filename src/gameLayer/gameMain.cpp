@@ -355,6 +355,15 @@ bool updateGame()
 		}
 	}
 
+	DrawTexturePro(
+		assetManager.textures,
+		getTextureAtlas(gameData.currentBlock, 0, 32, 32),
+		{ (float)blockX, (float)blockY, 1, 1 },
+		{ 0, 0 },
+		0.0f,
+		{ 255, 255, 255, 255 }
+	);
+
 	// Draw the block selection frame
 	DrawTexturePro(
 		assetManager.frame,
@@ -364,6 +373,7 @@ bool updateGame()
 		0.0f,
 		gameData.hoverMode == GameData::HoverMode::blockLayer ? WHITE : RED // white frame for block layer, red frame for wall layer
 	);
+
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
 	EndMode2D();

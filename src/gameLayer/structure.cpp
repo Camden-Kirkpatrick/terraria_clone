@@ -5,7 +5,6 @@ void Structure::create(int w, int h)
 {
 	*this = {};
 	structureBlocks.resize(w * h);
-	structureWallBlocks.resize(w * h);
 
 	this->w = w;
 	this->h = h;

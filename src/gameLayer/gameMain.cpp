@@ -30,6 +30,8 @@ struct GameData
 		wallLayer = 1,
 	} hoverMode = blockLayer; // Determines whether we are placing/breaking normal blocks or wall blocks
 	int currentBlock = Block::dirt;
+	Vector2 selectionStart = {};
+	Vector2 selectionEnd = {};
 } gameData;
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
@@ -107,20 +109,23 @@ bool updateGame()
 	int key = GetKeyPressed();
 	switch (key)
 	{
-		case KEY_ONE:   gameData.currentBlock = Block::dirt;        break;
-		case KEY_TWO:   gameData.currentBlock = Block::grassBlock;  break;
-		case KEY_THREE: gameData.currentBlock = Block::stone;       break;
-		case KEY_FOUR:  gameData.currentBlock = Block::bricks;      break;
-		case KEY_FIVE:  gameData.currentBlock = Block::sand;        break;
-		case KEY_SIX:   gameData.currentBlock = Block::glass;       break;
-		case KEY_SEVEN: gameData.currentBlock = Block::goldBlock;   break;
-		case KEY_EIGHT: gameData.currentBlock = Block::woodLog;     break;
-		case KEY_NINE:  gameData.currentBlock = Block::leaves;      break;
-		case KEY_ZERO:  gameData.currentBlock = Block::woodenChest; break;
-
 		case KEY_F1:   showImGui              = !showImGui;         break;
-
 		case KEY_R:	                         initGame(true, false); break;
+	}
+
+	// Selection area
+	if (showImGui)
+	{
+		if (IsKeyPressed(KEY_ONE))
+			gameData.selectionStart = Vector2{ (float)blockX, (float)blockY };
+		if (IsKeyPressed(KEY_TWO))
+			gameData.selectionEnd = Vector2{ (float)blockX, (float)blockY };
+
+		// Ensure selectionStart is before selectionEnd
+		if (gameData.selectionStart.x > gameData.selectionEnd.x)
+			std::swap(gameData.selectionStart.x, gameData.selectionEnd.x);
+		if (gameData.selectionStart.y > gameData.selectionEnd.y)
+			std::swap(gameData.selectionStart.y, gameData.selectionEnd.y);
 	}
 
 
@@ -382,6 +387,19 @@ bool updateGame()
 		0.0f,
 		gameData.hoverMode == GameData::HoverMode::blockLayer ? WHITE : RED // white frame for block layer, red frame for wall layer
 	);
+
+	// Draw the selection rectangle
+	if (showImGui)
+	{
+		Rectangle rect;
+		rect.x = gameData.selectionStart.x;
+		rect.y = gameData.selectionStart.y; 
+		// Size = end - start + 1
+		rect.width = (gameData.selectionEnd.x - gameData.selectionStart.x) + 1;
+		rect.height = (gameData.selectionEnd.y - gameData.selectionStart.y) + 1;
+
+		DrawRectangleLinesEx(rect, 0.1f, { 20, 101, 250, 145 });
+	}
 
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.

@@ -1,5 +1,6 @@
 #include "saveMap.hpp"
 #include <asserts.hpp>
+#include <iostream>
 
 bool saveBlockDataToFile(std::vector<Block> blocks, int w, int h, const char* fileName)
 {
@@ -27,7 +28,7 @@ bool saveBlockDataToFile(std::vector<Block> blocks, int w, int h, const char* fi
 	return true;
 }
 
-bool loadBlockDataFromFile(std::vector<Block>& blocks, int w, int h, const char* fileName)
+bool loadBlockDataFromFile(std::vector<Block>& blocks, int &w, int &h, const char* fileName)
 {
 	// Reset outputs up front so a failed load leaves the caller with a clean state
 	blocks.clear();
@@ -41,6 +42,7 @@ bool loadBlockDataFromFile(std::vector<Block>& blocks, int w, int h, const char*
 
 	f.read((char*)&w, sizeof(w));
 	f.read((char*)&h, sizeof(h));
+	std::cout << w << " " << h << std::endl;
 
 	// Reject if the header read failed (file too short / not a save file) or if
 	// the dimensions are zero/negative

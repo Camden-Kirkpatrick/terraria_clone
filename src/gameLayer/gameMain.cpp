@@ -4,6 +4,7 @@
 #include "helpers.hpp"
 #include "blocks.hpp"
 #include "worldGenerator.hpp"
+#include "structure.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <imgui.h>
@@ -32,6 +33,7 @@ struct GameData
 	int currentBlock = Block::dirt;
 	Vector2 selectionStart = {};
 	Vector2 selectionEnd = {};
+	Structure copyStructure = {};
 } gameData;
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
@@ -120,6 +122,12 @@ bool updateGame()
 			gameData.selectionStart = Vector2{ (float)blockX, (float)blockY };
 		if (IsKeyPressed(KEY_TWO))
 			gameData.selectionEnd = Vector2{ (float)blockX, (float)blockY };
+
+		if (IsKeyPressed(KEY_THREE))
+			gameData.copyStructure.pasteIntoMap(
+				gameData.gameMap,
+				Vector2{(float)blockX, (float)blockY}
+			);
 
 		// Ensure selectionStart is before selectionEnd
 		if (gameData.selectionStart.x > gameData.selectionEnd.x)
@@ -427,6 +435,19 @@ bool updateGame()
 
 		ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
 		ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
+		ImGui::Separator();
+
+		ImGui::Text("Press 1 to change the start of the selection area");
+		ImGui::Text("Press 2 to change the end of the selection area");
+		ImGui::Text("Press 3 to paste the copied area");
+		if (ImGui::Button("Copy Current Selection"))
+		{
+			gameData.copyStructure.copyFromMap(
+				gameData.gameMap,
+				gameData.selectionStart,
+				gameData.selectionEnd
+			);
+		}
 		ImGui::Separator();
 
 		ImGui::Text("World width"); ImGui::SameLine();

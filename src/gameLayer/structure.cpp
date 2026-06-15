@@ -38,6 +38,7 @@ Block* Structure::getBlockSafe(int x, int y)
 	return &structureBlocks[w * y + x];
 }
 
+// Copy an area from the map and store it in a structure
 // start and end define the area being selected
 void Structure::copyFromMap(GameMap& map, Vector2 start, Vector2 end)
 {
@@ -64,11 +65,6 @@ void Structure::copyFromMap(GameMap& map, Vector2 start, Vector2 end)
 
 	Vector2 size = Vector2{ end.x - start.x + 1, end.y - start.y + 1 };
 
-	if (size.x > map.w)
-		return;
-	if (size.y > map.h)
-		return;
-
 	// Allocate memory for the structure
 	create(size.x, size.y);
 
@@ -82,5 +78,18 @@ void Structure::copyFromMap(GameMap& map, Vector2 start, Vector2 end)
 	}
 }
 
-
-void pasteIntoMap(GameMap& map, Vector2 start);
+// Copy the structure into the map
+void Structure::pasteIntoMap(GameMap& map, Vector2 start)
+{
+	for (int y = 0; y < h; y++)
+	{
+		for (int x = 0; x < w; x++)
+		{
+			// Get the map blocks that will be overwritten with the structure
+			Block* b = map.getBlockSafe(x + start.x, y + start.y);
+			// Place the structure block in the world
+			if (b)
+				*b = getBlockUnsafe(x, y);
+		}
+	}
+}

@@ -5,6 +5,7 @@
 #include "blocks.hpp"
 #include "worldGenerator.hpp"
 #include "structure.hpp"
+#include "saveMap.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <imgui.h>
@@ -34,6 +35,7 @@ struct GameData
 	Vector2 selectionStart = {};
 	Vector2 selectionEnd = {};
 	Structure copyStructure = {};
+	char saveName[100] = {};
 } gameData;
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
@@ -448,6 +450,42 @@ bool updateGame()
 				gameData.selectionEnd
 			);
 		}
+
+		ImGui::InputText("File name", gameData.saveName, sizeof(gameData.saveName));
+
+		if (ImGui::Button("Save to file"))
+		{
+			std::string path = RESOURCES_PATH "structures/";
+			path += gameData.saveName;
+			path += ".bin";
+
+			saveBlockDataToFile(
+				gameData.copyStructure.structureBlocks,
+				gameData.copyStructure.w,
+				gameData.copyStructure.h,
+				path.c_str()
+			);
+		}
+
+		if (ImGui::Button("Load from file"))
+		{
+			std::string path = RESOURCES_PATH "structures/";
+			path += gameData.saveName;
+			path += ".bin";
+			std::cout << "Loading " << path << std::endl;
+			std::cout << "w: " << gameData.copyStructure.w << std::endl;
+			std::cout << "h: " << gameData.copyStructure.h << std::endl;
+
+			loadBlockDataFromFile(
+				gameData.copyStructure.structureBlocks,
+				gameData.copyStructure.w,
+				gameData.copyStructure.h,
+				path.c_str()
+			);
+			std::cout << "w: " << gameData.copyStructure.w << std::endl;
+			std::cout << "h: " << gameData.copyStructure.h << std::endl;
+		}
+
 		ImGui::Separator();
 
 		ImGui::Text("World width"); ImGui::SameLine();

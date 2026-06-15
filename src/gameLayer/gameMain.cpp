@@ -114,7 +114,10 @@ bool updateGame()
 	switch (key)
 	{
 		case KEY_F1:   showImGui              = !showImGui;         break;
-		case KEY_R:	                         initGame(true, false); break;
+
+		case KEY_R:	   
+			if (!showImGui)
+				initGame(true, false); break;
 	}
 
 	// Selection area

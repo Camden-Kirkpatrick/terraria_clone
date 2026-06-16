@@ -40,7 +40,8 @@ struct GameData
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
 
-// Prevents breaking/placing blocks behind the ImGui window
+// Toggle the ImGui menu on/off
+// Blocks can't be broken or placed behind the ImGui menu
 bool showImGui = true;
 
 bool initGame(bool resetWorldGen, bool resetCamera)
@@ -109,8 +110,6 @@ bool updateGame()
 		gameData.currentBlock = b->type;
 	}
 
-
-	// Change the block being placed using 0-9
 	int key = GetKeyPressed();
 	switch (key)
 	{
@@ -483,9 +482,6 @@ bool updateGame()
 			std::string path = RESOURCES_PATH "structures/";
 			path += gameData.saveName;
 			path += ".bin";
-			std::cout << "Loading " << path << std::endl;
-			std::cout << "w: " << gameData.copyStructure.w << std::endl;
-			std::cout << "h: " << gameData.copyStructure.h << std::endl;
 
 			loadBlockDataFromFile(
 				gameData.copyStructure.structureBlocks,
@@ -493,8 +489,20 @@ bool updateGame()
 				gameData.copyStructure.h,
 				path.c_str()
 			);
-			std::cout << "w: " << gameData.copyStructure.w << std::endl;
-			std::cout << "h: " << gameData.copyStructure.h << std::endl;
+		}
+
+		if (ImGui::Button("Copy World"))
+		{
+			gameData.selectionStart.x = 0;
+			gameData.selectionStart.y = 0;
+			gameData.selectionEnd.x = worldWidth - 1;
+			gameData.selectionEnd.y = worldHeight - 1;
+
+			gameData.copyStructure.copyFromMap(
+				gameData.gameMap,
+				gameData.selectionStart,
+				gameData.selectionEnd
+			);
 		}
 
 		ImGui::Separator();

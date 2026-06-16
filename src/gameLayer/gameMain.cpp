@@ -113,10 +113,10 @@ bool updateGame()
 	int key = GetKeyPressed();
 	switch (key)
 	{
-		case KEY_F1:   showImGui              = !showImGui;         break;
+		case KEY_TAB: showImGui = !showImGui; break;
 
 		case KEY_R:	   
-			if (!showImGui)
+			if (!showImGui) // Prevent resetting the game when typing in the text boxes
 				initGame(true, false); break;
 	}
 

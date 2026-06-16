@@ -42,7 +42,6 @@ bool loadBlockDataFromFile(std::vector<Block>& blocks, int &w, int &h, const cha
 
 	f.read((char*)&w, sizeof(w));
 	f.read((char*)&h, sizeof(h));
-	std::cout << w << " " << h << std::endl;
 
 	// Reject if the header read failed (file too short / not a save file) or if
 	// the dimensions are zero/negative

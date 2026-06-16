@@ -76,10 +76,11 @@ bool updateGame()
 #pragma region keyboard_input
 	// Camera movement: shift the target (the world point we're looking at).
 	// Multiplying by deltaTime makes the speed framerate-independent.
-	if (IsKeyDown(KEY_A)) { gameData.camera.target.x -= gameData.cameraSpeed * deltaTime; } // pan left
-	if (IsKeyDown(KEY_D)) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
-	if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
-	if (IsKeyDown(KEY_S)) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
+	// !showImGui is there to prevent game inputs when typing in the text boxes
+	if (IsKeyDown(KEY_A) && !showImGui) { gameData.camera.target.x -= gameData.cameraSpeed * deltaTime; } // pan left
+	if (IsKeyDown(KEY_D) && !showImGui) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
+	if (IsKeyDown(KEY_W) && !showImGui) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
+	if (IsKeyDown(KEY_S) && !showImGui) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
 	 
 	// Camera zoom
 	if (IsKeyDown(KEY_MINUS)) { gameData.camera.zoom -= INC_CAM_ZOOM; }
@@ -116,7 +117,7 @@ bool updateGame()
 		case KEY_TAB: showImGui = !showImGui; break;
 
 		case KEY_R:	   
-			if (!showImGui) // Prevent resetting the game when typing in the text boxes
+			if (!showImGui)
 				initGame(true, false); break;
 	}
 
@@ -128,11 +129,25 @@ bool updateGame()
 		if (IsKeyPressed(KEY_TWO))
 			gameData.selectionEnd = Vector2{ (float)blockX, (float)blockY };
 
-		if (IsKeyPressed(KEY_THREE))
-			gameData.copyStructure.pasteIntoMap(
-				gameData.gameMap,
-				Vector2{(float)blockX, (float)blockY}
-			);
+		if (IsKeyDown(KEY_LEFT_CONTROL))
+		{
+			if (IsKeyDown(KEY_C))
+			{
+				gameData.copyStructure.copyFromMap(
+					gameData.gameMap,
+					gameData.selectionStart,
+					gameData.selectionEnd
+				);
+			}
+
+			if (IsKeyPressed(KEY_V))
+			{
+				gameData.copyStructure.pasteIntoMap(
+					gameData.gameMap,
+					Vector2{ (float)blockX, (float)blockY }
+				);
+			}
+		}
 
 		// Ensure selectionStart is before selectionEnd
 		if (gameData.selectionStart.x > gameData.selectionEnd.x)
@@ -442,17 +457,10 @@ bool updateGame()
 		ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 		ImGui::Separator();
 
-		ImGui::Text("Press 1 to change the start of the selection area");
-		ImGui::Text("Press 2 to change the end of the selection area");
-		ImGui::Text("Press 3 to paste the copied area");
-		if (ImGui::Button("Copy Current Selection"))
-		{
-			gameData.copyStructure.copyFromMap(
-				gameData.gameMap,
-				gameData.selectionStart,
-				gameData.selectionEnd
-			);
-		}
+		ImGui::Text("Press '1' to change the start of the selection area");
+		ImGui::Text("Press '2' to change the end of the selection area");
+		ImGui::Text("Press 'Left CTRL + c' to copy the selected area");
+		ImGui::Text("Press 'Left CTRL + v' to paste the copied area");
 
 		ImGui::InputText("File name", gameData.saveName, sizeof(gameData.saveName));
 

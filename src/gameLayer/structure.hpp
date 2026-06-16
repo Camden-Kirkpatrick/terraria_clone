@@ -21,4 +21,6 @@ struct Structure
 
 	void copyFromMap(GameMap &map, Vector2 start, Vector2 end);
 	void pasteIntoMap(GameMap& map, Vector2 start);
+
+	std::uint16_t getBlockType(int x, int y);
 };

@@ -36,6 +36,8 @@ struct GameData
 	Vector2 selectionEnd = {};
 	Structure copyStructure = {};
 	char saveName[100] = {};
+	bool previewStructure = true;
+	//bool brushMode = false;
 } gameData;
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
@@ -137,14 +139,21 @@ bool updateGame()
 					gameData.selectionEnd
 				);
 			}
+		}
 
-			if (IsKeyPressed(KEY_V))
-			{
-				gameData.copyStructure.pasteIntoMap(
-					gameData.gameMap,
-					Vector2{ (float)blockX, (float)blockY }
-				);
-			}
+		//if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && gameData.brushMode)
+		//{
+		//	gameData.copyStructure.pasteIntoMap(
+		//		gameData.gameMap,
+		//		Vector2{ (float)blockX, (float)blockY }
+		//	);
+		//}
+		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+		{
+			gameData.copyStructure.pasteIntoMap(
+				gameData.gameMap,
+				Vector2{ (float)blockX, (float)blockY }
+			);
 		}
 
 		// Ensure selectionStart is before selectionEnd
@@ -397,6 +406,26 @@ bool updateGame()
 		0.0f,
 		{ 255, 255, 255, 255 }
 	);
+
+	// Show the current structure that was copied or loaded
+	if (gameData.previewStructure && showImGui)
+	{
+		for (int x = 0; x < gameData.copyStructure.w; x++)
+		{
+			for (int y = 0; y < gameData.copyStructure.h; y++)
+			{
+				uint16_t blockIndex = gameData.copyStructure.getBlockType(x, y);
+				DrawTexturePro(
+					assetManager.textures,
+					getTextureAtlas(blockIndex, 0, 32, 32),
+					{ (float)blockX + x, (float)blockY + y, 1, 1 },
+					{ 0, 0 },
+					0.0f,
+					{ 255, 255, 255, 175 }
+				);
+			}
+		}
+	}
 
 	// Draw the block selection frame
 	DrawTexturePro(
@@ -682,12 +711,10 @@ bool updateGame()
 		ImGui::Text("Menu must be closed in order to place/break blocks");
 		ImGui::Text("Use middle click on your mouse to select the block being hovered over");
 
-
-
 		ImGui::Text("Press '1' to change the start of the selection area");
 		ImGui::Text("Press '2' to change the end of the selection area");
 		ImGui::Text("Press 'Left CTRL + c' to copy the selected area");
-		ImGui::Text("Press 'Left CTRL + v' to paste the copied area");
+		ImGui::Text("Press 'Mouse Right Click' to paste the copied area");
 
 		ImGui::InputText("File name", gameData.saveName, sizeof(gameData.saveName));
 
@@ -737,7 +764,10 @@ bool updateGame()
 
 		ImGui::Separator();
 
+		if (ImGui::Checkbox("Preview structure", &gameData.previewStructure)) {}
+		//if (ImGui::Checkbox("Brush mode", &gameData.brushMode)) {}
 
+		ImGui::Separator();
 
 		// Loop over every block type, skipping air (type 0).
 		// i doubles as the block ID and the atlas column index.

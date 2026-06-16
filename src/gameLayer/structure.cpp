@@ -127,3 +127,12 @@ void Structure::pasteIntoMap(GameMap& map, Vector2 start)
 		}
 	}
 }
+
+std::uint16_t Structure::getBlockType(int x, int y)
+{
+	Block* b = getBlockSafe(x, y);
+	if (b)
+		return b->type;
+	else
+		return Block::air;
+}

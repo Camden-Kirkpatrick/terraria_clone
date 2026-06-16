@@ -69,6 +69,7 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 
 	size_t blockCount = w * h;
 	blocks.resize(blockCount);
+	wallBlocks.resize(blockCount);
 
 	f.read((char*)blocks.data(), sizeof(Block) * blockCount);
 	f.read((char*)wallBlocks.data(), sizeof(Block) * blockCount);

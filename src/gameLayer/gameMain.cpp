@@ -119,7 +119,7 @@ bool updateGame()
 				initGame(true, false); break;
 	}
 
-	// Selection area
+	// Select an area to copy and paste blocks, or save/load blocks to/from a file
 	if (showImGui)
 	{
 		if (IsKeyPressed(KEY_ONE))
@@ -159,13 +159,9 @@ bool updateGame()
 	bool shiftDown = IsKeyDown(KEY_LEFT_SHIFT);
 
 	if (shiftDown)
-	{
 		gameData.hoverMode = GameData::HoverMode::wallLayer;
-	}
 	else
-	{
 		gameData.hoverMode = GameData::HoverMode::blockLayer;
-	}
 
 	// Don't allow placing and breaking blocks while the ImGui menu is shown
 	if (!showImGui)
@@ -283,10 +279,8 @@ bool updateGame()
 			if (b.type != Block::air)
 			{
 				if (Block::wallColumn[b.type] == -1)
-				{
 					// This block type doesn't have a wall texture, so skip drawing it
 					continue;
-				}
 
 				float size = 1; 
 				Texture2D textureAtlas = assetManager.textures;
@@ -414,7 +408,7 @@ bool updateGame()
 		gameData.hoverMode == GameData::HoverMode::blockLayer ? WHITE : RED // white frame for block layer, red frame for wall layer
 	);
 
-	// Draw the selection rectangle
+	// Draw the selection rectangle used for copying and pasting blocks
 	if (showImGui)
 	{
 		Rectangle rect;
@@ -455,58 +449,7 @@ bool updateGame()
 		ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 		ImGui::Separator();
 
-		ImGui::Text("Press '1' to change the start of the selection area");
-		ImGui::Text("Press '2' to change the end of the selection area");
-		ImGui::Text("Press 'Left CTRL + c' to copy the selected area");
-		ImGui::Text("Press 'Left CTRL + v' to paste the copied area");
 
-		ImGui::InputText("File name", gameData.saveName, sizeof(gameData.saveName));
-
-		if (ImGui::Button("Save to file"))
-		{
-			std::string path = RESOURCES_PATH "structures/";
-			path += gameData.saveName;
-			path += ".bin";
-
-			saveBlockDataToFile(
-				gameData.copyStructure.structureBlocks,
-				gameData.copyStructure.structureWallBlocks,
-				gameData.copyStructure.w,
-				gameData.copyStructure.h,
-				path.c_str()
-			);
-		}
-
-		if (ImGui::Button("Load from file"))
-		{
-			std::string path = RESOURCES_PATH "structures/";
-			path += gameData.saveName;
-			path += ".bin";
-
-			loadBlockDataFromFile(
-				gameData.copyStructure.structureBlocks,
-				gameData.copyStructure.structureWallBlocks,
-				gameData.copyStructure.w,
-				gameData.copyStructure.h,
-				path.c_str()
-			);
-		}
-
-		if (ImGui::Button("Copy World"))
-		{
-			gameData.selectionStart.x = 0;
-			gameData.selectionStart.y = 0;
-			gameData.selectionEnd.x = worldWidth - 1;
-			gameData.selectionEnd.y = worldHeight - 1;
-
-			gameData.copyStructure.copyFromMap(
-				gameData.gameMap,
-				gameData.selectionStart,
-				gameData.selectionEnd
-			);
-		}
-
-		ImGui::Separator();
 
 		ImGui::Text("World width"); ImGui::SameLine();
 		if (ImGui::SliderInt("##worldWidth", &worldWidth, 25, 10000))
@@ -738,6 +681,63 @@ bool updateGame()
 		ImGui::Text("Press F1 to open/close the menu");
 		ImGui::Text("Menu must be closed in order to place/break blocks");
 		ImGui::Text("Use middle click on your mouse to select the block being hovered over");
+
+
+
+		ImGui::Text("Press '1' to change the start of the selection area");
+		ImGui::Text("Press '2' to change the end of the selection area");
+		ImGui::Text("Press 'Left CTRL + c' to copy the selected area");
+		ImGui::Text("Press 'Left CTRL + v' to paste the copied area");
+
+		ImGui::InputText("File name", gameData.saveName, sizeof(gameData.saveName));
+
+		if (ImGui::Button("Save to file"))
+		{
+			std::string path = RESOURCES_PATH "structures/";
+			path += gameData.saveName;
+			path += ".bin";
+
+			saveBlockDataToFile(
+				gameData.copyStructure.structureBlocks,
+				gameData.copyStructure.structureWallBlocks,
+				gameData.copyStructure.w,
+				gameData.copyStructure.h,
+				path.c_str()
+			);
+		}
+
+		if (ImGui::Button("Load from file"))
+		{
+			std::string path = RESOURCES_PATH "structures/";
+			path += gameData.saveName;
+			path += ".bin";
+
+			loadBlockDataFromFile(
+				gameData.copyStructure.structureBlocks,
+				gameData.copyStructure.structureWallBlocks,
+				gameData.copyStructure.w,
+				gameData.copyStructure.h,
+				path.c_str()
+			);
+		}
+
+		if (ImGui::Button("Copy World"))
+		{
+			gameData.selectionStart.x = 0;
+			gameData.selectionStart.y = 0;
+			gameData.selectionEnd.x = worldWidth - 1;
+			gameData.selectionEnd.y = worldHeight - 1;
+
+			gameData.copyStructure.copyFromMap(
+				gameData.gameMap,
+				gameData.selectionStart,
+				gameData.selectionEnd
+			);
+		}
+
+		ImGui::Separator();
+
+
 
 		// Loop over every block type, skipping air (type 0).
 		// i doubles as the block ID and the atlas column index.

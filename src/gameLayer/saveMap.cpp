@@ -2,7 +2,7 @@
 #include <asserts.hpp>
 #include <iostream>
 
-bool saveBlockDataToFile(std::vector<Block> blocks, int w, int h, const char* fileName)
+bool saveBlockDataToFile(std::vector<Block> blocks, std::vector<Block> wallBlocks, int w, int h, const char* fileName)
 {
 	std::ofstream f(fileName, std::ios::binary);
 
@@ -16,19 +16,27 @@ bool saveBlockDataToFile(std::vector<Block> blocks, int w, int h, const char* fi
 	if (blocks.size() == 0)
 		return false;
 
+	permaAssertDevelopement(wallBlocks.size() == w * h);
+	permaAssertDevelopement(wallBlocks.size() != 0);
+	if (wallBlocks.size() != w * h)
+		return false;
+	if (wallBlocks.size() == 0)
+		return false;
+
 	// Write the dimensions first so the loader knows how many blocks follow
 	f.write((const char*)&w, sizeof(w));
 	f.write((const char*)&h, sizeof(h));
 
 	// Dump the entire block array as one contiguous byte blob
 	f.write((const char*)blocks.data(), sizeof(Block) * blocks.size());
+	f.write((const char*)wallBlocks.data(), sizeof(Block) * wallBlocks.size());
 
 	f.close();
 
 	return true;
 }
 
-bool loadBlockDataFromFile(std::vector<Block>& blocks, int &w, int &h, const char* fileName)
+bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallBlocks, int &w, int &h, const char* fileName)
 {
 	// Reset outputs up front so a failed load leaves the caller with a clean state
 	blocks.clear();
@@ -63,6 +71,7 @@ bool loadBlockDataFromFile(std::vector<Block>& blocks, int &w, int &h, const cha
 	blocks.resize(blockCount);
 
 	f.read((char*)blocks.data(), sizeof(Block) * blockCount);
+	f.read((char*)wallBlocks.data(), sizeof(Block) * blockCount);
 
 	// Partial read = truncated/corrupt file; wipe the partially-filled vector
 	if (!f)

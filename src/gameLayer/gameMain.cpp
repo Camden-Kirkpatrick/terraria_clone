@@ -471,6 +471,7 @@ bool updateGame()
 
 			saveBlockDataToFile(
 				gameData.copyStructure.structureBlocks,
+				gameData.copyStructure.structureWallBlocks,
 				gameData.copyStructure.w,
 				gameData.copyStructure.h,
 				path.c_str()
@@ -485,6 +486,7 @@ bool updateGame()
 
 			loadBlockDataFromFile(
 				gameData.copyStructure.structureBlocks,
+				gameData.copyStructure.structureWallBlocks,
 				gameData.copyStructure.w,
 				gameData.copyStructure.h,
 				path.c_str()

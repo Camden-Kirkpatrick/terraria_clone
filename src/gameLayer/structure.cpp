@@ -5,6 +5,7 @@ void Structure::create(int w, int h)
 {
 	*this = {};
 	structureBlocks.resize(w * h);
+	structureWallBlocks.resize(w * h);
 
 	this->w = w;
 	this->h = h;
@@ -36,6 +37,34 @@ Block* Structure::getBlockSafe(int x, int y)
 		return nullptr;
 
 	return &structureBlocks[w * y + x];
+}
+
+Block& Structure::getWallBlockUnsafe(int x, int y)
+{
+	permaAssertCommentDevelopement(
+		structureWallBlocks.size() == w * h,
+		"Structure data not initialized"
+	);
+
+	permaAssertCommentDevelopement(
+		x >= 0 && y >= 0 && x < w && y < h,
+		"getBlockUnsafe out of bounds error"
+	);
+
+	return structureWallBlocks[w * y + x];
+}
+
+Block* Structure::getWallBlockSafe(int x, int y)
+{
+	permaAssertCommentDevelopement(
+		structureWallBlocks.size() == w * h,
+		"Structure data not initialized"
+	);
+
+	if (x < 0 || y < 0 || x >= w || y >= h)
+		return nullptr;
+
+	return &structureWallBlocks[w * y + x];
 }
 
 // Copy an area from the map and store it in a structure
@@ -74,6 +103,7 @@ void Structure::copyFromMap(GameMap& map, Vector2 start, Vector2 end)
 		for (int x = 0; x < size.x; x++)
 		{
 			getBlockUnsafe(x, y) = map.getBlockUnsafe(x + start.x, y + start.y);
+			getWallBlockUnsafe(x, y) = map.getWallBlockUnsafe(x + start.x, y + start.y);
 		}
 	}
 }
@@ -90,6 +120,10 @@ void Structure::pasteIntoMap(GameMap& map, Vector2 start)
 			// Place the structure block in the world
 			if (b)
 				*b = getBlockUnsafe(x, y);
+
+			Block* wb = map.getWallBlockSafe(x + start.x, y + start.y);
+			if (b)
+				*wb = getWallBlockUnsafe(x, y);
 		}
 	}
 }

@@ -18,8 +18,8 @@ struct GameMap
 	Block& getBlockUnsafe(int x, int y);
 	// Safe versions of the getBlock functions will return nullptr if the coordinates are out of bounds.
 	Block* getBlockSafe(int x, int y);
-	Block& GameMap::getWallBlockUnsafe(int x, int y);
-	Block* GameMap::getWallBlockSafe(int x, int y);
+	Block& getWallBlockUnsafe(int x, int y);
+	Block* getWallBlockSafe(int x, int y);
 
 	// Helper function to get the block type at (x, y) safely, returning air for out-of-bounds coordinates.
 	// This is used for checking the blocks around woodLogs, to see if the texture needs to be updated.

@@ -77,11 +77,10 @@ bool updateGame()
 #pragma region keyboard_input
 	// Camera movement: shift the target (the world point we're looking at).
 	// Multiplying by deltaTime makes the speed framerate-independent.
-	// !showImGui is there to prevent game inputs when typing in the text boxes
-	if (IsKeyDown(KEY_A) && !showImGui) { gameData.camera.target.x -= gameData.cameraSpeed * deltaTime; } // pan left
-	if (IsKeyDown(KEY_D) && !showImGui) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
-	if (IsKeyDown(KEY_W) && !showImGui) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
-	if (IsKeyDown(KEY_S) && !showImGui) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
+	if (IsKeyDown(KEY_A)) { gameData.camera.target.x -= gameData.cameraSpeed * deltaTime; } // pan left
+	if (IsKeyDown(KEY_D)) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
+	if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
+	if (IsKeyDown(KEY_S)) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
 	 
 	// Camera zoom
 	if (IsKeyDown(KEY_MINUS)) { gameData.camera.zoom -= INC_CAM_ZOOM; }
@@ -116,7 +115,7 @@ bool updateGame()
 		case KEY_TAB: showImGui = !showImGui; break;
 
 		case KEY_R:	   
-			if (!showImGui)
+			if (!showImGui) // prevent game inputs when typing in the text boxes
 				initGame(true, false); break;
 	}
 

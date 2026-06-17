@@ -15,18 +15,21 @@
 
 
 ## Features
-- [x] Basic random world generation
+- [x] Random world generation
+- [x] Improve world generation
+- [x] Edit world generation settings while running
 - [x] Desert biome
+- [x] Add caves
+- [x] Improve cave generation
 - [x] Random texture variation
 - [x] Dynamic wood texture based on leaves
 - [x] Background wall blocks
 - [x] Culling
-- [x] Edit world generation settings while running
-- [x] Improve world generation
+- [x] Block selection menu
+- [x] Copy/Paste blocks easily
+- [x] Save/Load structures to/from a file
 - [ ] Add entities
 - [ ] Add a player
-- [x] Add caves
-- [x] Improve cave generation
 - [ ] Tree generation
 - [ ] Add more biomes
   - [ ] Tundra

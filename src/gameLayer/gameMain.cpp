@@ -243,7 +243,10 @@ bool updateGame()
 							if (b)
 							{
 								b->type = gameData.currentBlock;
-								b->randIndex = std::rand() % 4;
+								if (b->type == 31)
+									b->randIndex = std::rand() % 2;
+								else
+									b->randIndex = std::rand() % 4;
 							}
 						}
 					}
@@ -348,8 +351,20 @@ bool updateGame()
 			// Set block properties
 			float size = 1.0f; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
 
+			// How tall to draw this block on screen, in world units.
+			// Most blocks are 1 tall, but the door's texture is 32x64 (twice as tall),
+			// so it must be drawn 2 world units tall to keep its aspect ratio.
+			float drawHeight = size;
+
 			Texture2D textureAtlas = assetManager.textures;
-			Rectangle textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 32);
+			Rectangle textureAtlasRect;
+			if (b.type == 31)
+			{
+				textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 64);
+				drawHeight = 2.0f * size;
+			}
+			else
+				textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 32);
 
 #pragma region wood_log_leaves
 			// Special handling for wood logs: they have different textures based on adjacent leaves
@@ -408,9 +423,9 @@ bool updateGame()
 
 			// Draw the block
 			DrawTexturePro(
-				textureAtlas,					        // The whole texture atlas
-				textureAtlasRect,		                // This is the 32x32 region to read from in the texture atlas
-				{ float(x), float(y), size, size },     // This is where we draw it on screen
+				textureAtlas,					            // The whole texture atlas
+				textureAtlasRect,		                    // The region to read from in the texture atlas
+				{ float(x), float(y), size, drawHeight },   // This is where we draw it on screen
 				{ 0, 0 },
 				0.0f,
 				WHITE

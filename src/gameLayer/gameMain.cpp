@@ -128,7 +128,7 @@ bool updateGame()
 				initGame(true, false); break;
 	}
 
-	// Select an area to copy and paste blocks, or save/load blocks to/from a file
+	// Select an area to copy and paste blocks, or save and load blocks to/from a file
 	if (showImGui)
 	{
 		if (IsKeyPressed(KEY_ONE))
@@ -136,6 +136,7 @@ bool updateGame()
 		if (IsKeyPressed(KEY_TWO))
 			gameData.selectionEnd = Vector2{ (float)blockX, (float)blockY };
 
+		// Copy the selected area
 		if (IsKeyDown(KEY_LEFT_CONTROL))
 		{
 			if (IsKeyDown(KEY_C))
@@ -147,7 +148,7 @@ bool updateGame()
 				);
 			}
 		}
-
+		// Paste the selected area (IsMouseButtonDown for brushMode)
 		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && gameData.brushMode)
 		{
 			gameData.copyStructure.pasteIntoMap(
@@ -794,9 +795,11 @@ bool updateGame()
 
 		ImGui::Separator();
 
+		ImGui::Text("Air"); ImGui::SameLine();
+
 		// Loop over every block type, skipping air (type 0).
 		// i doubles as the block ID and the atlas column index.
-		for (int i = 1; i < Block::BLOCKS_COUNT; i++)
+		for (int i = 0; i < Block::BLOCKS_COUNT; i++)
 		{
 			// Get the tile's pixel rect in the atlas (column i, row 0, 32x32).
 			auto atlas = getTextureAtlas(i, 0, 32, 32);

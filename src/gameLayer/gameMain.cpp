@@ -433,11 +433,19 @@ bool updateGame()
 		}
 	}
 
+	float drawHeight = 1.0f;
+	Rectangle textureAtlasRect = getTextureAtlas(gameData.currentBlock, 0, 32, 32);
+	if (gameData.currentBlock == 31)
+	{
+		textureAtlasRect = getTextureAtlas(gameData.currentBlock, 0, 32, 64);
+		drawHeight *= 2;
+	}
+		
 	// Show the block currently selected
 	DrawTexturePro(
 		assetManager.textures,
-		getTextureAtlas(gameData.currentBlock, 0, 32, 32),
-		{ (float)blockX, (float)blockY, 1, 1 },
+		textureAtlasRect,
+		{ (float)blockX, (float)blockY, 1, drawHeight },
 		{ 0, 0 },
 		0.0f,
 		{ 255, 255, 255, 255 }

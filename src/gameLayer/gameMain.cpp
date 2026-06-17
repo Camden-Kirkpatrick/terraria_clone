@@ -32,6 +32,7 @@ struct GameData
 		wallLayer = 1,
 	} hoverMode = blockLayer; // Determines whether we are placing/breaking normal blocks or wall blocks
 	int currentBlock = Block::dirt;
+	int blockShape = 1; // Used to place a grid of blocks (1 = 1x1 block area, 2 = 2x2 block area, etc.)
 	Vector2 selectionStart = {};
 	Vector2 selectionEnd = {};
 	Structure copyStructure = {};
@@ -115,6 +116,7 @@ bool updateGame()
 	switch (key)
 	{
 		case KEY_TAB: showImGui = !showImGui; break;
+
 
 		case KEY_R:	   
 			if (!showImGui) // prevent game inputs when typing in the text boxes
@@ -211,20 +213,33 @@ bool updateGame()
 
 				if (shiftDown)
 				{
-					Block* b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
-					if (b)
+					// More than one block may be placed depending on the blockShape
+					for (int x = 0; x < gameData.blockShape; x++)
 					{
-						b->type = gameData.currentBlock;
-						b->randIndex = std::rand() % 4; // Pick a random texture when placing a block
+						for (int y = 0; y < gameData.blockShape; y++)
+						{
+							Block* b = gameData.gameMap.getWallBlockSafe(blockX + x, blockY + y);
+							if (b)
+							{
+								b->type = gameData.currentBlock;
+								b->randIndex = std::rand() % 4; // Pick a random texture when placing a block
+							}
+						}
 					}
 				}
 				else
 				{
-					Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
-					if (b)
+					for (int x = 0; x < gameData.blockShape; x++)
 					{
-						b->type = gameData.currentBlock;
-						b->randIndex = std::rand() % 4;
+						for (int y = 0; y < gameData.blockShape; y++)
+						{
+							Block* b = gameData.gameMap.getBlockSafe(blockX + x, blockY + y);
+							if (b)
+							{
+								b->type = gameData.currentBlock;
+								b->randIndex = std::rand() % 4;
+							}
+						}
 					}
 				}
 			}
@@ -325,7 +340,7 @@ bool updateGame()
 				continue;
 
 			// Set block properties
-			float size = 1; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
+			float size = 1.0f; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
 
 			Texture2D textureAtlas = assetManager.textures;
 			Rectangle textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 32);
@@ -766,6 +781,8 @@ bool updateGame()
 
 		if (ImGui::Checkbox("Preview structure", &gameData.previewStructure)) {}
 		if (ImGui::Checkbox("Brush mode", &gameData.brushMode)) {}
+		ImGui::Text("Change the block shape to a 'm x m' grid:");
+		if (ImGui::SliderInt("##blckShp", &gameData.blockShape, 1, 100)) {}
 
 		ImGui::Separator();
 

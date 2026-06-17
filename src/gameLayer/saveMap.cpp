@@ -2,6 +2,7 @@
 #include <asserts.hpp>
 #include <iostream>
 
+// Write binary block data to a file
 bool saveBlockDataToFile(std::vector<Block> blocks, std::vector<Block> wallBlocks, int w, int h, const char* fileName)
 {
 	std::ofstream f(fileName, std::ios::binary);
@@ -23,11 +24,11 @@ bool saveBlockDataToFile(std::vector<Block> blocks, std::vector<Block> wallBlock
 	if (wallBlocks.size() == 0)
 		return false;
 
-	// Write the dimensions first so the loader knows how many blocks follow
+	// Write the dimensions first so the loader knows how many blocks to read
 	f.write((const char*)&w, sizeof(w));
 	f.write((const char*)&h, sizeof(h));
 
-	// Dump the entire block array as one contiguous byte blob
+	// Dump the entire block array as one contiguous stream of bytes
 	f.write((const char*)blocks.data(), sizeof(Block) * blocks.size());
 	f.write((const char*)wallBlocks.data(), sizeof(Block) * wallBlocks.size());
 
@@ -36,6 +37,7 @@ bool saveBlockDataToFile(std::vector<Block> blocks, std::vector<Block> wallBlock
 	return true;
 }
 
+// Read binary block data from a file
 bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallBlocks, int &w, int &h, const char* fileName)
 {
 	// Reset outputs up front so a failed load leaves the caller with a clean state
@@ -48,6 +50,7 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 	if (!f.is_open())
 		return false;
 
+	// Get the width and height so we know how many blocks to allocate
 	f.read((char*)&w, sizeof(w));
 	f.read((char*)&h, sizeof(h));
 
@@ -71,6 +74,7 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 	blocks.resize(blockCount);
 	wallBlocks.resize(blockCount);
 
+	// Read the entire stream of bytes back into our vectors
 	f.read((char*)blocks.data(), sizeof(Block) * blockCount);
 	f.read((char*)wallBlocks.data(), sizeof(Block) * blockCount);
 

@@ -38,9 +38,9 @@ struct GameData
 		int x = 1;
 		int y = 1;
 	} blockShape;
+	Structure copyStructure = {}; // A Structure is a grid of blocks (similar to a map) that can be saved and loaded to/from a file
 	Vector2 selectionStart = {};
 	Vector2 selectionEnd = {};
-	Structure copyStructure = {};
 	char saveName[100] = {};
 	bool previewStructure = true;
 	bool brushMode = false;

@@ -32,7 +32,12 @@ struct GameData
 		wallLayer = 1,
 	} hoverMode = blockLayer; // Determines whether we are placing/breaking normal blocks or wall blocks
 	int currentBlock = Block::dirt;
-	int blockShape = 1; // Used to place a grid of blocks (1 = 1x1 block area, 2 = 2x2 block area, etc.)
+	// Used to place a grid of blocks (x=3, y=2 = 3x2 grid of blocks)
+	struct BlockShape
+	{
+		int x = 1;
+		int y = 1;
+	} blockShape;
 	Vector2 selectionStart = {};
 	Vector2 selectionEnd = {};
 	Structure copyStructure = {};
@@ -214,9 +219,9 @@ bool updateGame()
 				if (shiftDown)
 				{
 					// More than one block may be placed depending on the blockShape
-					for (int x = 0; x < gameData.blockShape; x++)
+					for (int x = 0; x < gameData.blockShape.x; x++)
 					{
-						for (int y = 0; y < gameData.blockShape; y++)
+						for (int y = 0; y < gameData.blockShape.y; y++)
 						{
 							Block* b = gameData.gameMap.getWallBlockSafe(blockX + x, blockY + y);
 							if (b)
@@ -229,9 +234,9 @@ bool updateGame()
 				}
 				else
 				{
-					for (int x = 0; x < gameData.blockShape; x++)
+					for (int x = 0; x < gameData.blockShape.x; x++)
 					{
-						for (int y = 0; y < gameData.blockShape; y++)
+						for (int y = 0; y < gameData.blockShape.y; y++)
 						{
 							Block* b = gameData.gameMap.getBlockSafe(blockX + x, blockY + y);
 							if (b)
@@ -780,9 +785,12 @@ bool updateGame()
 		ImGui::Separator();
 
 		if (ImGui::Checkbox("Preview structure", &gameData.previewStructure)) {}
+
 		if (ImGui::Checkbox("Brush mode", &gameData.brushMode)) {}
-		ImGui::Text("Change the block shape to a 'm x m' grid:");
-		if (ImGui::SliderInt("##blckShp", &gameData.blockShape, 1, 100)) {}
+
+		ImGui::Text("Change the block shape to a 'm x n' grid:");
+		if (ImGui::SliderInt("##blckShpX", &gameData.blockShape.x, 1, 100)) {}
+		if (ImGui::SliderInt("##blckShpY", &gameData.blockShape.y, 1, 100)) {}
 
 		ImGui::Separator();
 

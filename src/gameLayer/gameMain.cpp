@@ -32,6 +32,7 @@ struct GameData
 		wallLayer = 1,
 	} hoverMode = blockLayer; // Determines whether we are placing/breaking normal blocks or wall blocks
 	int currentBlock = Block::dirt;
+	int currentBlockVariant = 0;
 	// Used to place a grid of blocks (x=3, y=2 = 3x2 grid of blocks)
 	struct BlockShape
 	{
@@ -243,10 +244,12 @@ bool updateGame()
 							if (b)
 							{
 								b->type = gameData.currentBlock;
-								if (b->type == 31)
-									b->randIndex = std::rand() % 2;
+								b->randIndex = gameData.currentBlockVariant;
+
+								if (gameData.currentBlock == Block::door) 
+									gameData.currentBlockVariant = std::rand() % 2; // doors only have 2 variations
 								else
-									b->randIndex = std::rand() % 4;
+									gameData.currentBlockVariant = std::rand() % 4;
 							}
 						}
 					}
@@ -434,10 +437,10 @@ bool updateGame()
 	}
 
 	float drawHeight = 1.0f;
-	Rectangle textureAtlasRect = getTextureAtlas(gameData.currentBlock, 0, 32, 32);
-	if (gameData.currentBlock == 31)
+	Rectangle textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.currentBlockVariant, 32, 32);
+	if (gameData.currentBlock == Block::door)
 	{
-		textureAtlasRect = getTextureAtlas(gameData.currentBlock, 0, 32, 64);
+		textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.currentBlockVariant, 32, 64);
 		drawHeight *= 2;
 	}
 		

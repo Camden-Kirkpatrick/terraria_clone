@@ -45,7 +45,7 @@ void resetWorldGen()
     // Desert settings
     // When the biome noise is in this range, deserts will generate
     worldGen.minDesertThreshold = 0.0f;
-    worldGen.maxDesertThreshold = 0.25f;
+    worldGen.maxDesertThreshold = 0.4f;
     worldGen.desertOctaves = 1;
     worldGen.desertFrequency = 0.0005;
     // This is the width (in noise units) of the band near each boundary where blending happens

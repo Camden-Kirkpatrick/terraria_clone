@@ -3,7 +3,7 @@
 
 #define DEFAULT_WORLD_WIDTH 10000
 #define DEFAULT_WORLD_HEIGHT 500
-#define DEFAULT_SEED 1234
+#define DEFAULT_SEED 2112
 
 struct WorldGen
 {

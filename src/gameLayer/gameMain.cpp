@@ -32,7 +32,7 @@ struct GameData
 		wallLayer = 1,
 	} hoverMode = blockLayer; // Determines whether we are placing/breaking normal blocks or wall blocks
 	int currentBlock = Block::dirt;
-	int currentBlockVariant = 0;
+	int currentBlockVariant = 0; // Random variation for the current block
 	// Used to place a grid of blocks (x=3, y=2 = 3x2 grid of blocks)
 	struct BlockShape
 	{
@@ -312,29 +312,29 @@ bool updateGame()
 		{
 			Block& b = gameData.gameMap.getWallBlockUnsafe(x, y);
 
-			if (b.type != Block::air)
-			{
-				if (Block::wallColumn[b.type] == -1)
-					// This block type doesn't have a wall texture, so skip drawing it
-					continue;
+			if (b.type == Block::air)
+				continue;
 
-				float size = 1; 
-				Texture2D textureAtlas = assetManager.textures;
-				// Use the wallColumn array to lookup the correct column in the texture atlas for the wall type of this block
-				// randIndex is used to add some variation so not all wall blocks of the same type look identical
-				Rectangle textureAtlasRect = getTextureAtlas(Block::wallColumn[b.type], b.randIndex, 32, 32);
+			if (Block::wallColumn[b.type] == -1)
+				// This block type doesn't have a wall texture, so skip drawing it
+				continue;
+
+			float size = 1; 
+			Texture2D textureAtlas = assetManager.textures;
+			// Use the wallColumn array to lookup the correct column in the texture atlas for the wall type of this block
+			// randIndex is used to add some variation so not all wall blocks of the same type look identical
+			Rectangle textureAtlasRect = getTextureAtlas(Block::wallColumn[b.type], b.randIndex, 32, 32);
 
 
-				// Draw the wall block
-				DrawTexturePro(
-					textureAtlas,
-					textureAtlasRect,
-					{ float(x), float(y), size, size },
-					{ 0, 0 },
-					0.0f,
-					WHITE
-				);
-			}
+			// Draw the wall block
+			DrawTexturePro(
+				textureAtlas,
+				textureAtlasRect,
+				{ float(x), float(y), size, size },
+				{ 0, 0 },
+				0.0f,
+				WHITE
+			);
 		}
 	}
 
@@ -443,28 +443,60 @@ bool updateGame()
 		textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.currentBlockVariant, 32, 64);
 		drawHeight *= 2;
 	}
-		
-	// Show the block currently selected
-	DrawTexturePro(
-		assetManager.textures,
-		textureAtlasRect,
-		{ (float)blockX, (float)blockY, 1, drawHeight },
-		{ 0, 0 },
-		0.0f,
-		{ 255, 255, 255, 255 }
-	);
+	
+	if (!showImGui)
+	{
+		// Show the block currently selected
+		DrawTexturePro(
+			assetManager.textures,
+			textureAtlasRect,
+			{ (float)blockX, (float)blockY, 1, drawHeight },
+			{ 0, 0 },
+			0.0f,
+			{ 255, 255, 255, 255 }
+		);
+	}
 
 	// Show the current structure that was copied or loaded
 	if (gameData.previewStructure && showImGui)
 	{
+		// Show the walls in the preview
 		for (int x = 0; x < gameData.copyStructure.w; x++)
 		{
 			for (int y = 0; y < gameData.copyStructure.h; y++)
 			{
-				uint16_t blockIndex = gameData.copyStructure.getBlockType(x, y);
+				Block& b = gameData.copyStructure.getWallBlockUnsafe(x, y);
+
+				if (b.type == Block::air)
+					continue;
+
+				if (Block::wallColumn[b.type] == -1)
+					continue;
+
+					DrawTexturePro(
+						assetManager.textures,
+						getTextureAtlas(Block::wallColumn[b.type], b.randIndex, 32, 32),
+						{ (float)blockX + x, (float)blockY + y, 1, 1 },
+						{ 0, 0 },
+						0.0f,
+						{ 255, 255, 255, 175 }
+					);
+			}
+		}
+
+		// Show the blocks in the preview
+		for (int x = 0; x < gameData.copyStructure.w; x++)
+		{
+			for (int y = 0; y < gameData.copyStructure.h; y++)
+			{
+				Block& b = gameData.copyStructure.getBlockUnsafe(x, y);
+
+				if (b.type == Block::air)
+					continue;
+
 				DrawTexturePro(
 					assetManager.textures,
-					getTextureAtlas(blockIndex, 0, 32, 32),
+					getTextureAtlas(b.type, b.randIndex, 32, 32),
 					{ (float)blockX + x, (float)blockY + y, 1, 1 },
 					{ 0, 0 },
 					0.0f,

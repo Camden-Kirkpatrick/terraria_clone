@@ -44,7 +44,6 @@ struct GameData
 	Vector2 selectionEnd = {};
 	char saveName[100] = {};
 	bool previewStructure = true;
-	bool brushMode = false;
 } gameData;
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
@@ -148,15 +147,8 @@ bool updateGame()
 				);
 			}
 		}
-		// Paste the selected area (IsMouseButtonDown for brushMode)
-		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && gameData.brushMode)
-		{
-			gameData.copyStructure.pasteIntoMap(
-				gameData.gameMap,
-				Vector2{ (float)blockX, (float)blockY }
-			);
-		}
-		else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+		// Paste the selected area
+		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
 		{
 			gameData.copyStructure.pasteIntoMap(
 				gameData.gameMap,
@@ -854,8 +846,6 @@ bool updateGame()
 		ImGui::Separator();
 
 		if (ImGui::Checkbox("Preview structure", &gameData.previewStructure)) {}
-
-		if (ImGui::Checkbox("Brush mode", &gameData.brushMode)) {}
 
 		ImGui::Text("Change the block shape to a 'm x n' grid:");
 		if (ImGui::SliderInt("##blckShpX", &gameData.blockShape.x, 1, 100)) {}

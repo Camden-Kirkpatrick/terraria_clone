@@ -864,10 +864,13 @@ bool updateGame()
 
 		// Loop over every block type, skipping air (type 0).
 		// i doubles as the block ID and the atlas column index.
-		for (int i = 0; i < Block::BLOCKS_COUNT; i++)
+		for (uint16_t i = 0; i < Block::BLOCKS_COUNT; i++)
 		{
 			// Get the tile's pixel rect in the atlas (column i, row 0, 32x32).
-			auto atlas = getTextureAtlas(i, 0, 32, 32);
+			Rectangle atlas = getTextureAtlas(i, 0, 32, 32);
+
+			if (i == Block::door)
+				atlas = getTextureAtlas(i, 0, 32, 64);
 
 			// Convert pixel coords to UVs (0..1) - what ImageButton expects.
 			atlas.x /= assetManager.textures.width;

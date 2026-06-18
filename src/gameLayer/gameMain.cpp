@@ -626,8 +626,9 @@ bool updateGame()
 
 
 		ImGui::Text("Biome settings");
-		ImGui::Text("Biome frequency:"); ImGui::SameLine();
-		if (ImGui::SliderFloat("##biomeFreq", &worldGen.biomeFrequency, 0.00001f, 0.01f, "%.5f"))
+		//ImGui::Text("Terrain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##terrOct", &worldGen.terrainOctaves, 1, 20);
+		ImGui::Text("Terrain frequency:"); ImGui::SameLine();
+		if (ImGui::SliderFloat("##terrFreq", &worldGen.terrainFrequency, 0.00001f, 0.01f, "%.5f"))
 			initGame(false, false);
 		ImGui::Text("Min desert threshold:"); ImGui::SameLine();
 		if (ImGui::SliderFloat("##minDesThresh", &worldGen.minDesertThreshold, 0.0f, 1.0f, "%.5f"))

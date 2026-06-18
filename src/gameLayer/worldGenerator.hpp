@@ -35,8 +35,8 @@ struct WorldGen
 	int maxStonePlainStart;
 
 	// Biome settings
-	int biomeOctaves;
-	float biomeFrequency;
+	int terrainOctaves;
+	float terrainFrequency;
 
 	// Desert settings
 	float minDesertThreshold;

@@ -39,8 +39,8 @@ void resetWorldGen()
     worldGen.maxStonePlainStart = 340;
 
     // Biome settings
-    worldGen.biomeOctaves = 1;
-    worldGen.biomeFrequency = 0.002f;
+    worldGen.terrainOctaves = 1;
+    worldGen.terrainFrequency = 0.002f;
 
     // Desert settings
     // When the biome noise is in this range, deserts will generate
@@ -117,14 +117,14 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // Noise generators for different layers, biomes, and caves
     std::unique_ptr<FastNoiseSIMD> dirtNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> stoneNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
-    std::unique_ptr<FastNoiseSIMD> biomeNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
+    std::unique_ptr<FastNoiseSIMD> terrainNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> desertNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> caveNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
 
     // Each generator gets a unique seed so their shapes don't match
     dirtNoiseGenerator->SetSeed(seed++);
     stoneNoiseGenerator->SetSeed(seed++);
-    biomeNoiseGenerator->SetSeed(seed++);
+    terrainNoiseGenerator->SetSeed(seed++);
     desertNoiseGenerator->SetSeed(seed++);
     caveNoiseGenerator->SetSeed(seed++);
 
@@ -167,15 +167,15 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     stoneNoiseGenerator->FillNoiseSet(stonePlainNoise, 0, 0, 0, WIDTH, 1, 1);
 
 
-    // Noise for switching between biomes
-    biomeNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    biomeNoiseGenerator->SetFractalOctaves(worldGen.biomeOctaves);
-    // Lower frequency = larger biome regions, slower transitions between plains and mountains
-    biomeNoiseGenerator->SetFrequency(worldGen.biomeFrequency);
+    // Noise for switching between plains and mountains
+    terrainNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    terrainNoiseGenerator->SetFractalOctaves(worldGen.terrainOctaves);
+    // Lower frequency = larger regions, slower transitions between plains and mountains
+    terrainNoiseGenerator->SetFrequency(worldGen.terrainFrequency);
 
-    float* biomeNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
+    float* terrainNoise = FastNoiseSIMD::GetEmptySet(WIDTH);
 
-    biomeNoiseGenerator->FillNoiseSet(biomeNoise, 0, 0, 0, WIDTH, 1, 1);
+    terrainNoiseGenerator->FillNoiseSet(terrainNoise, 0, 0, 0, WIDTH, 1, 1);
 
 
     // Noise for deserts
@@ -239,7 +239,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         dirtMountainNoise[i] = (dirtMountainNoise[i] + 1) / 2;
         stoneMountainNoise[i] = (stoneMountainNoise[i] + 1) / 2;
 
-        biomeNoise[i] = (biomeNoise[i] + 1) / 2;
+        terrainNoise[i] = (terrainNoise[i] + 1) / 2;
 
         desertNoise[i] = (desertNoise[i] + 1) / 2;
     }
@@ -250,7 +250,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
     }
 
-    savedBiomeNoise.assign(biomeNoise, biomeNoise + WIDTH);
+    // Used for displaying the current type of terrain (plains/mountains)
+    //savedBiomeNoise.assign(terrainNoise, terrainNoise + WIDTH);
 
     auto getCaveNoise1 = [&](int x, int y)
         {
@@ -295,7 +296,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         int dirtThickness = 0;
         int dirtStart = 0;
 
-        // Three-way decision based on where biomeNoise[x] sits relative to the plains/mountains boundary:
+        // Three-way decision based on where terrainNoise[x] sits relative to the plains/mountains boundary:
         //   1. Inside the blend zone   -> smoothly mix plains and mountains
         //   2. Below plainThreshold    -> pure plains
         //   3. Above plainThreshold    -> pure mountains
@@ -303,13 +304,13 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         // while still producing smooth transitions at boundaries.
 
         // Case 1: blend zone.
-        // Triggers when biomeNoise[x] is within terrainBlendZone of plainThreshold on either side.
+        // Triggers when terrainNoise[x] is within terrainBlendZone of plainThreshold on either side.
         // e.g. plainThreshold=0.5, terrainBlendZone=0.05 -> blend zone is (0.45, 0.55).
-        if (biomeNoise[x] > worldGen.plainThreshold - worldGen.terrainBlendZone && biomeNoise[x] < worldGen.plainThreshold + worldGen.terrainBlendZone)
+        if (terrainNoise[x] > worldGen.plainThreshold - worldGen.terrainBlendZone && terrainNoise[x] < worldGen.plainThreshold + worldGen.terrainBlendZone)
         {
             // distToEdge: how far this column's noise is from the boundary (always positive).
             // 0.0 = exactly on the boundary, terrainBlendZone = at the outer edge of the zone.
-            float distToEdge = std::abs(biomeNoise[x] - worldGen.plainThreshold);
+            float distToEdge = std::abs(terrainNoise[x] - worldGen.plainThreshold);
             // Normalize to [0, 1]: 0.0 at the boundary, 1.0 at the outer edge.
             // This makes the formulas below independent of how wide the blend zone is.
             float ratio = distToEdge / worldGen.terrainBlendZone;
@@ -319,14 +320,14 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             //   t = 0.5 -> exact 50/50 mix (used right at the boundary)
             //   t = 1 -> pure mountains
             // We need t to slide smoothly from 0 (outer plains edge) -> 0.5 (boundary) -> 1 (outer mountains edge)
-            // as biomeNoise[x] walks across the blend zone.
+            // as terrainNoise[x] walks across the blend zone.
             //
             // ratio is symmetric around the boundary (same magnitude on both sides), so it can't
-            // tell t which direction to lean. The biomeNoise < plainThreshold check below picks
+            // tell t which direction to lean. The terrainNoise < plainThreshold check below picks
             // the correct formula for each side.
             float t;
 
-            if (biomeNoise[x] < worldGen.plainThreshold)
+            if (terrainNoise[x] < worldGen.plainThreshold)
                 // Plains side: ratio=0 at boundary -> t=0.5; ratio=1 at outer edge -> t=0.
                 t = 0.5f - 0.5f * ratio;
             else
@@ -338,16 +339,16 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, t);
         }
         // Case 2: pure plains.
-        // biomeNoise is on the plains side AND outside the blend zone.
+        // terrainNoise is on the plains side AND outside the blend zone.
         // Use plain settings only, with no mountain contamination, so plain settings are
         // fully isolated to plain columns.
-        else if (biomeNoise[x] < worldGen.plainThreshold)
+        else if (terrainNoise[x] < worldGen.plainThreshold)
         {
             stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
             dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
         }
         // Case 3: pure mountains.
-        // biomeNoise is on the mountains side AND outside the blend zone.
+        // terrainNoise is on the mountains side AND outside the blend zone.
         // Use mountain settings only, mirror of the plains branch.
         else
         {
@@ -633,7 +634,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     FastNoiseSIMD::FreeNoiseSet(stonePlainNoise);
     FastNoiseSIMD::FreeNoiseSet(dirtMountainNoise);
     FastNoiseSIMD::FreeNoiseSet(stoneMountainNoise);
-    FastNoiseSIMD::FreeNoiseSet(biomeNoise);
+    FastNoiseSIMD::FreeNoiseSet(terrainNoise);
     FastNoiseSIMD::FreeNoiseSet(caveNoise1);
     FastNoiseSIMD::FreeNoiseSet(caveNoise2);
     FastNoiseSIMD::FreeNoiseSet(caveSelectorNoise);

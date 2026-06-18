@@ -123,7 +123,6 @@ bool updateGame()
 	{
 		case KEY_TAB: showImGui = !showImGui; break;
 
-
 		case KEY_R:	   
 			if (!showImGui) // prevent game inputs when typing in the text boxes
 				initGame(true, false); break;
@@ -436,12 +435,12 @@ bool updateGame()
 		}
 	}
 
-	float drawHeight = 1.0f;
+	float blockHeight = 1;
 	Rectangle textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.currentBlockVariant, 32, 32);
 	if (gameData.currentBlock == Block::door)
 	{
 		textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.currentBlockVariant, 32, 64);
-		drawHeight *= 2;
+		blockHeight = 2;
 	}
 	
 	if (!showImGui)
@@ -450,7 +449,7 @@ bool updateGame()
 		DrawTexturePro(
 			assetManager.textures,
 			textureAtlasRect,
-			{ (float)blockX, (float)blockY, 1, drawHeight },
+			{ (float)blockX, (float)blockY, 1, blockHeight },
 			{ 0, 0 },
 			0.0f,
 			{ 255, 255, 255, 255 }
@@ -494,10 +493,18 @@ bool updateGame()
 				if (b.type == Block::air)
 					continue;
 
+				float blockHeight = 1;
+				Rectangle textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 32);
+				if (b.type == Block::door)
+				{
+					textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 64);
+					blockHeight = 2;
+				}
+					
 				DrawTexturePro(
 					assetManager.textures,
-					getTextureAtlas(b.type, b.randIndex, 32, 32),
-					{ (float)blockX + x, (float)blockY + y, 1, 1 },
+					textureAtlasRect,
+					{ (float)blockX + x, (float)blockY + y, 1, blockHeight },
 					{ 0, 0 },
 					0.0f,
 					{ 255, 255, 255, 175 }

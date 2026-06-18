@@ -5,6 +5,10 @@
 #define DEFAULT_WORLD_HEIGHT 500
 #define DEFAULT_SEED 2112
 
+// Used to calculate min/maxNumWorms
+#define MAX_WORM_DIVISOR 100
+#define MIN_WORM_DIVISOR 400
+
 struct WorldGen
 {
 	// Mountain settings

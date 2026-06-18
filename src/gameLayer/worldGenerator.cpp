@@ -533,6 +533,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 #pragma region spawn_worms
     rng.seed(seed + 2112);
 
+    // Depending on the world size, there can be more or less tunnels
+    worldGen.minNumWorms = (int)(worldWidth / MIN_WORM_DIVISOR);
+    worldGen.maxNumWorms = (int)(worldWidth / MAX_WORM_DIVISOR);
+
     int numWorms = getRandomInt(rng, worldGen.minNumWorms, worldGen.maxNumWorms);
     worldGen.curNumWorms = numWorms;
 

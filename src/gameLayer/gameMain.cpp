@@ -51,7 +51,7 @@ AssetManager assetManager; // Global asset manager instance to load and store te
 // Toggle the ImGui menu on/off
 // Blocks can't be broken or placed behind the ImGui menu
 bool showImGui = true;
-bool showAdvancedSettings = false;
+bool showAdvancedSettings = false; // Hide or show certain settings
 
 bool initGame(bool resetWorldGen, bool resetCamera)
 {
@@ -116,6 +116,7 @@ bool updateGame()
 	{
 		Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
 		gameData.currentBlock = b->type;
+		gameData.currentBlockVariant = b->randIndex;
 	}
 
 	int key = GetKeyPressed();
@@ -428,6 +429,7 @@ bool updateGame()
 		}
 	}
 
+	// If a door is the block currently selected, make sure to get a 32x64 area instead of a 32x32 area
 	float blockHeight = 1;
 	Rectangle textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.currentBlockVariant, 32, 32);
 	if (gameData.currentBlock == Block::door)
@@ -436,9 +438,9 @@ bool updateGame()
 		blockHeight = 2;
 	}
 	
+	// Show a prevew of the block currently selected
 	if (!showImGui)
 	{
-		// Show the block currently selected
 		DrawTexturePro(
 			assetManager.textures,
 			textureAtlasRect,
@@ -449,7 +451,7 @@ bool updateGame()
 		);
 	}
 
-	// Show the current structure that was copied or loaded
+	// Show a preview of the current structure that was copied or loaded from a file
 	if (gameData.previewStructure && showImGui)
 	{
 		// Show the walls in the preview

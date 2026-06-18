@@ -11,19 +11,22 @@
 
 struct WorldGen
 {
+	// Terrain settings
+	int terrainOctaves;
+	float terrainFrequency;
+	float terrainBlendZone;
+
 	// Mountain settings
 	// Noise generation settings
 	int dirtMountainOctaves;
 	float dirtMountainFrequency;
 	int stoneMountainOctaves;
 	float stoneMountainFrequency;
-	// Terrain generation settings
+	// Mountain generation settings
 	int minDirtMountainThickness;
 	int maxDirtMountainThickness;
 	int minStoneMountainStart;
 	int maxStoneMountainStart;
-
-	float terrainBlendZone;
 	
 	// Plain settings
 	// Noise generation settings
@@ -32,15 +35,11 @@ struct WorldGen
 	float dirtPlainFrequency;
 	int stonePlainOctaves;
 	float stonePlainFrequency;
-	// Terrain generation settings
+	// Plain generation settings
 	int minDirtPlainThickness;
 	int maxDirtPlainThickness;
 	int minStonePlainStart;
 	int maxStonePlainStart;
-
-	// Biome settings
-	int terrainOctaves;
-	float terrainFrequency;
 
 	// Desert settings
 	float minDesertThreshold;

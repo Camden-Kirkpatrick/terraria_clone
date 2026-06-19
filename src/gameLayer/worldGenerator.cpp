@@ -1,6 +1,7 @@
 #include "worldGenerator.hpp"
 #include "randomStuff.hpp"
 #include <FastNoiseSIMD.h>
+#include <memory>
 
 WorldGen worldGen;
 int worldWidth = DEFAULT_WORLD_WIDTH;

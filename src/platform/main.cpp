@@ -14,7 +14,7 @@ int main()
 #endif
 
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-	InitWindow(WIN_WIDTH, WIN_HEIGHT, "game");
+	InitWindow(WIN_WIDTH, WIN_HEIGHT, "terraria_clone");
 	SetTargetFPS(FPS);
 
 #pragma region imgui

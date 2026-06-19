@@ -13,7 +13,7 @@ set(PRODUCTION_BUILD OFF CACHE BOOL "Make this a production build" FORCE)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Raylib as static libraries" FORCE)
 
 
-project(mygame)
+project(terraria_clone)
 
 if(MSVC)
 	set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
@@ -26,7 +26,7 @@ endif()
 #add raylib, and here you would add other libraries if needed!
 add_subdirectory(thirdparty/raylib-5.0)
 add_subdirectory(thirdparty/imgui-docking)
-add_subdirectory(thirdparty/rlImgui)
+add_subdirectory(thirdparty/rlimgui)
 add_subdirectory(thirdparty/FastNoiseSIMD)
 
 

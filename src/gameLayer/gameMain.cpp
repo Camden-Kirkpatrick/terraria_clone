@@ -539,365 +539,381 @@ bool updateGame()
 #if PRODUCTION_BUILD == 0 || MENU
 	if (showImGui)
 	{
-		ImGui::Begin("Game Menu");
+		ImGui::Begin("Menu");
 
-		ImGui::SeparatorText("Controls");
-		ImGui::Text("Press 'TAB' to open/close the menu");
-		ImGui::Text("Menu must be closed in order to place/break blocks");
-		ImGui::Text("Press 'r' to reset world-gen settings to the default");
-
-		//int cameraX = (int)gameData.camera.target.x;
-		//if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())
-		//{
-		//	float bn = savedBiomeNoise[cameraX];
-		//	const char* branch =
-		//		(bn > worldGen.plainThreshold - worldGen.terrainBlendZone &&
-		//			bn < worldGen.plainThreshold + worldGen.terrainBlendZone) ? "BLEND" :
-		//		(bn < worldGen.plainThreshold) ? "PLAINS" : "MOUNTAINS";
-		//	ImGui::Text("Column %d  biomeNoise=%.5f  branch=%s", cameraX, bn, branch);
-		//}
-
-		ImGui::SeparatorText("Camera");
-		ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
-		ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
-
-		ImGui::SeparatorText("World");
-		ImGui::Text("World width"); ImGui::SameLine();
-		if (ImGui::SliderInt("##worldWidth", &worldWidth, 25, 10000))
-			initGame(false, false);
-		ImGui::Text("World height"); ImGui::SameLine();
-		if (ImGui::SliderInt("##worldHeight", &worldHeight, 375, 1000))
-			initGame(false, false);
-		ImGui::Text("Seed:"); ImGui::SameLine();
-		if (ImGui::InputInt("##seed", &seed))
-			initGame(false, false);
-
-		ImGui::SeparatorText("Actions");
-		if (ImGui::Button("Reset world generation settings"))
+		if (ImGui::BeginTabBar("MenuTabs"))
 		{
-			initGame(true, false);
-		}
-
-		if (ImGui::Button("Generate flat world"))
-		{
-			flatWorld();
-			initGame(false, false);
-		}
-
-		if (ImGui::Button("Go to world spawn"))
-		{
-			initGame(false, true);
-		}
-
-		ImGui::Checkbox("Show advanced settings", &showAdvancedSettings);
-
-		if (showAdvancedSettings)
-		{
-			ImGui::SeparatorText("World Generation Settings");
-
-			ImGui::SeparatorText("Mountain Settings");
-			//ImGui::Text("Dirt mountain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtMtnOct", &worldGen.dirtMountainOctaves, 1, 20);
-			ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##dirtMtnFreq", &worldGen.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f"))
-				initGame(false, false);
-
-			ImGui::Text("Min dirt mountain thickness:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##minDirtMtnThick", &worldGen.minDirtMountainThickness, 1, 50))
-				initGame(false, false);
-			ImGui::Text("Max dirt mountain thickness:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##maxDirtMtnThick", &worldGen.maxDirtMountainThickness, 1, 50))
-				initGame(false, false);
-
-			//ImGui::Text("Stone mountain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnMtnOct", &worldGen.stoneMountainOctaves, 1, 20);
-			ImGui::Text("Stone mountain frequency:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##stnMtnFreq", &worldGen.stoneMountainFrequency, 0.00001f, 0.1f, "%.5f"))
-				initGame(false, false);
-			ImGui::Text("Min stone mountain start:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##minStoneMtnStart", &worldGen.minStoneMountainStart, 330, 400))
-				initGame(false, false);
-			ImGui::Text("Max stone mountain start:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##maxStoneMtnStart", &worldGen.maxStoneMountainStart, 330, 400))
-				initGame(false, false);
-
-			ImGui::SeparatorText("Plains Settings");
-			//ImGui::Text("Dirt plain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtPlnOct", &worldGen.dirtPlainOctaves, 1, 20);
-			ImGui::Text("Dirt plain frequency:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##dirtPlnFreq", &worldGen.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f"))
-				initGame(false, false);
-
-			ImGui::Text("Min dirt plain thickness:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##minDirtPlnThick", &worldGen.minDirtPlainThickness, 1, 50))
-				initGame(false, false);
-			ImGui::Text("Max dirt plain thickness:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##maxDirtPlnThick", &worldGen.maxDirtPlainThickness, 1, 50))
-				initGame(false, false);
-
-			//ImGui::Text("Stone plain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnPlnOct", &worldGen.stonePlainOctaves, 1, 20);
-			ImGui::Text("Stone plain frequency:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##stnPlnFreq", &worldGen.stonePlainFrequency, 0.00001f, 0.1f, "%.5f"))
-				initGame(false, false);
-
-			ImGui::Text("Min stone plain start:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##minStonePlnStart", &worldGen.minStonePlainStart, 330, 400))
-				initGame(false, false);
-			ImGui::Text("Max stone plain start:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##maxStonePlnStart", &worldGen.maxStonePlainStart, 330, 400))
-				initGame(false, false);
-
-			ImGui::SeparatorText("Terrain and Biome Settings");
-			//ImGui::Text("Terrain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##terrOct", &worldGen.terrainOctaves, 1, 20);
-			ImGui::Text("Terrain frequency:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##terrFreq", &worldGen.terrainFrequency, 0.00001f, 0.01f, "%.5f"))
-				initGame(false, false);
-			ImGui::Text("Terrain blend zone:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##terrBlendZone", &worldGen.terrainBlendZone, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-
-			ImGui::Text("Min desert threshold:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##minDesThresh", &worldGen.minDesertThreshold, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-			ImGui::Text("Max desert threshold:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##maxDesThresh", &worldGen.maxDesertThreshold, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-
-			//ImGui::Text("Desert octaves:");  ImGui::SameLine(); ImGui::SliderInt("##desOct", &worldGen.desertOctaves, 1, 20);
-			ImGui::Text("Desert frequency:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##desFreq", &worldGen.desertFrequency, 0.00001f, 0.1f, "%.5f"))
-				initGame(false, false);
-
-			ImGui::Text("Desert blend zone:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##desBlendZone", &worldGen.desertBlendZone, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-
-			ImGui::SeparatorText("Cave Settings");
-			if (ImGui::Checkbox("Generate caves", &worldGen.generateCaves))
+			if (ImGui::BeginTabItem("Game Menu"))
 			{
-				initGame(false, false);
+
+				ImGui::SeparatorText("Controls");
+				ImGui::Text("Press 'TAB' to open/close the menu");
+				ImGui::Text("Menu must be closed in order to place/break blocks");
+				ImGui::Text("Press 'r' to reset world-gen settings to the default");
+
+				//int cameraX = (int)gameData.camera.target.x;
+				//if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())
+				//{
+				//	float bn = savedBiomeNoise[cameraX];
+				//	const char* branch =
+				//		(bn > worldGen.plainThreshold - worldGen.terrainBlendZone &&
+				//			bn < worldGen.plainThreshold + worldGen.terrainBlendZone) ? "BLEND" :
+				//		(bn < worldGen.plainThreshold) ? "PLAINS" : "MOUNTAINS";
+				//	ImGui::Text("Column %d  biomeNoise=%.5f  branch=%s", cameraX, bn, branch);
+				//}
+
+				ImGui::SeparatorText("Camera");
+				ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
+				ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
+
+				ImGui::SeparatorText("World");
+				ImGui::Text("World width"); ImGui::SameLine();
+				if (ImGui::SliderInt("##worldWidth", &worldWidth, 25, 10000))
+					initGame(false, false);
+				ImGui::Text("World height"); ImGui::SameLine();
+				if (ImGui::SliderInt("##worldHeight", &worldHeight, 375, 1000))
+					initGame(false, false);
+				ImGui::Text("Seed:"); ImGui::SameLine();
+				if (ImGui::InputInt("##seed", &seed))
+					initGame(false, false);
+
+				ImGui::SeparatorText("Actions");
+				if (ImGui::Button("Reset world generation settings"))
+				{
+					initGame(true, false);
+				}
+
+				if (ImGui::Button("Generate flat world"))
+				{
+					flatWorld();
+					initGame(false, false);
+				}
+
+				if (ImGui::Button("Go to world spawn"))
+				{
+					initGame(false, true);
+				}
+
+				ImGui::Checkbox("Show advanced settings", &showAdvancedSettings);
+
+				if (showAdvancedSettings)
+				{
+					ImGui::SeparatorText("World Generation Settings");
+
+					if (ImGui::CollapsingHeader("Mountain Settings"))
+					{
+						//ImGui::Text("Dirt mountain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtMtnOct", &worldGen.dirtMountainOctaves, 1, 20);
+						ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##dirtMtnFreq", &worldGen.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f"))
+							initGame(false, false);
+
+						ImGui::Text("Min dirt mountain thickness:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##minDirtMtnThick", &worldGen.minDirtMountainThickness, 1, 50))
+							initGame(false, false);
+						ImGui::Text("Max dirt mountain thickness:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##maxDirtMtnThick", &worldGen.maxDirtMountainThickness, 1, 50))
+							initGame(false, false);
+
+						//ImGui::Text("Stone mountain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnMtnOct", &worldGen.stoneMountainOctaves, 1, 20);
+						ImGui::Text("Stone mountain frequency:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##stnMtnFreq", &worldGen.stoneMountainFrequency, 0.00001f, 0.1f, "%.5f"))
+							initGame(false, false);
+						ImGui::Text("Min stone mountain start:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##minStoneMtnStart", &worldGen.minStoneMountainStart, 330, 400))
+							initGame(false, false);
+						ImGui::Text("Max stone mountain start:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##maxStoneMtnStart", &worldGen.maxStoneMountainStart, 330, 400))
+							initGame(false, false);
+					}
+
+					if (ImGui::CollapsingHeader("Plains Settings"))
+					{
+						//ImGui::Text("Dirt plain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtPlnOct", &worldGen.dirtPlainOctaves, 1, 20);
+						ImGui::Text("Dirt plain frequency:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##dirtPlnFreq", &worldGen.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f"))
+							initGame(false, false);
+
+						ImGui::Text("Min dirt plain thickness:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##minDirtPlnThick", &worldGen.minDirtPlainThickness, 1, 50))
+							initGame(false, false);
+						ImGui::Text("Max dirt plain thickness:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##maxDirtPlnThick", &worldGen.maxDirtPlainThickness, 1, 50))
+							initGame(false, false);
+
+						//ImGui::Text("Stone plain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnPlnOct", &worldGen.stonePlainOctaves, 1, 20);
+						ImGui::Text("Stone plain frequency:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##stnPlnFreq", &worldGen.stonePlainFrequency, 0.00001f, 0.1f, "%.5f"))
+							initGame(false, false);
+
+						ImGui::Text("Min stone plain start:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##minStonePlnStart", &worldGen.minStonePlainStart, 330, 400))
+							initGame(false, false);
+						ImGui::Text("Max stone plain start:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##maxStonePlnStart", &worldGen.maxStonePlainStart, 330, 400))
+							initGame(false, false);
+					}
+
+					if (ImGui::CollapsingHeader("Terrain and Biome Settings"))
+					{
+						//ImGui::Text("Terrain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##terrOct", &worldGen.terrainOctaves, 1, 20);
+						ImGui::Text("Terrain frequency:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##terrFreq", &worldGen.terrainFrequency, 0.00001f, 0.01f, "%.5f"))
+							initGame(false, false);
+						ImGui::Text("Terrain blend zone:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##terrBlendZone", &worldGen.terrainBlendZone, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+
+						ImGui::Text("Min desert threshold:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##minDesThresh", &worldGen.minDesertThreshold, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+						ImGui::Text("Max desert threshold:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##maxDesThresh", &worldGen.maxDesertThreshold, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+
+						//ImGui::Text("Desert octaves:");  ImGui::SameLine(); ImGui::SliderInt("##desOct", &worldGen.desertOctaves, 1, 20);
+						ImGui::Text("Desert frequency:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##desFreq", &worldGen.desertFrequency, 0.00001f, 0.1f, "%.5f"))
+							initGame(false, false);
+
+						ImGui::Text("Desert blend zone:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##desBlendZone", &worldGen.desertBlendZone, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+					}
+
+					if (ImGui::CollapsingHeader("Cave and Tunnel Settings"))
+					{
+						if (ImGui::Checkbox("Generate caves", &worldGen.generateCaves))
+						{
+							initGame(false, false);
+						}
+
+						//ImGui::Text("Cave octaves:");  ImGui::SameLine(); ImGui::SliderInt("##caveOctOct", &worldGen.caveOctaves, 1, 20);
+						ImGui::Text("Cave frequency:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##caveFreq", &worldGen.caveFrequency, 0.00001f, 0.1f, "%.5f"))
+							initGame(false, false);
+
+						ImGui::Text("Min cave threshold:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##minCaveThresh", &worldGen.minCaveThreshold, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+						ImGui::Text("Max cave threshold:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##maxCaveThresh", &worldGen.maxCaveThreshold, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+
+						if (ImGui::Checkbox("Generate tunnels", &worldGen.generateWorms))
+						{
+							initGame(false, false);
+						}
+
+						ImGui::Text("Current number of tunnels: %d", worldGen.curNumWorms);
+
+						ImGui::Text("Min tunnel length:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##minTunlLen", &worldGen.minWormLength, 50, 500))
+						{
+							// min/maxWormWidth use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
+							if (worldGen.minWormLength > worldGen.maxWormLength)
+								worldGen.maxWormLength = worldGen.minWormLength;
+							initGame(false, false);
+						}
+						ImGui::Text("Max tunnel width:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##maxTunlLen", &worldGen.maxWormLength, 50, 500))
+						{
+							if (worldGen.maxWormLength < worldGen.minWormLength)
+								worldGen.minWormLength = worldGen.maxWormLength;
+							initGame(false, false);
+						}
+
+						ImGui::Text("Min tunnel width:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##minTunlWidth", &worldGen.minWormWidth, 1, 20))
+						{
+							// min/maxWormWidth use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
+							if (worldGen.minWormWidth > worldGen.maxWormWidth)
+								worldGen.maxWormWidth = worldGen.minWormWidth;
+							initGame(false, false);
+						}
+						ImGui::Text("Max tunnel width:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##maxTunlWidth", &worldGen.maxWormWidth, 1, 20))
+						{
+							if (worldGen.maxWormWidth < worldGen.minWormWidth)
+								worldGen.minWormWidth = worldGen.maxWormWidth;
+							initGame(false, false);
+						}
+
+						ImGui::Text("Min tunnel turn angle:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##minTunlAngle", &worldGen.minWormTurnAngle, -0.2f, 0.2f))
+						{
+							// min/maxWormTurnAngle use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
+							if (worldGen.minWormTurnAngle > worldGen.maxWormTurnAngle)
+								worldGen.maxWormTurnAngle = worldGen.minWormTurnAngle;
+							initGame(false, false);
+						}
+						ImGui::Text("Max tunnel turn angle:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##maxTunlAngle", &worldGen.maxWormTurnAngle, -0.2f, 0.2f))
+						{
+							if (worldGen.maxWormTurnAngle < worldGen.minWormTurnAngle)
+								worldGen.minWormTurnAngle = worldGen.maxWormTurnAngle;
+							initGame(false, false);
+						}
+					}
+
+					if (ImGui::CollapsingHeader("Special Material Settings"))
+					{
+						ImGui::Text("Ore threshold:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##oreThresh", &worldGen.oreThreshold, 0, 499))
+							initGame(false, false);
+						ImGui::Text("Gold chance:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##gldChance", &worldGen.goldChance, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+						ImGui::Text("Iron chance:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##irnChance", &worldGen.ironChance, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+						ImGui::Text("Copper chance:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##copChance", &worldGen.copperChance, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+
+						ImGui::Text("Ruby threshold:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##rubThresh", &worldGen.rubyThreshold, 0, 499))
+							initGame(false, false);
+						ImGui::Text("Ruby chance:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##rubChance", &worldGen.rubyChance, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+
+						ImGui::Text("Clay threshold:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##clyThresh", &worldGen.clayThreshold, 0, 499))
+							initGame(false, false);
+						ImGui::Text("Clay chance:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##clyChance", &worldGen.clayChance, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+					}
+				}
+
+				ImGui::EndTabItem();
 			}
 
-			//ImGui::Text("Cave octaves:");  ImGui::SameLine(); ImGui::SliderInt("##caveOctOct", &worldGen.caveOctaves, 1, 20);
-			ImGui::Text("Cave frequency:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##caveFreq", &worldGen.caveFrequency, 0.00001f, 0.1f, "%.5f"))
-				initGame(false, false);
-
-			ImGui::Text("Min cave threshold:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##minCaveThresh", &worldGen.minCaveThreshold, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-			ImGui::Text("Max cave threshold:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##maxCaveThresh", &worldGen.maxCaveThreshold, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-
-			ImGui::SeparatorText("Tunnel Settings");
-			if (ImGui::Checkbox("Generate tunnels", &worldGen.generateWorms))
+			if (ImGui::BeginTabItem("Block Selection"))
 			{
-				initGame(false, false);
-			}
+				ImGui::SeparatorText("Controls");
+				ImGui::BulletText("Middle click: select the hovered block");
+				ImGui::BulletText("'1': set start of selection area");
+				ImGui::BulletText("'2': set end of selection area");
+				ImGui::BulletText("Left CTRL + C: copy the selected area");
+				ImGui::BulletText("Right click: paste the copied area");
+				ImGui::BulletText("'-' / '=': zoom out / in");
+				ImGui::BulletText("'[' / ']': decrease / increase camera speed");
 
-			ImGui::Text("Current number of tunnels: %d", worldGen.curNumWorms);
+				ImGui::SeparatorText("Saving & Loading");
+				ImGui::TextWrapped("To save a copied area, type a file name and press 'Save to file'. This creates a file you can load back any time.");
+				ImGui::TextWrapped("To load a structure, type the file name and press 'Load from file', then right-click to paste it into the world.");
 
-			ImGui::Text("Min tunnel length:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##minTunlLen", &worldGen.minWormLength, 50, 500))
-			{
-				// min/maxWormWidth use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
-				if (worldGen.minWormLength > worldGen.maxWormLength)
-					worldGen.maxWormLength = worldGen.minWormLength;
-				initGame(false, false);
-			}
-			ImGui::Text("Max tunnel width:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##maxTunlLen", &worldGen.maxWormLength, 50, 500))
-			{
-				if (worldGen.maxWormLength < worldGen.minWormLength)
-					worldGen.minWormLength = worldGen.maxWormLength;
-				initGame(false, false);
-			}
-
-			ImGui::Text("Min tunnel width:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##minTunlWidth", &worldGen.minWormWidth, 1, 20))
-			{
-				// min/maxWormWidth use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
-				if (worldGen.minWormWidth > worldGen.maxWormWidth)
-					worldGen.maxWormWidth = worldGen.minWormWidth;
-				initGame(false, false);
-			}
-			ImGui::Text("Max tunnel width:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##maxTunlWidth", &worldGen.maxWormWidth, 1, 20))
-			{
-				if (worldGen.maxWormWidth < worldGen.minWormWidth)
-					worldGen.minWormWidth = worldGen.maxWormWidth;
-				initGame(false, false);
-			}
-
-			ImGui::Text("Min tunnel turn angle:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##minTunlAngle", &worldGen.minWormTurnAngle, -0.2f, 0.2f))
-			{
-				// min/maxWormTurnAngle use getRandomInt(), which requires the first arg to be greater than or equal to the second arg
-				if (worldGen.minWormTurnAngle > worldGen.maxWormTurnAngle)
-					worldGen.maxWormTurnAngle = worldGen.minWormTurnAngle;
-				initGame(false, false);
-			}
-			ImGui::Text("Max tunnel turn angle:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##maxTunlAngle", &worldGen.maxWormTurnAngle, -0.2f, 0.2f))
-			{
-				if (worldGen.maxWormTurnAngle < worldGen.minWormTurnAngle)
-					worldGen.minWormTurnAngle = worldGen.maxWormTurnAngle;
-				initGame(false, false);
-			}
-
-			ImGui::SeparatorText("Special Material Settings");
-			ImGui::Text("Ore threshold:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##oreThresh", &worldGen.oreThreshold, 0, 499))
-				initGame(false, false);
-			ImGui::Text("Gold chance:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##gldChance", &worldGen.goldChance, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-			ImGui::Text("Iron chance:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##irnChance", &worldGen.ironChance, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-			ImGui::Text("Copper chance:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##copChance", &worldGen.copperChance, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-
-			ImGui::Text("Ruby threshold:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##rubThresh", &worldGen.rubyThreshold, 0, 499))
-				initGame(false, false);
-			ImGui::Text("Ruby chance:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##rubChance", &worldGen.rubyChance, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-
-			ImGui::Text("Clay threshold:"); ImGui::SameLine();
-			if (ImGui::SliderInt("##clyThresh", &worldGen.clayThreshold, 0, 499))
-				initGame(false, false);
-			ImGui::Text("Clay chance:"); ImGui::SameLine();
-			if (ImGui::SliderFloat("##clyChance", &worldGen.clayChance, 0.0f, 1.0f, "%.5f"))
-				initGame(false, false);
-		}
-
-
-
-		ImGui::End();
-
-
-
-		ImGui::Begin("Block Selection");
-		ImGui::TextWrapped("Press F1 to open/close the menu");
-
-		ImGui::SeparatorText("Controls");
-		ImGui::BulletText("Middle click: select the hovered block");
-		ImGui::BulletText("'1': set start of selection area");
-		ImGui::BulletText("'2': set end of selection area");
-		ImGui::BulletText("Left CTRL + C: copy the selected area");
-		ImGui::BulletText("Right click: paste the copied area");
-		ImGui::BulletText("'-' / '=': zoom out / in");
-		ImGui::BulletText("'[' / ']': decrease / increase camera speed");
-
-		ImGui::SeparatorText("Saving & Loading");
-		ImGui::TextWrapped("To save a copied area, type a file name and press 'Save to file'. This creates a file you can load back any time.");
-		ImGui::TextWrapped("To load a structure, type the file name and press 'Load from file', then right-click to paste it into the world.");
-
-		ImGui::Text("File name:");
-		ImGui::SameLine();
-		ImGui::InputText("##structureFile", gameData.structureFile, sizeof(gameData.structureFile));
-
-		if (ImGui::Button("Save to file"))
-		{
-			std::string path = RESOURCES_PATH "structures/";
-			path += gameData.structureFile;
-			path += ".bin";
-
-			saveBlockDataToFile(
-				gameData.copyStructure.structureBlocks,
-				gameData.copyStructure.structureWallBlocks,
-				gameData.copyStructure.w,
-				gameData.copyStructure.h,
-				path.c_str()
-			);
-		}
-
-		if (ImGui::Button("Load from file"))
-		{
-			std::string path = RESOURCES_PATH "structures/";
-			path += gameData.structureFile;
-			path += ".bin";
-
-			loadBlockDataFromFile(
-				gameData.copyStructure.structureBlocks,
-				gameData.copyStructure.structureWallBlocks,
-				gameData.copyStructure.w,
-				gameData.copyStructure.h,
-				path.c_str()
-			);
-		}
-
-		if (ImGui::Button("Copy World"))
-		{
-			gameData.selectionStart.x = 0;
-			gameData.selectionStart.y = 0;
-			gameData.selectionEnd.x = worldWidth - 1;
-			gameData.selectionEnd.y = worldHeight - 1;
-
-			gameData.copyStructure.copyFromMap(
-				gameData.gameMap,
-				gameData.selectionStart,
-				gameData.selectionEnd
-			);
-		}
-
-		ImGui::Separator();
-
-		if (ImGui::Checkbox("Preview structure", &gameData.previewStructure)) {}
-
-		ImGui::Text("Change the block shape to a 'm x n' grid:");
-		if (ImGui::SliderInt("##blckShpX", &gameData.blockShape.x, 1, 100)) {}
-		if (ImGui::SliderInt("##blckShpY", &gameData.blockShape.y, 1, 100)) {}
-
-		ImGui::Separator();
-
-		ImGui::Text("Air"); ImGui::SameLine();
-
-		// Loop over every block type, skipping air (type 0).
-		// i doubles as the block ID and the atlas column index.
-		for (uint16_t i = 0; i < Block::BLOCKS_COUNT; i++)
-		{
-			// Get the tile's pixel rect in the atlas (column i, row 0, 32x32).
-			Rectangle atlas = getTextureAtlas(i, 0, 32, 32);
-
-			if (i == Block::door)
-				atlas = getTextureAtlas(i, 0, 32, 64);
-
-			// Convert pixel coords to UVs (0..1) - what ImageButton expects.
-			atlas.x /= assetManager.textures.width;
-			atlas.width /= assetManager.textures.width;
-			atlas.y /= assetManager.textures.height;
-			atlas.height /= assetManager.textures.height;
-
-			// ImageButton has no label, so every button would share the same ID
-			// and collide on hover/click state. Push i to make each one unique.
-			ImGui::PushID(i);
-
-			// ImTextureID is an opaque void*; raylib/OpenGL stores the GL texture
-			// ID inside it. The intptr_t hop avoids a 64-bit int-to-pointer warning.
-			ImTextureID tex = (ImTextureID)(intptr_t)assetManager.textures.id;
-
-			// 35x35 button showing the atlas sub-region from uv0 to uv1.
-			float blockHeight = 32;
-			if (i == Block::door)
-				blockHeight = 64;
-
-			if (ImGui::ImageButton(tex,
-				{ 32, blockHeight }, { atlas.x, atlas.y },
-				{ atlas.x + atlas.width, atlas.y + atlas.height }))
-			{
-				gameData.currentBlock = i;
-			}
-
-			ImGui::PopID();
-
-			// 10 buttons per row: SameLine keeps the next widget inline; skipping
-			// it every 10th iteration drops to a new row.
-			if (i % 10 != 0)
-			{
+				ImGui::Text("File name:");
 				ImGui::SameLine();
+				ImGui::InputText("##structureFile", gameData.structureFile, sizeof(gameData.structureFile));
+
+				if (ImGui::Button("Save to file"))
+				{
+					std::string path = RESOURCES_PATH "structures/";
+					path += gameData.structureFile;
+					path += ".bin";
+
+					saveBlockDataToFile(
+						gameData.copyStructure.structureBlocks,
+						gameData.copyStructure.structureWallBlocks,
+						gameData.copyStructure.w,
+						gameData.copyStructure.h,
+						path.c_str()
+					);
+				}
+
+				if (ImGui::Button("Load from file"))
+				{
+					std::string path = RESOURCES_PATH "structures/";
+					path += gameData.structureFile;
+					path += ".bin";
+
+					loadBlockDataFromFile(
+						gameData.copyStructure.structureBlocks,
+						gameData.copyStructure.structureWallBlocks,
+						gameData.copyStructure.w,
+						gameData.copyStructure.h,
+						path.c_str()
+					);
+				}
+
+				if (ImGui::Button("Copy World"))
+				{
+					gameData.selectionStart.x = 0;
+					gameData.selectionStart.y = 0;
+					gameData.selectionEnd.x = worldWidth - 1;
+					gameData.selectionEnd.y = worldHeight - 1;
+
+					gameData.copyStructure.copyFromMap(
+						gameData.gameMap,
+						gameData.selectionStart,
+						gameData.selectionEnd
+					);
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::Checkbox("Preview structure", &gameData.previewStructure)) {}
+
+				ImGui::Text("Change the block shape to a 'm x n' grid:");
+				if (ImGui::SliderInt("##blckShpX", &gameData.blockShape.x, 1, 100)) {}
+				if (ImGui::SliderInt("##blckShpY", &gameData.blockShape.y, 1, 100)) {}
+
+				ImGui::Separator();
+
+				ImGui::Text("Air"); ImGui::SameLine();
+
+				// Loop over every block type, skipping air (type 0).
+				// i doubles as the block ID and the atlas column index.
+				for (uint16_t i = 0; i < Block::BLOCKS_COUNT; i++)
+				{
+					// Get the tile's pixel rect in the atlas (column i, row 0, 32x32).
+					Rectangle atlas = getTextureAtlas(i, 0, 32, 32);
+
+					if (i == Block::door)
+						atlas = getTextureAtlas(i, 0, 32, 64);
+
+					// Convert pixel coords to UVs (0..1) - what ImageButton expects.
+					atlas.x /= assetManager.textures.width;
+					atlas.width /= assetManager.textures.width;
+					atlas.y /= assetManager.textures.height;
+					atlas.height /= assetManager.textures.height;
+
+					// ImageButton has no label, so every button would share the same ID
+					// and collide on hover/click state. Push i to make each one unique.
+					ImGui::PushID(i);
+
+					// ImTextureID is an opaque void*; raylib/OpenGL stores the GL texture
+					// ID inside it. The intptr_t hop avoids a 64-bit int-to-pointer warning.
+					ImTextureID tex = (ImTextureID)(intptr_t)assetManager.textures.id;
+
+					// 35x35 button showing the atlas sub-region from uv0 to uv1.
+					float blockHeight = 32;
+					if (i == Block::door)
+						blockHeight = 64;
+
+					if (ImGui::ImageButton(tex,
+						{ 32, blockHeight }, { atlas.x, atlas.y },
+						{ atlas.x + atlas.width, atlas.y + atlas.height }))
+					{
+						gameData.currentBlock = i;
+					}
+
+					ImGui::PopID();
+
+					// 10 buttons per row: SameLine keeps the next widget inline; skipping
+					// it every 10th iteration drops to a new row.
+					if (i % 10 != 0)
+					{
+						ImGui::SameLine();
+					}
+				}
+
+				ImGui::EndTabItem();
 			}
+
+		ImGui::EndTabBar();
 		}
 
 		ImGui::End();

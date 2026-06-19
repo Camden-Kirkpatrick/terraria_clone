@@ -23,7 +23,10 @@ int main()
 	// Allow docking and increase font size
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	io.FontGlobalScale = 2;
+	//io.FontGlobalScale = 2;
+	ImFont* roboto = io.Fonts->AddFontFromFileTTF(RESOURCES_PATH "fonts/RobotoRegular-3m4L.ttf", 32.0f);
+	io.FontDefault = roboto;     // <-- actually use Roboto
+	rlImGuiReloadFonts();
 
 	// Change the style/theme
 	//ImGui::StyleColorsClassic();

@@ -540,6 +540,8 @@ bool updateGame()
 	if (showImGui)
 	{
 		ImGui::Begin("Game Menu");
+
+		ImGui::SeparatorText("Controls");
 		ImGui::Text("Press 'TAB' to open/close the menu");
 		ImGui::Text("Menu must be closed in order to place/break blocks");
 		ImGui::Text("Press 'r' to reset world-gen settings to the default");
@@ -555,27 +557,22 @@ bool updateGame()
 		//	ImGui::Text("Column %d  biomeNoise=%.5f  branch=%s", cameraX, bn, branch);
 		//}
 
+		ImGui::SeparatorText("Camera");
 		ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
 		ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
-		ImGui::Separator();
 
-
-
+		ImGui::SeparatorText("World");
 		ImGui::Text("World width"); ImGui::SameLine();
 		if (ImGui::SliderInt("##worldWidth", &worldWidth, 25, 10000))
 			initGame(false, false);
 		ImGui::Text("World height"); ImGui::SameLine();
 		if (ImGui::SliderInt("##worldHeight", &worldHeight, 375, 1000))
 			initGame(false, false);
-		ImGui::Separator();
-
 		ImGui::Text("Seed:"); ImGui::SameLine();
 		if (ImGui::InputInt("##seed", &seed))
 			initGame(false, false);
-		ImGui::Separator();
 
-
-
+		ImGui::SeparatorText("Actions");
 		if (ImGui::Button("Reset world generation settings"))
 		{
 			initGame(true, false);
@@ -592,17 +589,13 @@ bool updateGame()
 			initGame(false, true);
 		}
 
-		if (ImGui::Checkbox("Show advanced settings", &showAdvancedSettings)) {}
-
-		ImGui::Separator();
-
-
+		ImGui::Checkbox("Show advanced settings", &showAdvancedSettings);
 
 		if (showAdvancedSettings)
 		{
-			ImGui::Text("World Generation Settings");
+			ImGui::SeparatorText("World Generation Settings");
 
-			ImGui::Text("Mountain Settings");
+			ImGui::SeparatorText("Mountain Settings");
 			//ImGui::Text("Dirt mountain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtMtnOct", &worldGen.dirtMountainOctaves, 1, 20);
 			ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine();
 			if (ImGui::SliderFloat("##dirtMtnFreq", &worldGen.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f"))
@@ -625,11 +618,8 @@ bool updateGame()
 			ImGui::Text("Max stone mountain start:"); ImGui::SameLine();
 			if (ImGui::SliderInt("##maxStoneMtnStart", &worldGen.maxStoneMountainStart, 330, 400))
 				initGame(false, false);
-			ImGui::Separator();
 
-
-
-			ImGui::Text("Plains Settings");
+			ImGui::SeparatorText("Plains Settings");
 			//ImGui::Text("Dirt plain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtPlnOct", &worldGen.dirtPlainOctaves, 1, 20);
 			ImGui::Text("Dirt plain frequency:"); ImGui::SameLine();
 			if (ImGui::SliderFloat("##dirtPlnFreq", &worldGen.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f"))
@@ -653,12 +643,8 @@ bool updateGame()
 			ImGui::Text("Max stone plain start:"); ImGui::SameLine();
 			if (ImGui::SliderInt("##maxStonePlnStart", &worldGen.maxStonePlainStart, 330, 400))
 				initGame(false, false);
-			ImGui::Separator();
 
-
-
-			ImGui::Text("Terrain and Biome Settings");
-
+			ImGui::SeparatorText("Terrain and Biome Settings");
 			//ImGui::Text("Terrain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##terrOct", &worldGen.terrainOctaves, 1, 20);
 			ImGui::Text("Terrain frequency:"); ImGui::SameLine();
 			if (ImGui::SliderFloat("##terrFreq", &worldGen.terrainFrequency, 0.00001f, 0.01f, "%.5f"))
@@ -682,11 +668,8 @@ bool updateGame()
 			ImGui::Text("Desert blend zone:"); ImGui::SameLine();
 			if (ImGui::SliderFloat("##desBlendZone", &worldGen.desertBlendZone, 0.0f, 1.0f, "%.5f"))
 				initGame(false, false);
-			ImGui::Separator();
 
-
-
-			ImGui::Text("Cave Settings");
+			ImGui::SeparatorText("Cave Settings");
 			if (ImGui::Checkbox("Generate caves", &worldGen.generateCaves))
 			{
 				initGame(false, false);
@@ -703,11 +686,8 @@ bool updateGame()
 			ImGui::Text("Max cave threshold:"); ImGui::SameLine();
 			if (ImGui::SliderFloat("##maxCaveThresh", &worldGen.maxCaveThreshold, 0.0f, 1.0f, "%.5f"))
 				initGame(false, false);
-			ImGui::Separator();
 
-
-
-			ImGui::Text("Tunnel Settings");
+			ImGui::SeparatorText("Tunnel Settings");
 			if (ImGui::Checkbox("Generate tunnels", &worldGen.generateWorms))
 			{
 				initGame(false, false);
@@ -762,10 +742,8 @@ bool updateGame()
 					worldGen.minWormTurnAngle = worldGen.maxWormTurnAngle;
 				initGame(false, false);
 			}
-			ImGui::Separator();
 
-
-			ImGui::Text("Special Material Settings");
+			ImGui::SeparatorText("Special Material Settings");
 			ImGui::Text("Ore threshold:"); ImGui::SameLine();
 			if (ImGui::SliderInt("##oreThresh", &worldGen.oreThreshold, 0, 499))
 				initGame(false, false);
@@ -801,15 +779,24 @@ bool updateGame()
 
 
 		ImGui::Begin("Block Selection");
-		ImGui::Text("Press F1 to open/close the menu");
-		ImGui::Text("Use middle click on your mouse to select the block being hovered over");
+		ImGui::TextWrapped("Press F1 to open/close the menu");
 
-		ImGui::Text("Press '1' to change the start of the selection area");
-		ImGui::Text("Press '2' to change the end of the selection area");
-		ImGui::Text("Press 'Left CTRL + c' to copy the selected area");
-		ImGui::Text("Press 'Mouse Right Click' to paste the copied area");
+		ImGui::SeparatorText("Controls");
+		ImGui::BulletText("Middle click: select the hovered block");
+		ImGui::BulletText("'1': set start of selection area");
+		ImGui::BulletText("'2': set end of selection area");
+		ImGui::BulletText("Left CTRL + C: copy the selected area");
+		ImGui::BulletText("Right click: paste the copied area");
+		ImGui::BulletText("'-' / '=': zoom out / in");
+		ImGui::BulletText("'[' / ']': decrease / increase camera speed");
 
-		ImGui::InputText("File name", gameData.structureFile, sizeof(gameData.structureFile));
+		ImGui::SeparatorText("Saving & Loading");
+		ImGui::TextWrapped("To save a copied area, type a file name and press 'Save to file'. This creates a file you can load back any time.");
+		ImGui::TextWrapped("To load a structure, type the file name and press 'Load from file', then right-click to paste it into the world.");
+
+		ImGui::Text("File name:");
+		ImGui::SameLine();
+		ImGui::InputText("##structureFile", gameData.structureFile, sizeof(gameData.structureFile));
 
 		if (ImGui::Button("Save to file"))
 		{

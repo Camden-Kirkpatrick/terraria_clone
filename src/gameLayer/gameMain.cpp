@@ -32,7 +32,7 @@ struct GameData
 		wallLayer = 1,
 	} hoverMode = blockLayer; // Determines whether we are placing/breaking normal blocks or wall blocks
 	int currentBlock = Block::dirt;
-	int currentBlockVariant = 0; // Random variation for the current block
+	int nextBlockVariant = 0; // Random variation for the next block
 	// Used to place a grid of blocks (x=3, y=2 = 3x2 grid of blocks)
 	struct BlockShape
 	{
@@ -116,7 +116,7 @@ bool updateGame()
 	{
 		Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
 		gameData.currentBlock = b->type;
-		gameData.currentBlockVariant = b->randIndex;
+		gameData.nextBlockVariant = b->randIndex;
 	}
 
 	int key = GetKeyPressed();
@@ -237,12 +237,12 @@ bool updateGame()
 							if (b)
 							{
 								b->type = gameData.currentBlock;
-								b->randIndex = gameData.currentBlockVariant;
+								b->randIndex = gameData.nextBlockVariant;
 
 								if (gameData.currentBlock == Block::door) 
-									gameData.currentBlockVariant = std::rand() % 2; // doors only have 2 variations
+									gameData.nextBlockVariant = std::rand() % 2; // doors only have 2 variations
 								else
-									gameData.currentBlockVariant = std::rand() % 4;
+									gameData.nextBlockVariant = std::rand() % 4;
 							}
 						}
 					}
@@ -431,10 +431,10 @@ bool updateGame()
 
 	// If a door is the block currently selected, make sure to get a 32x64 area instead of a 32x32 area
 	float blockHeight = 1;
-	Rectangle textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.currentBlockVariant, 32, 32);
+	Rectangle textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.nextBlockVariant, 32, 32);
 	if (gameData.currentBlock == Block::door)
 	{
-		textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.currentBlockVariant, 32, 64);
+		textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.nextBlockVariant, 32, 64);
 		blockHeight = 2;
 	}
 	
@@ -547,9 +547,11 @@ bool updateGame()
 			{
 
 				ImGui::SeparatorText("Controls");
-				ImGui::Text("Press 'TAB' to open/close the menu");
-				ImGui::Text("Menu must be closed in order to place/break blocks");
-				ImGui::Text("Press 'r' to reset world-gen settings to the default");
+				ImGui::BulletText("Press 'TAB' to open/close the menu");
+				ImGui::BulletText("Menu must be closed in order to place/break blocks");
+				ImGui::BulletText("Press 'r' to reset world-gen settings to the default");
+				ImGui::BulletText("'-' / '=': zoom out / in");
+				ImGui::BulletText("'[' / ']': decrease / increase camera speed");
 
 				//int cameraX = (int)gameData.camera.target.x;
 				//if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())
@@ -791,16 +793,71 @@ bool updateGame()
 
 			if (ImGui::BeginTabItem("Block Selection"))
 			{
-				ImGui::SeparatorText("Controls");
-				ImGui::BulletText("Middle click: select the hovered block");
+				ImGui::SeparatorText("Placing & Breaking Blocks");
+				ImGui::TextWrapped("Close this menu (TAB) to edit the world. Select a block from the grid below, then:");
+				ImGui::BulletText("Left click: break the block under the cursor");
+				ImGui::BulletText("Right click: place the selected block");
+				ImGui::BulletText("Middle click: pick the block under the cursor");
+				ImGui::TextWrapped("While the menu is open, the mouse copies/pastes structures (see below) instead of placing or breaking blocks.");
+
+				ImGui::Text("Air"); ImGui::SameLine();
+
+				// Loop over every block type, skipping air (type 0).
+				// i doubles as the block ID and the atlas column index.
+				for (uint16_t i = 0; i < Block::BLOCKS_COUNT; i++)
+				{
+					// Get the tile's pixel rect in the atlas (column i, row 0, 32x32).
+					Rectangle atlas = getTextureAtlas(i, 0, 32, 32);
+
+					if (i == Block::door)
+						atlas = getTextureAtlas(i, 0, 32, 64);
+
+					// Convert pixel coords to UVs (0..1) - what ImageButton expects.
+					atlas.x /= assetManager.textures.width;
+					atlas.width /= assetManager.textures.width;
+					atlas.y /= assetManager.textures.height;
+					atlas.height /= assetManager.textures.height;
+
+					// ImageButton has no label, so every button would share the same ID
+					// and collide on hover/click state. Push i to make each one unique.
+					ImGui::PushID(i);
+
+					// ImTextureID is an opaque void*; raylib/OpenGL stores the GL texture
+					// ID inside it. The intptr_t hop avoids a 64-bit int-to-pointer warning.
+					ImTextureID tex = (ImTextureID)(intptr_t)assetManager.textures.id;
+
+					// 35x35 button showing the atlas sub-region from uv0 to uv1.
+					float blockHeight = 32;
+					if (i == Block::door)
+						blockHeight = 64;
+
+					if (ImGui::ImageButton(tex,
+						{ 32, blockHeight }, { atlas.x, atlas.y },
+						{ atlas.x + atlas.width, atlas.y + atlas.height }))
+					{
+						gameData.currentBlock = i;
+						gameData.nextBlockVariant = (i == Block::door) ? std::rand() % 2 : std::rand() % 4;
+					}
+
+					ImGui::PopID();
+
+					// 10 buttons per row: SameLine keeps the next widget inline; skipping
+					// it every 10th iteration drops to a new row.
+					if (i % 10 != 0)
+					{
+						ImGui::SameLine();
+					}
+				}
+
+				ImGui::Separator();
+
+				ImGui::SeparatorText("Controls for Structures");
 				ImGui::BulletText("'1': set start of selection area");
 				ImGui::BulletText("'2': set end of selection area");
 				ImGui::BulletText("Left CTRL + C: copy the selected area");
 				ImGui::BulletText("Right click: paste the copied area");
-				ImGui::BulletText("'-' / '=': zoom out / in");
-				ImGui::BulletText("'[' / ']': decrease / increase camera speed");
 
-				ImGui::SeparatorText("Saving & Loading");
+				ImGui::SeparatorText("Saving & Loading Structures");
 				ImGui::TextWrapped("To save a copied area, type a file name and press 'Save to file'. This creates a file you can load back any time.");
 				ImGui::TextWrapped("To load a structure, type the file name and press 'Load from file', then right-click to paste it into the world.");
 
@@ -859,56 +916,6 @@ bool updateGame()
 				ImGui::Text("Change the block shape to a 'm x n' grid:");
 				if (ImGui::SliderInt("##blckShpX", &gameData.blockShape.x, 1, 100)) {}
 				if (ImGui::SliderInt("##blckShpY", &gameData.blockShape.y, 1, 100)) {}
-
-				ImGui::Separator();
-
-				ImGui::Text("Air"); ImGui::SameLine();
-
-				// Loop over every block type, skipping air (type 0).
-				// i doubles as the block ID and the atlas column index.
-				for (uint16_t i = 0; i < Block::BLOCKS_COUNT; i++)
-				{
-					// Get the tile's pixel rect in the atlas (column i, row 0, 32x32).
-					Rectangle atlas = getTextureAtlas(i, 0, 32, 32);
-
-					if (i == Block::door)
-						atlas = getTextureAtlas(i, 0, 32, 64);
-
-					// Convert pixel coords to UVs (0..1) - what ImageButton expects.
-					atlas.x /= assetManager.textures.width;
-					atlas.width /= assetManager.textures.width;
-					atlas.y /= assetManager.textures.height;
-					atlas.height /= assetManager.textures.height;
-
-					// ImageButton has no label, so every button would share the same ID
-					// and collide on hover/click state. Push i to make each one unique.
-					ImGui::PushID(i);
-
-					// ImTextureID is an opaque void*; raylib/OpenGL stores the GL texture
-					// ID inside it. The intptr_t hop avoids a 64-bit int-to-pointer warning.
-					ImTextureID tex = (ImTextureID)(intptr_t)assetManager.textures.id;
-
-					// 35x35 button showing the atlas sub-region from uv0 to uv1.
-					float blockHeight = 32;
-					if (i == Block::door)
-						blockHeight = 64;
-
-					if (ImGui::ImageButton(tex,
-						{ 32, blockHeight }, { atlas.x, atlas.y },
-						{ atlas.x + atlas.width, atlas.y + atlas.height }))
-					{
-						gameData.currentBlock = i;
-					}
-
-					ImGui::PopID();
-
-					// 10 buttons per row: SameLine keeps the next widget inline; skipping
-					// it every 10th iteration drops to a new row.
-					if (i % 10 != 0)
-					{
-						ImGui::SameLine();
-					}
-				}
 
 				ImGui::EndTabItem();
 			}

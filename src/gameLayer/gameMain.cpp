@@ -40,10 +40,10 @@ struct GameData
 		int y = 1;
 	} blockShape;
 	Structure copyStructure = {}; // A Structure is a grid of blocks (similar to a map) that can be saved and loaded to/from a file
-	Vector2 selectionStart = {};
-	Vector2 selectionEnd = {};
-	char saveName[100] = {};
-	bool previewStructure = true;
+	Vector2 selectionStart = {}; // Beginning of the area to be copied
+	Vector2 selectionEnd = {}; // End of the area to be copied
+	char structureFile[100] = {}; // Name of the file the structure is saved to/loaded from
+	bool previewStructure = true; // Show a preview of the structure before it's placed
 } gameData;
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
@@ -540,7 +540,7 @@ bool updateGame()
 	if (showImGui)
 	{
 		ImGui::Begin("Game Menu");
-		ImGui::Text("Press 'F1' to open/close the menu");
+		ImGui::Text("Press 'TAB' to open/close the menu");
 		ImGui::Text("Menu must be closed in order to place/break blocks");
 		ImGui::Text("Press 'r' to reset world-gen settings to the default");
 
@@ -600,7 +600,9 @@ bool updateGame()
 
 		if (showAdvancedSettings)
 		{
-			ImGui::Text("Mountain settings");
+			ImGui::Text("World Generation Settings");
+
+			ImGui::Text("Mountain Settings");
 			//ImGui::Text("Dirt mountain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtMtnOct", &worldGen.dirtMountainOctaves, 1, 20);
 			ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine();
 			if (ImGui::SliderFloat("##dirtMtnFreq", &worldGen.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f"))
@@ -627,7 +629,7 @@ bool updateGame()
 
 
 
-			ImGui::Text("Plains settings");
+			ImGui::Text("Plains Settings");
 			//ImGui::Text("Dirt plain octaves:");   ImGui::SameLine(); ImGui::SliderInt("##dirtPlnOct", &worldGen.dirtPlainOctaves, 1, 20);
 			ImGui::Text("Dirt plain frequency:"); ImGui::SameLine();
 			if (ImGui::SliderFloat("##dirtPlnFreq", &worldGen.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f"))
@@ -655,7 +657,7 @@ bool updateGame()
 
 
 
-			ImGui::Text("Terrain and Biome settings");
+			ImGui::Text("Terrain and Biome Settings");
 
 			//ImGui::Text("Terrain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##terrOct", &worldGen.terrainOctaves, 1, 20);
 			ImGui::Text("Terrain frequency:"); ImGui::SameLine();
@@ -673,6 +675,7 @@ bool updateGame()
 				initGame(false, false);
 
 			//ImGui::Text("Desert octaves:");  ImGui::SameLine(); ImGui::SliderInt("##desOct", &worldGen.desertOctaves, 1, 20);
+			ImGui::Text("Desert frequency:"); ImGui::SameLine();
 			if (ImGui::SliderFloat("##desFreq", &worldGen.desertFrequency, 0.00001f, 0.1f, "%.5f"))
 				initGame(false, false);
 
@@ -683,7 +686,7 @@ bool updateGame()
 
 
 
-			ImGui::Text("Cave settings");
+			ImGui::Text("Cave Settings");
 			if (ImGui::Checkbox("Generate caves", &worldGen.generateCaves))
 			{
 				initGame(false, false);
@@ -704,7 +707,7 @@ bool updateGame()
 
 
 
-			ImGui::Text("Tunnel settings");
+			ImGui::Text("Tunnel Settings");
 			if (ImGui::Checkbox("Generate tunnels", &worldGen.generateWorms))
 			{
 				initGame(false, false);
@@ -762,7 +765,7 @@ bool updateGame()
 			ImGui::Separator();
 
 
-			ImGui::Text("Special material settings");
+			ImGui::Text("Special Material Settings");
 			ImGui::Text("Ore threshold:"); ImGui::SameLine();
 			if (ImGui::SliderInt("##oreThresh", &worldGen.oreThreshold, 0, 499))
 				initGame(false, false);
@@ -799,7 +802,6 @@ bool updateGame()
 
 		ImGui::Begin("Block Selection");
 		ImGui::Text("Press F1 to open/close the menu");
-		ImGui::Text("Menu must be closed in order to place/break blocks");
 		ImGui::Text("Use middle click on your mouse to select the block being hovered over");
 
 		ImGui::Text("Press '1' to change the start of the selection area");
@@ -807,12 +809,12 @@ bool updateGame()
 		ImGui::Text("Press 'Left CTRL + c' to copy the selected area");
 		ImGui::Text("Press 'Mouse Right Click' to paste the copied area");
 
-		ImGui::InputText("File name", gameData.saveName, sizeof(gameData.saveName));
+		ImGui::InputText("File name", gameData.structureFile, sizeof(gameData.structureFile));
 
 		if (ImGui::Button("Save to file"))
 		{
 			std::string path = RESOURCES_PATH "structures/";
-			path += gameData.saveName;
+			path += gameData.structureFile;
 			path += ".bin";
 
 			saveBlockDataToFile(
@@ -827,7 +829,7 @@ bool updateGame()
 		if (ImGui::Button("Load from file"))
 		{
 			std::string path = RESOURCES_PATH "structures/";
-			path += gameData.saveName;
+			path += gameData.structureFile;
 			path += ".bin";
 
 			loadBlockDataFromFile(

@@ -12,6 +12,8 @@
 [![Watch the video](https://img.youtube.com/vi/4QnyahOjVzM/maxresdefault.jpg)](https://www.youtube.com/watch?v=4QnyahOjVzM)
 ## Video (v1.4.0)
 [![Watch the video](https://img.youtube.com/vi/cEhbzT8-38I/maxresdefault.jpg)](https://www.youtube.com/watch?v=cEhbzT8-38I)
+## Video (v1.5.0)
+[![Watch the video](https://img.youtube.com/vi/irFjFR9b87E/maxresdefault.jpg)](https://www.youtube.com/watch?v=irFjFR9b87E)
 
 
 ## Features

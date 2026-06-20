@@ -44,6 +44,7 @@ struct GameData
 	Vector2 selectionEnd = {}; // End of the area to be copied
 	char structureFile[100] = {}; // Name of the file the structure is saved to/loaded from
 	bool previewStructure = true; // Show a preview of the structure before it's placed
+	bool previewSelection = true; // Show the selection outline rectangle
 } gameData;
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
@@ -531,7 +532,7 @@ bool updateGame()
 	}
 
 	// Draw the selection rectangle used for copying and pasting blocks
-	if (showImGui)
+	if (showImGui && gameData.previewSelection)
 	{
 		Rectangle rect;
 		rect.x = gameData.selectionStart.x;
@@ -924,6 +925,7 @@ bool updateGame()
 				ImGui::Separator();
 
 				if (ImGui::Checkbox("Preview structure", &gameData.previewStructure)) {}
+				if (ImGui::Checkbox("Preview selection", &gameData.previewSelection)) {}
 
 				ImGui::Text("Change the block shape to a 'm x n' grid:");
 				if (ImGui::SliderInt("##blckShpX", &gameData.blockShape.x, 1, 100)) {}

@@ -185,17 +185,19 @@ bool updateGame()
 			{
 				Block* b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
 				if (b)
-				{
 					*b = {};
-				}
 			}
 			else
 			{
 				Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
-				if (b)
-				{
+				// Block above the current block
+				Block* b0 = gameData.gameMap.getBlockSafe(blockX, blockY - 1);
+				// Pressing left click on the bottom block of the door, also breaks the door
+				if (b0->type == Block::door)
+					*b0 = {};
+				// Break normal block
+				else
 					*b = {};
-				}
 			}
 		}
 

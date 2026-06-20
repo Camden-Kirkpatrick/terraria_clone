@@ -441,14 +441,20 @@ bool updateGame()
 	// Show a prevew of the block currently selected
 	if (!showImGui)
 	{
-		DrawTexturePro(
-			assetManager.textures,
-			textureAtlasRect,
-			{ (float)blockX, (float)blockY, 1, blockHeight },
-			{ 0, 0 },
-			0.0f,
-			{ 255, 255, 255, 255 }
-		);
+		for (int x = 0; x < gameData.blockShape.x; x++)
+		{
+			for (int y = 0; y < gameData.blockShape.y; y++)
+			{
+				DrawTexturePro(
+					assetManager.textures,
+					textureAtlasRect,
+					{ (float)blockX + x, (float)blockY + y, 1, blockHeight },
+					{ 0, 0 },
+					0.0f,
+					{ 255, 255, 255, 255 }
+				);
+			}
+		}
 	}
 
 	// Show a preview of the current structure that was copied or loaded from a file
@@ -509,14 +515,20 @@ bool updateGame()
 	}
 
 	// Draw the block selection frame
-	DrawTexturePro(
-		assetManager.frame,
-		{ 0, 0, (float)assetManager.frame.width, (float)assetManager.frame.height },
-		{ (float)blockX, (float)blockY, 1, 1 },
-		{ 0, 0 },
-		0.0f,
-		gameData.hoverMode == GameData::HoverMode::blockLayer ? WHITE : RED // white frame for block layer, red frame for wall layer
-	);
+	for (int x = 0; x < gameData.blockShape.x; x++)
+	{
+		for (int y = 0; y < gameData.blockShape.y; y++)
+		{
+			DrawTexturePro(
+				assetManager.frame,
+				{ 0, 0, (float)assetManager.frame.width, (float)assetManager.frame.height },
+				{ (float)blockX + x, (float)blockY + y, 1, 1 },
+				{ 0, 0 },
+				0.0f,
+				gameData.hoverMode == GameData::HoverMode::blockLayer ? WHITE : RED // white frame for block layer, red frame for wall layer
+			);
+		}
+	}
 
 	// Draw the selection rectangle used for copying and pasting blocks
 	if (showImGui)

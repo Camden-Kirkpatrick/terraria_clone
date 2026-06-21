@@ -3,7 +3,7 @@
 #include <iostream>
 
 // Write binary block data to a file
-bool saveBlockDataToFile(std::vector<Block> blocks, std::vector<Block> wallBlocks, int w, int h, const char* fileName)
+bool saveBlockDataToFile(const std::vector<Block> &blocks, std::vector<Block> wallBlocks, int w, int h, const char* fileName)
 {
 	std::ofstream f(fileName, std::ios::binary);
 

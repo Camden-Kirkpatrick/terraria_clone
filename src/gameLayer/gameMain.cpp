@@ -26,20 +26,25 @@ struct GameData
 	GameMap gameMap = {};
 	Camera2D camera = {};
 	float cameraSpeed = 0.0f;
+
 	enum HoverMode
 	{
 		blockLayer = 0,
 		wallLayer = 1,
 	} hoverMode = blockLayer; // Determines whether we are placing/breaking normal blocks or wall blocks
-	int currentBlock = Block::dirt;
+
+	int curBlock = Block::dirt; // The block currently selected to be placed
 	int nextBlockVariant = 0; // Random variation for the next block
+
 	// Used to place a grid of blocks (x=3, y=2 = 3x2 grid of blocks)
 	struct BlockShape
 	{
 		int x = 1;
 		int y = 1;
 	} blockShape;
-	Structure copyStructure = {}; // A Structure is a grid of blocks (similar to a map) that can be saved and loaded to/from a file
+
+	Structure copyStructures[10] = {}; // A Structure is a grid of blocks (similar to a map) that can be saved and loaded to/from a file
+	int curStructureIdx = 0; // Keep track of the structure currently selected
 	Vector2 selectionStart = {}; // Beginning of the area to be copied
 	Vector2 selectionEnd = {}; // End of the area to be copied
 	char structureFile[100] = {}; // Name of the file the structure is saved to/loaded from
@@ -116,7 +121,7 @@ bool updateGame()
 	if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE))
 	{
 		Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
-		gameData.currentBlock = b->type;
+		gameData.curBlock = b->type;
 		gameData.nextBlockVariant = b->randIndex;
 	}
 
@@ -129,6 +134,29 @@ bool updateGame()
 			if (!showImGui) // prevent game inputs when typing in the text boxes
 				initGame(true, false); break;
 	}
+
+#pragma region structures
+	if (showImGui)
+	{
+		// Change the current structure with the arrow keys
+		if (IsKeyPressed(KEY_RIGHT))
+		{
+			if (gameData.curStructureIdx < 9)
+				gameData.curStructureIdx++;
+			else
+				gameData.curStructureIdx = 0;
+		}
+		if (IsKeyPressed(KEY_LEFT))
+		{
+			if (gameData.curStructureIdx > 0)
+				gameData.curStructureIdx--;
+			else
+				gameData.curStructureIdx = 9;
+		}
+	}
+
+	// The structure currently selected
+	Structure& curStructure = gameData.copyStructures[gameData.curStructureIdx];
 
 	// Select an area to copy and paste blocks, or save and load blocks to/from a file
 	if (showImGui)
@@ -143,17 +171,18 @@ bool updateGame()
 		{
 			if (IsKeyDown(KEY_C))
 			{
-				gameData.copyStructure.copyFromMap(
+				curStructure.copyFromMap(
 					gameData.gameMap,
 					gameData.selectionStart,
 					gameData.selectionEnd
 				);
 			}
 		}
+
 		// Paste the selected area
 		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
 		{
-			gameData.copyStructure.pasteIntoMap(
+			curStructure.pasteIntoMap(
 				gameData.gameMap,
 				Vector2{ (float)blockX, (float)blockY }
 			);
@@ -165,7 +194,7 @@ bool updateGame()
 		if (gameData.selectionStart.y > gameData.selectionEnd.y)
 			std::swap(gameData.selectionStart.y, gameData.selectionEnd.y);
 	}
-
+#pragma endregion
 
 	// Holding shift toggles "hover mode" which allows placing blocks on the wall layer instead of the main layer
 	bool shiftDown = IsKeyDown(KEY_LEFT_SHIFT);
@@ -175,6 +204,7 @@ bool updateGame()
 	else
 		gameData.hoverMode = GameData::HoverMode::blockLayer;
 
+#pragma region place_break_blocks
 	// Don't allow placing and breaking blocks while the ImGui menu is shown
 	if (!showImGui)
 	{
@@ -227,7 +257,7 @@ bool updateGame()
 							Block* b = gameData.gameMap.getWallBlockSafe(blockX + x, blockY + y);
 							if (b)
 							{
-								b->type = gameData.currentBlock;
+								b->type = gameData.curBlock;
 								b->randIndex = std::rand() % 4; // Pick a random texture when placing a block
 							}
 						}
@@ -236,7 +266,7 @@ bool updateGame()
 				else
 				{
 					// ----- Special Case for Doors ----
-					bool isDoor = gameData.currentBlock == Block::door;
+					bool isDoor = gameData.curBlock == Block::door;
 					int stopY = gameData.blockShape.y;
 					int incY = 1;
 
@@ -255,7 +285,7 @@ bool updateGame()
 							Block* b = gameData.gameMap.getBlockSafe(blockX + x, blockY + y);
 							if (b)
 							{
-								b->type = gameData.currentBlock;
+								b->type = gameData.curBlock;
 								b->randIndex = gameData.nextBlockVariant;
 
 								if (isDoor) 
@@ -281,6 +311,7 @@ bool updateGame()
 			lastPlacedY = -1;
 		}
 	}
+#pragma endregion
 #pragma endregion
 
 #pragma region rendering 
@@ -456,10 +487,10 @@ bool updateGame()
 	// ----- Special Case for Doors ----
 	// If a door is the block currently selected, make sure to get a 32x64 area instead of a 32x32 area
 	float blockHeight = 1;
-	Rectangle textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.nextBlockVariant, 32, 32);
-	if (gameData.currentBlock == Block::door)
+	Rectangle textureAtlasRect = getTextureAtlas(gameData.curBlock, gameData.nextBlockVariant, 32, 32);
+	if (gameData.curBlock == Block::door)
 	{
-		textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.nextBlockVariant, 32, 64);
+		textureAtlasRect = getTextureAtlas(gameData.curBlock, gameData.nextBlockVariant, 32, 64);
 		blockHeight = 2;
 	}
 
@@ -467,7 +498,7 @@ bool updateGame()
 	int incY = 1;
 
 	// Same code used for placing a grid of doors, but used for the block preview
-	if (gameData.currentBlock == Block::door)
+	if (gameData.curBlock == Block::door)
 	{
 		stopY = gameData.blockShape.y * 2;
 		incY = 2;
@@ -497,11 +528,11 @@ bool updateGame()
 	if (gameData.previewStructure && showImGui)
 	{
 		// Show the walls in the preview
-		for (int x = 0; x < gameData.copyStructure.w; x++)
+		for (int x = 0; x < curStructure.w; x++)
 		{
-			for (int y = 0; y < gameData.copyStructure.h; y++)
+			for (int y = 0; y < curStructure.h; y++)
 			{
-				Block& b = gameData.copyStructure.getWallBlockUnsafe(x, y);
+				Block& b = curStructure.getWallBlockUnsafe(x, y);
 
 				if (b.type == Block::air)
 					continue;
@@ -521,11 +552,11 @@ bool updateGame()
 		}
 
 		// Show the blocks in the preview
-		for (int x = 0; x < gameData.copyStructure.w; x++)
+		for (int x = 0; x < curStructure.w; x++)
 		{
-			for (int y = 0; y < gameData.copyStructure.h; y++)
+			for (int y = 0; y < curStructure.h; y++)
 			{
-				Block& b = gameData.copyStructure.getBlockUnsafe(x, y);
+				Block& b = curStructure.getBlockUnsafe(x, y);
 
 				if (b.type == Block::air)
 					continue;
@@ -883,7 +914,7 @@ bool updateGame()
 						{ 32, blockHeight }, { atlas.x, atlas.y },
 						{ atlas.x + atlas.width, atlas.y + atlas.height }))
 					{
-						gameData.currentBlock = i;
+						gameData.curBlock = i;
 						gameData.nextBlockVariant = (i == Block::door) ? std::rand() % 2 : std::rand() % 4;
 					}
 
@@ -920,10 +951,10 @@ bool updateGame()
 					path += ".bin";
 
 					saveBlockDataToFile(
-						gameData.copyStructure.structureBlocks,
-						gameData.copyStructure.structureWallBlocks,
-						gameData.copyStructure.w,
-						gameData.copyStructure.h,
+						curStructure.structureBlocks,
+						curStructure.structureWallBlocks,
+						curStructure.w,
+						curStructure.h,
 						path.c_str()
 					);
 				}
@@ -935,10 +966,10 @@ bool updateGame()
 					path += ".bin";
 
 					loadBlockDataFromFile(
-						gameData.copyStructure.structureBlocks,
-						gameData.copyStructure.structureWallBlocks,
-						gameData.copyStructure.w,
-						gameData.copyStructure.h,
+						curStructure.structureBlocks,
+						curStructure.structureWallBlocks,
+						curStructure.w,
+						curStructure.h,
 						path.c_str()
 					);
 				}
@@ -950,7 +981,7 @@ bool updateGame()
 					gameData.selectionEnd.x = worldWidth - 1;
 					gameData.selectionEnd.y = worldHeight - 1;
 
-					gameData.copyStructure.copyFromMap(
+					curStructure.copyFromMap(
 						gameData.gameMap,
 						gameData.selectionStart,
 						gameData.selectionEnd

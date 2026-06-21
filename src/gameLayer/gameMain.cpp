@@ -247,6 +247,11 @@ bool updateGame()
 								else
 									gameData.nextBlockVariant = std::rand() % 4;
 							}
+
+							// Don't allow a door to be on the bottom half of another door
+							Block* b0 = gameData.gameMap.getBlockSafe(blockX + x, blockY - 1 + y);
+							if (b0->type == Block::door)
+								*b0 = {};
 						}
 					}
 				}
@@ -936,7 +941,7 @@ bool updateGame()
 				ImGui::EndTabItem();
 			}
 
-		ImGui::EndTabBar();
+			ImGui::EndTabBar();
 		}
 
 		ImGui::End();

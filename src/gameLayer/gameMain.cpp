@@ -190,11 +190,14 @@ bool updateGame()
 			else
 			{
 				Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
+
+				// ----- Special Case for Doors ----
 				// Block above the current block
 				Block* b0 = gameData.gameMap.getBlockSafe(blockX, blockY - 1);
 				// Pressing left click on the bottom block of the door, also breaks the door
 				if (b0->type == Block::door)
 					*b0 = {};
+				// ----------------------------------
 				// Break normal block
 				else
 					*b = {};
@@ -232,9 +235,22 @@ bool updateGame()
 				}
 				else
 				{
+					// ----- Special Case for Doors ----
+					bool isDoor = gameData.currentBlock == Block::door;
+					int stopY = gameData.blockShape.y;
+					int incY = 1;
+
+					// If the current block is a door, and we want to draw an area of doors, then we have to get a 1x2 area
+					if (isDoor)
+					{
+						stopY = gameData.blockShape.y * 2;
+						incY = 2;
+					}
+					// ----------------------------------
+
 					for (int x = 0; x < gameData.blockShape.x; x++)
 					{
-						for (int y = 0; y < gameData.blockShape.y; y++)
+						for (int y = 0; y < stopY; y += incY)
 						{
 							Block* b = gameData.gameMap.getBlockSafe(blockX + x, blockY + y);
 							if (b)
@@ -242,7 +258,7 @@ bool updateGame()
 								b->type = gameData.currentBlock;
 								b->randIndex = gameData.nextBlockVariant;
 
-								if (gameData.currentBlock == Block::door) 
+								if (isDoor) 
 									gameData.nextBlockVariant = std::rand() % 2; // doors only have 2 variations
 								else
 									gameData.nextBlockVariant = std::rand() % 4;
@@ -437,6 +453,7 @@ bool updateGame()
 		}
 	}
 
+	// ----- Special Case for Doors ----
 	// If a door is the block currently selected, make sure to get a 32x64 area instead of a 32x32 area
 	float blockHeight = 1;
 	Rectangle textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.nextBlockVariant, 32, 32);
@@ -445,13 +462,24 @@ bool updateGame()
 		textureAtlasRect = getTextureAtlas(gameData.currentBlock, gameData.nextBlockVariant, 32, 64);
 		blockHeight = 2;
 	}
+
+	int stopY = gameData.blockShape.y;
+	int incY = 1;
+
+	// Same code used for placing a grid of doors, but used for the block preview
+	if (gameData.currentBlock == Block::door)
+	{
+		stopY = gameData.blockShape.y * 2;
+		incY = 2;
+	}
+	// ----------------------------------
 	
 	// Show a prevew of the block currently selected
 	if (!showImGui)
 	{
 		for (int x = 0; x < gameData.blockShape.x; x++)
 		{
-			for (int y = 0; y < gameData.blockShape.y; y++)
+			for (int y = 0; y < stopY; y += incY)
 			{
 				DrawTexturePro(
 					assetManager.textures,
@@ -525,7 +553,7 @@ bool updateGame()
 	// Draw the block selection frame
 	for (int x = 0; x < gameData.blockShape.x; x++)
 	{
-		for (int y = 0; y < gameData.blockShape.y; y++)
+		for (int y = 0; y < stopY; y++)
 		{
 			DrawTexturePro(
 				assetManager.frame,

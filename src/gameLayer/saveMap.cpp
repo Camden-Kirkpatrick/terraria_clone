@@ -2,6 +2,50 @@
 #include <asserts.hpp>
 #include <iostream>
 
+//const int VERSION = 2;
+//
+//struct BlockSaveRepresentation1
+//{
+//	std::uint16_t type = 0;
+//	std::uint8_t randIndex = 0;
+//
+//	Block toBlock()
+//	{
+//		Block b;
+//		b.type = type;
+//		b.randIndex = randIndex;
+//
+//		return b;
+//	}
+//};
+//
+//struct BlockSaveRepresentation2
+//{
+//	std::uint16_t type = 0;
+//	std::uint8_t randIndex = 0;
+//	std::uint8_t durability = 1;
+//
+//	Block toBlock()
+//	{
+//		Block b;
+//		b.type = type;
+//		b.randIndex = randIndex;
+//		b.durability = durability;
+//
+//		return b;
+//	}
+//};
+//
+//BlockSaveRepresentation2 toBlockRepresentation(Block b)
+//{
+//	BlockSaveRepresentation2 r;
+//	r.type = b.type;
+//	r.randIndex = b.randIndex;
+//	r.durability = b.durability;
+//
+//	return r;
+//}
+
 // Write binary block data to a file
 bool saveBlockDataToFile(const std::vector<Block> &blocks, std::vector<Block> wallBlocks, int w, int h, const char* fileName)
 {
@@ -24,13 +68,22 @@ bool saveBlockDataToFile(const std::vector<Block> &blocks, std::vector<Block> wa
 	if (wallBlocks.size() == 0)
 		return false;
 
-	// Write the dimensions first so the loader knows how many blocks to read
+	//f.write((const char*)&VERSION, sizeof(VERSION));
+	// Write the dimensions, so the loader knows how many blocks to read
 	f.write((const char*)&w, sizeof(w));
 	f.write((const char*)&h, sizeof(h));
 
 	// Dump the entire block array as one contiguous stream of bytes
 	f.write((const char*)blocks.data(), sizeof(Block) * blocks.size());
 	f.write((const char*)wallBlocks.data(), sizeof(Block) * wallBlocks.size());
+
+	//for (int i = 0; i < blocks.size(); i++)
+	//{
+	//	auto b = toBlockRepresentation(blocks[i]);
+	//	auto wb = toBlockRepresentation(wallBlocks[i]);
+	//	f.write((const char*)&b, sizeof(b));
+	//	f.write((const char*)&wb, sizeof(wb));
+	//}
 
 	f.close();
 
@@ -50,6 +103,9 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 	if (!f.is_open())
 		return false;
 
+	int version = 0;
+
+	//f.read((char*)&version, sizeof(version));
 	// Get the width and height so we know how many blocks to allocate
 	f.read((char*)&w, sizeof(w));
 	f.read((char*)&h, sizeof(h));
@@ -69,6 +125,76 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 		f.close();
 		return false;
 	}
+
+	//switch (version)
+	//{
+	//	case 1:
+	//	{
+	//		size_t blockCount = w * h;
+	//		blocks.resize(blockCount);
+	//		wallBlocks.resize(blockCount);
+
+	//		for (int i = 0; i < blockCount; i++)
+	//		{
+	//			BlockSaveRepresentation1 read, readWall;
+	//			f.read((char*)&read, sizeof(read));
+	//			f.read((char*)&readWall, sizeof(readWall));
+
+	//			if (!f)
+	//			{
+	//				blocks.clear();
+	//				wallBlocks.clear();
+	//				w = 0;
+	//				h = 0;
+	//				f.close();
+	//				return false;
+	//			}
+
+	//			blocks[i] = read.toBlock();
+	//			wallBlocks[i] = readWall.toBlock();
+	//		}
+
+	//		break;
+	//	}
+
+	//	case 2:
+	//	{
+	//		size_t blockCount = w * h;
+	//		blocks.resize(blockCount);
+	//		wallBlocks.resize(blockCount);
+
+	//		for (int i = 0; i < blockCount; i++)
+	//		{
+	//			BlockSaveRepresentation2 read, readWall;
+	//			f.read((char*)&read, sizeof(read));
+	//			f.read((char*)&readWall, sizeof(readWall));
+
+	//			if (!f)
+	//			{
+	//				blocks.clear();
+	//				wallBlocks.clear();
+	//				w = 0;
+	//				h = 0;
+	//				f.close();
+	//				return false;
+	//			}
+
+	//			blocks[i] = read.toBlock();
+	//			wallBlocks[i] = readWall.toBlock();
+	//		}
+
+	//		break;
+	//	}
+
+	//	// Wrong version
+	//	default:
+	//	{
+	//		w = 0;
+	//		h = 0;
+	//		f.close();
+	//		return false;
+	//	}
+	//}
 
 	size_t blockCount = w * h;
 	blocks.resize(blockCount);

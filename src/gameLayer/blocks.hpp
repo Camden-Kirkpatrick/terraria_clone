@@ -59,7 +59,6 @@ struct Block
 		boneWordrobe,
 		boneBookShelf,
 		bonePlatform,
-		gravel,
 
 		BLOCKS_COUNT,
 	};
@@ -103,6 +102,6 @@ struct Block
 	void sanitize()
 	{
 		if (type >= BLOCKS_COUNT)
-			type = 0;
+			type = air;
 	}
 };

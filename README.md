@@ -30,13 +30,13 @@
 - [x] Block selection menu
 - [x] Copy/Paste blocks easily
 - [x] Save/Load structures to/from a file
+- [x] Tree generation
 - [ ] Add entities
 - [ ] Add a player
-- [ ] Tree generation
 - [ ] Add more biomes
   - [ ] Tundra
   - [ ] Jungle
   - [ ] Ocean
 - [ ] Sounds / Music
 - [ ] Game menu
-- [ ] Save/load worlds
+- [ ] Save/Load worlds

@@ -1,5 +1,7 @@
 #include "worldGenerator.hpp"
 #include "randomStuff.hpp"
+#include "structure.hpp"
+#include "saveMap.hpp"
 #include <FastNoiseSIMD.h>
 #include <memory>
 
@@ -114,6 +116,34 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     std::ranlux24_base rng;
 
+    Structure tree1;
+    loadBlockDataFromFile(
+        tree1.structureBlocks,
+        tree1.structureWallBlocks,
+        tree1.w,
+        tree1.h,
+        RESOURCES_PATH "structures/tree1.bin"
+    );
+
+    Structure tree2;
+    loadBlockDataFromFile(
+        tree2.structureBlocks,
+        tree2.structureWallBlocks,
+        tree2.w,
+        tree2.h,
+        RESOURCES_PATH "structures/tree2.bin"
+    );
+
+    Structure tree3;
+    loadBlockDataFromFile(
+        tree3.structureBlocks,
+        tree3.structureWallBlocks,
+        tree3.w,
+        tree3.h,
+        RESOURCES_PATH "structures/tree3.bin"
+    );
+
+    Structure trees[3] = { tree1, tree2, tree3 };
 #pragma region generate_noise
     // Noise generators for different layers, biomes, and caves
     std::unique_ptr<FastNoiseSIMD> dirtNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
@@ -633,6 +663,46 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         worldGen.curNumWorms = 0;
     }
 #pragma endregion
+
+
+
+    for (int x = 0; x < WIDTH; x++)
+    {
+        if (getRandomChance(rng, 0.04f))
+        {
+            Structure tree = trees[getRandomInt(rng, 0, 2)];
+
+            for (int y = 0; y < HEIGHT; y++)
+            {
+                // Get the current block type
+                uint16_t type = gameMap.getBlockType(x, y);
+                // Ignore air blocks
+                if (type == Block::air)
+                    continue;
+                else if (type == Block::grassBlock)
+                {
+                    // Generate a tree
+
+                    Vector2 spawnPos = { (float)x, (float)y };
+
+                    spawnPos.x -= tree.w / 2;
+                    spawnPos.y -= tree.h;
+
+                    tree.pasteIntoMap(gameMap, spawnPos);
+
+                    // Leave a gap between trees
+                    x += 5;
+
+                    break;
+                }
+                // Not a grass block
+                else
+                    break;
+            }
+        }
+    }
+
+
 
     // Free resources
     FastNoiseSIMD::FreeNoiseSet(dirtPlainNoise);

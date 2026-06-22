@@ -2,49 +2,43 @@
 #include <asserts.hpp>
 #include <iostream>
 
-//const int VERSION = 2;
-//
-//struct BlockSaveRepresentation1
-//{
-//	std::uint16_t type = 0;
-//	std::uint8_t randIndex = 0;
-//
-//	Block toBlock()
-//	{
-//		Block b;
-//		b.type = type;
-//		b.randIndex = randIndex;
-//
-//		return b;
-//	}
-//};
-//
-//struct BlockSaveRepresentation2
-//{
-//	std::uint16_t type = 0;
-//	std::uint8_t randIndex = 0;
-//	std::uint8_t durability = 1;
-//
-//	Block toBlock()
-//	{
-//		Block b;
-//		b.type = type;
-//		b.randIndex = randIndex;
-//		b.durability = durability;
-//
-//		return b;
-//	}
-//};
-//
-//BlockSaveRepresentation2 toBlockRepresentation(Block b)
-//{
-//	BlockSaveRepresentation2 r;
-//	r.type = b.type;
-//	r.randIndex = b.randIndex;
-//	r.durability = b.durability;
-//
-//	return r;
-//}
+// Format version for NEW saves. Bump by 1 whenever the on-disk layout below
+// changes. Written as the first bytes of every file so the loader knows which
+// reader (case) to use
+const int VERSION = 1;
+
+// FROZEN snapshot of the version-1 on-disk layout. NEVER edit this - real files
+// were written in this exact byte layout. Only the fields that existed in v1
+struct BlockSaveRepresentation1
+{
+	std::uint16_t type = 0;
+	std::uint8_t randIndex = 0;
+
+	// Disk record -> live Block. Fields missing from previous versions are left at
+	// Block's defaults, so old saves auto-upgrade with sane values
+	Block toBlock()
+	{
+		Block b;
+		b.type = type;
+		b.randIndex = randIndex;
+
+		return b;
+	}
+};
+
+// FROZEN snapshot of the version-2 layout = v1 + new variables
+// struct BlockSaveRepresentation2 { ... };
+
+// Pack a live Block into the CURRENT representation (matches VERSION)
+// Used while saving. Change the return type when you bump to a new version
+BlockSaveRepresentation1 toBlockRepresentation(Block b)
+{
+	BlockSaveRepresentation1 r;
+	r.type = b.type;
+	r.randIndex = b.randIndex;
+
+	return r;
+}
 
 // Write binary block data to a file
 bool saveBlockDataToFile(const std::vector<Block> &blocks, std::vector<Block> wallBlocks, int w, int h, const char* fileName)
@@ -68,22 +62,20 @@ bool saveBlockDataToFile(const std::vector<Block> &blocks, std::vector<Block> wa
 	if (wallBlocks.size() == 0)
 		return false;
 
-	//f.write((const char*)&VERSION, sizeof(VERSION));
+	// File layout: [VERSION][w][h], then per cell: block, then wall (interleaved)
+	f.write((const char*)&VERSION, sizeof(VERSION));
 	// Write the dimensions, so the loader knows how many blocks to read
 	f.write((const char*)&w, sizeof(w));
 	f.write((const char*)&h, sizeof(h));
 
-	// Dump the entire block array as one contiguous stream of bytes
-	f.write((const char*)blocks.data(), sizeof(Block) * blocks.size());
-	f.write((const char*)wallBlocks.data(), sizeof(Block) * wallBlocks.size());
-
-	//for (int i = 0; i < blocks.size(); i++)
-	//{
-	//	auto b = toBlockRepresentation(blocks[i]);
-	//	auto wb = toBlockRepresentation(wallBlocks[i]);
-	//	f.write((const char*)&b, sizeof(b));
-	//	f.write((const char*)&wb, sizeof(wb));
-	//}
+	// Two records per cell - foreground block, then the wall behind it
+	for (int i = 0; i < blocks.size(); i++)
+	{
+		auto b = toBlockRepresentation(blocks[i]);
+		auto wb = toBlockRepresentation(wallBlocks[i]);
+		f.write((const char*)&b, sizeof(b));
+		f.write((const char*)&wb, sizeof(wb));
+	}
 
 	f.close();
 
@@ -103,9 +95,10 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 	if (!f.is_open())
 		return false;
 
+	// Read the format stamp FIRST - it decides which reader runs below
 	int version = 0;
+	f.read((char*)&version, sizeof(version));
 
-	//f.read((char*)&version, sizeof(version));
 	// Get the width and height so we know how many blocks to allocate
 	f.read((char*)&w, sizeof(w));
 	f.read((char*)&h, sizeof(h));
@@ -126,95 +119,51 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 		return false;
 	}
 
-	//switch (version)
-	//{
-	//	case 1:
-	//	{
-	//		size_t blockCount = w * h;
-	//		blocks.resize(blockCount);
-	//		wallBlocks.resize(blockCount);
-
-	//		for (int i = 0; i < blockCount; i++)
-	//		{
-	//			BlockSaveRepresentation1 read, readWall;
-	//			f.read((char*)&read, sizeof(read));
-	//			f.read((char*)&readWall, sizeof(readWall));
-
-	//			if (!f)
-	//			{
-	//				blocks.clear();
-	//				wallBlocks.clear();
-	//				w = 0;
-	//				h = 0;
-	//				f.close();
-	//				return false;
-	//			}
-
-	//			blocks[i] = read.toBlock();
-	//			wallBlocks[i] = readWall.toBlock();
-	//		}
-
-	//		break;
-	//	}
-
-	//	case 2:
-	//	{
-	//		size_t blockCount = w * h;
-	//		blocks.resize(blockCount);
-	//		wallBlocks.resize(blockCount);
-
-	//		for (int i = 0; i < blockCount; i++)
-	//		{
-	//			BlockSaveRepresentation2 read, readWall;
-	//			f.read((char*)&read, sizeof(read));
-	//			f.read((char*)&readWall, sizeof(readWall));
-
-	//			if (!f)
-	//			{
-	//				blocks.clear();
-	//				wallBlocks.clear();
-	//				w = 0;
-	//				h = 0;
-	//				f.close();
-	//				return false;
-	//			}
-
-	//			blocks[i] = read.toBlock();
-	//			wallBlocks[i] = readWall.toBlock();
-	//		}
-
-	//		break;
-	//	}
-
-	//	// Wrong version
-	//	default:
-	//	{
-	//		w = 0;
-	//		h = 0;
-	//		f.close();
-	//		return false;
-	//	}
-	//}
-
-	size_t blockCount = w * h;
-	blocks.resize(blockCount);
-	wallBlocks.resize(blockCount);
-
-	// Read the entire stream of bytes back into our vectors
-	f.read((char*)blocks.data(), sizeof(Block) * blockCount);
-	f.read((char*)wallBlocks.data(), sizeof(Block) * blockCount);
-
-	// Partial read = truncated/corrupt file; wipe the partially-filled vector
-	if (!f)
+	// One case per format version. Each reads with its OWN frozen representation, so
+	// old files are read exactly as written. Keep every old case forever.
+	switch (version)
 	{
-		blocks.clear();
-		w = 0;
-		h = 0;
-		f.close();
-		return false;
+		// VERSION = 1
+		case 1:
+		{
+			size_t blockCount = w * h;
+			blocks.resize(blockCount);
+			wallBlocks.resize(blockCount);
+
+			for (int i = 0; i < blockCount; i++)
+			{
+				BlockSaveRepresentation1 read, readWall;
+				f.read((char*)&read, sizeof(read));
+				f.read((char*)&readWall, sizeof(readWall));
+
+				if (!f)
+				{
+					blocks.clear();
+					wallBlocks.clear();
+					w = 0;
+					h = 0;
+					f.close();
+					return false;
+				}
+
+				blocks[i] = read.toBlock();
+				wallBlocks[i] = readWall.toBlock();
+			}
+
+			break;
+		}
+
+		// Unknown version - we don't know this layout, fail safely
+		default:
+		{
+			w = 0;
+			h = 0;
+			f.close();
+			return false;
+		}
 	}
 
-	// Ensure all blocks have a valid type
+	// Clamp any out-of-range block type to air so a bad/stale type can't crash rendering
 	for (int i = 0; i < blocks.size(); i++)
 		blocks[i].sanitize();
 

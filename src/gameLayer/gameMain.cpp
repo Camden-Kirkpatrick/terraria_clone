@@ -45,8 +45,8 @@ struct GameData
 
 	Structure copyStructures[10] = {}; // A Structure is a grid of blocks (similar to a map) that can be saved and loaded to/from a file
 	int curStructureIdx = 0; // Keep track of the structure currently selected
-	Vector2 selectionStart = {0, 0}; // Beginning of the area to be copied
-	Vector2 selectionEnd = {0, 0}; // End of the area to be copied
+	Vector2 selectionStart = {-1, -1}; // Beginning of the area to be copied
+	Vector2 selectionEnd = {-1, -1}; // End of the area to be copied
 	char structureFile[100] = {}; // Name of the file the structure is saved to/loaded from
 	bool previewStructure = true; // Show a preview of the structure before it's placed
 	bool previewSelection = true; // Show the selection outline rectangle
@@ -162,9 +162,26 @@ bool updateGame()
 	if (showImGui)
 	{
 		if (IsKeyPressed(KEY_ONE))
-			gameData.selectionStart = Vector2{ (float)blockX, (float)blockY };
+		{
+			// The first time we choose a selection area, start at the current block, instead of (0, 0)
+			if (gameData.selectionStart.x == -1)
+			{
+				gameData.selectionStart = Vector2{ (float)blockX, (float)blockY };
+				gameData.selectionEnd = Vector2{ (float)blockX, (float)blockY };
+			}
+			else
+				gameData.selectionStart = Vector2{ (float)blockX, (float)blockY };
+		}
 		if (IsKeyPressed(KEY_TWO))
-			gameData.selectionEnd = Vector2{ (float)blockX, (float)blockY };
+		{
+			if (gameData.selectionEnd.x == -1)
+			{
+				gameData.selectionStart = Vector2{ (float)blockX, (float)blockY };
+				gameData.selectionEnd = Vector2{ (float)blockX, (float)blockY };
+			}
+			else
+				gameData.selectionEnd = Vector2{ (float)blockX, (float)blockY };
+		}
 
 		// Copy the selected area
 		if (IsKeyDown(KEY_LEFT_CONTROL))

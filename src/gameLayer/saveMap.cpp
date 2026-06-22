@@ -85,10 +85,19 @@ bool saveBlockDataToFile(const std::vector<Block> &blocks, std::vector<Block> wa
 // Read binary block data from a file
 bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallBlocks, int &w, int &h, const char* fileName)
 {
-	// Reset outputs up front so a failed load leaves the caller with a clean state
-	blocks.clear();
-	w = 0;
-	h = 0;
+	// Resets every output to a clean, empty state. Call on ANY failure path so a
+	// partial/corrupt load never leaves the caller with half-set data (e.g. a
+	// plausible w/h read from the header but no blocks behind it).
+	auto resetData = [&]()
+	{
+		blocks.clear();
+		wallBlocks.clear();
+		w = 0;
+		h = 0;
+	};
+
+	// Start from a clean slate
+	resetData();
 
 	std::ifstream f(fileName, std::ios::binary);
 
@@ -107,6 +116,7 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 	// the dimensions are zero/negative
 	if (!f || w <= 0 || h <= 0)
 	{
+		resetData();
 		f.close();
 		return false;
 	}
@@ -115,6 +125,7 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 	// would otherwise cause a huge allocation below
 	if (w > 10000 || h > 10000)
 	{
+		resetData();
 		f.close();
 		return false;
 	}
@@ -138,10 +149,7 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 
 				if (!f)
 				{
-					blocks.clear();
-					wallBlocks.clear();
-					w = 0;
-					h = 0;
+					resetData();
 					f.close();
 					return false;
 				}
@@ -156,8 +164,7 @@ bool loadBlockDataFromFile(std::vector<Block> &blocks, std::vector<Block> &wallB
 		// Unknown version - we don't know this layout, fail safely
 		default:
 		{
-			w = 0;
-			h = 0;
+			resetData();
 			f.close();
 			return false;
 		}

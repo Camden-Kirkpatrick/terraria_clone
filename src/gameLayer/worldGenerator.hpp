@@ -79,6 +79,10 @@ struct WorldGen
 	int maxWormWidth;
 	float minWormTurnAngle;
 	float maxWormTurnAngle;
+
+	// Tree settings
+	bool generateTrees;
+	float treeSpawnChance;
 };
 
 extern WorldGen worldGen;

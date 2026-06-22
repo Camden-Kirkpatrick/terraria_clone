@@ -87,6 +87,10 @@ void resetWorldGen()
     worldGen.maxWormWidth = 5;
     worldGen.minWormTurnAngle = -0.2f;
     worldGen.maxWormTurnAngle = 0.2f;
+
+    // Tree settings
+    worldGen.generateTrees = true;
+    worldGen.treeSpawnChance = 0.04f;
 }
 
 void flatWorld()
@@ -665,39 +669,41 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 #pragma endregion
 
 
-
-    for (int x = 0; x < WIDTH; x++)
+    if (worldGen.generateTrees)
     {
-        if (getRandomChance(rng, 0.04f))
+        for (int x = 0; x < WIDTH; x++)
         {
-            Structure tree = trees[getRandomInt(rng, 0, 2)];
-
-            for (int y = 0; y < HEIGHT; y++)
+            if (getRandomChance(rng, worldGen.treeSpawnChance))
             {
-                // Get the current block type
-                uint16_t type = gameMap.getBlockType(x, y);
-                // Ignore air blocks
-                if (type == Block::air)
-                    continue;
-                else if (type == Block::grassBlock)
+                Structure tree = trees[getRandomInt(rng, 0, 2)];
+
+                for (int y = 0; y < HEIGHT; y++)
                 {
-                    // Generate a tree
+                    // Get the current block type
+                    uint16_t type = gameMap.getBlockType(x, y);
+                    // Ignore air blocks
+                    if (type == Block::air)
+                        continue;
+                    else if (type == Block::grassBlock)
+                    {
+                        // Generate a tree
 
-                    Vector2 spawnPos = { (float)x, (float)y };
+                        Vector2 spawnPos = { (float)x, (float)y };
 
-                    spawnPos.x -= tree.w / 2;
-                    spawnPos.y -= tree.h;
+                        spawnPos.x -= tree.w / 2;
+                        spawnPos.y -= tree.h;
 
-                    tree.pasteIntoMap(gameMap, spawnPos);
+                        tree.pasteIntoMap(gameMap, spawnPos);
 
-                    // Leave a gap between trees
-                    x += 5;
+                        // Leave a gap between trees
+                        x += 5;
 
-                    break;
+                        break;
+                    }
+                    // Not a grass block
+                    else
+                        break;
                 }
-                // Not a grass block
-                else
-                    break;
             }
         }
     }

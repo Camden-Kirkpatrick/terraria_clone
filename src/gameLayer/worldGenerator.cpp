@@ -684,12 +684,12 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     // Ignore air blocks
                     if (type == Block::air)
                         continue;
+                    // Generate a tree
                     else if (type == Block::grassBlock)
                     {
-                        // Generate a tree
-
                         Vector2 spawnPos = { (float)x, (float)y };
 
+                        // Top-left of the tree (tree start)
                         spawnPos.x -= tree.w / 2;
                         spawnPos.y -= tree.h;
 

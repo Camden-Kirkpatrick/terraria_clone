@@ -883,6 +883,18 @@ bool updateGame()
 						if (ImGui::SliderFloat("##clyChance", &worldGen.clayChance, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
 					}
+
+					if (ImGui::CollapsingHeader("Tree Settings"))
+					{
+						if (ImGui::Checkbox("Generate trees", &worldGen.generateTrees))
+						{
+							initGame(false, false);
+						}
+
+						ImGui::Text("Tree spawn chance:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##treeSpnChance", &worldGen.treeSpawnChance, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+					}
 				}
 
 				ImGui::EndTabItem();

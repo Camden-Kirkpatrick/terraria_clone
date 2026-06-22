@@ -45,8 +45,8 @@ struct GameData
 
 	Structure copyStructures[10] = {}; // A Structure is a grid of blocks (similar to a map) that can be saved and loaded to/from a file
 	int curStructureIdx = 0; // Keep track of the structure currently selected
-	Vector2 selectionStart = {}; // Beginning of the area to be copied
-	Vector2 selectionEnd = {}; // End of the area to be copied
+	Vector2 selectionStart = {0, 0}; // Beginning of the area to be copied
+	Vector2 selectionEnd = {0, 0}; // End of the area to be copied
 	char structureFile[100] = {}; // Name of the file the structure is saved to/loaded from
 	bool previewStructure = true; // Show a preview of the structure before it's placed
 	bool previewSelection = true; // Show the selection outline rectangle
@@ -292,12 +292,12 @@ bool updateGame()
 									gameData.nextBlockVariant = std::rand() % 2; // doors only have 2 variations
 								else
 									gameData.nextBlockVariant = std::rand() % 4;
-							}
 
-							// Don't allow a door to be on the bottom half of another door
-							Block* b0 = gameData.gameMap.getBlockSafe(blockX + x, blockY - 1 + y);
-							if (b0->type == Block::door)
-								*b0 = {};
+								// Don't allow a door to be on the bottom half of another door
+								Block* b0 = gameData.gameMap.getBlockSafe(blockX + x, blockY - 1 + y);
+								if (b0 && b0->type == Block::door)
+									*b0 = {};
+							}
 						}
 					}
 				}
@@ -601,8 +601,9 @@ bool updateGame()
 	if (showImGui && gameData.previewSelection)
 	{
 		Rectangle rect;
+
 		rect.x = gameData.selectionStart.x;
-		rect.y = gameData.selectionStart.y; 
+		rect.y = gameData.selectionStart.y;
 		// Size = end - start + 1
 		rect.width = (gameData.selectionEnd.x - gameData.selectionStart.x) + 1;
 		rect.height = (gameData.selectionEnd.y - gameData.selectionStart.y) + 1;

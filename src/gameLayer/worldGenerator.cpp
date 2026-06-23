@@ -858,85 +858,85 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 
 
-    //auto generateDirtLayer = [&]()
-    //{
-    //    for (int x = 0; x < WIDTH; x++)
-    //    {
-    //        int dirtPlainThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
-    //        int dirtMountainThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
+    auto generateDirtLayer = [&]()
+    {
+        for (int x = 0; x < WIDTH; x++)
+        {
+            int dirtPlainThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
+            int dirtMountainThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
 
-    //        int dirtThickness = 0;
-    //        int dirtStart = 0;
+            int dirtThickness = 0;
+            int dirtStart = 0;
 
-    //        // Blend zone between plains and mountains
-    //        if (terrainNoise[x] > worldGen.plainThreshold - worldGen.terrainBlendZone && terrainNoise[x] < worldGen.plainThreshold + worldGen.terrainBlendZone)
-    //        {
-    //            float distToEdge = std::abs(terrainNoise[x] - worldGen.plainThreshold);
-    //            float ratio = distToEdge / worldGen.terrainBlendZone;
-    //            float t;
+            // Blend zone between plains and mountains
+            if (terrainNoise[x] > worldGen.plainThreshold - worldGen.terrainBlendZone && terrainNoise[x] < worldGen.plainThreshold + worldGen.terrainBlendZone)
+            {
+                float distToEdge = std::abs(terrainNoise[x] - worldGen.plainThreshold);
+                float ratio = distToEdge / worldGen.terrainBlendZone;
+                float t;
 
-    //            if (terrainNoise[x] < worldGen.plainThreshold)
-    //                t = 0.5f - 0.5f * ratio;
-    //            else
-    //                t = 0.5f + 0.5f * ratio;
+                if (terrainNoise[x] < worldGen.plainThreshold)
+                    t = 0.5f - 0.5f * ratio;
+                else
+                    t = 0.5f + 0.5f * ratio;
 
-    //            dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, t);
-    //        }
-    //        // Plains
-    //        else if (terrainNoise[x] < worldGen.plainThreshold)
-    //        {
-    //            const float variationStart = 0.33f;
-    //            const float maxDirtOffset = 12.0f;
+                dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, t);
+            }
+            // Plains
+            else if (terrainNoise[x] < worldGen.plainThreshold)
+            {
+                const float variationStart = 0.33f;
+                const float maxDirtOffset = 12.0f;
 
-    //            float depth = 0.0f;
-    //            if (terrainNoise[x] < variationStart)
-    //                depth = (variationStart - terrainNoise[x]) / variationStart;
+                float depth = 0.0f;
+                if (terrainNoise[x] < variationStart)
+                    depth = (variationStart - terrainNoise[x]) / variationStart;
 
-    //            float dirtOffset = depth * maxDirtOffset;
+                float dirtOffset = depth * maxDirtOffset;
 
-    //            dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness + dirtOffset, dirtPlainNoise[x]);
-    //        }
-    //        // Mountains
-    //        else
-    //        {
-    //            const float variationStart = 0.66f;
-    //            const float maxDirtOffset = 30.0f;
+                dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness + dirtOffset, dirtPlainNoise[x]);
+            }
+            // Mountains
+            else
+            {
+                const float variationStart = 0.66f;
+                const float maxDirtOffset = 30.0f;
 
-    //            float depth = 0.0f;
-    //            if (terrainNoise[x] > variationStart)
-    //                depth = (terrainNoise[x] - variationStart) / (1.0f - variationStart);
+                float depth = 0.0f;
+                if (terrainNoise[x] > variationStart)
+                    depth = (terrainNoise[x] - variationStart) / (1.0f - variationStart);
 
-    //            float dirtOffset = depth * maxDirtOffset;
+                float dirtOffset = depth * maxDirtOffset;
 
-    //            dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + dirtOffset, dirtMountainNoise[x]);
-    //        }
+                dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + dirtOffset, dirtMountainNoise[x]);
+            }
 
-    //        dirtStart = stoneLayer[x] - dirtThickness;
+            dirtStart = stoneLayer[x] - dirtThickness;
 
-    //        for (int y = 0; y < HEIGHT; y++)
-    //        {
-    //            // Ignore air
-    //            if (y < dirtStart)
-    //                continue;
-    //            // Stop when the stone layer is reached
-    //            if (y > stoneLayer[x])
-    //                break;
+            for (int y = 0; y < HEIGHT; y++)
+            {
+                // Ignore air
+                if (y < dirtStart)
+                    continue;
+                // Stop when the stone layer is reached
+                if (y > stoneLayer[x])
+                    break;
 
-    //            Block b;
+                Block b;
 
-    //            if (y > dirtStart)
-    //                b.type = Block::dirt;
-    //            else if (y == dirtStart)
-    //                b.type = Block::grassBlock;
+                if (y > dirtStart)
+                    b.type = Block::dirt;
+                else if (y == dirtStart)
+                    b.type = Block::grassBlock;
 
-    //            b.randIndex = std::rand() % 4;
+                b.randIndex = std::rand() % 4;
 
-    //            gameMap.getBlockUnsafe(x, y) = b;
+                gameMap.getBlockUnsafe(x, y) = b;
 
-    //            gameMap.getWallBlockUnsafe(x, y) = b;
-    //        }
-    //    }
-    //};
+                gameMap.getWallBlockUnsafe(x, y) = b;
+            }
+        }
+    };
 
 
 
@@ -946,7 +946,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 
     generateStoneLayer();
-    //generateDirtLayer();
+    generateDirtLayer();
 
 
 

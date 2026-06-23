@@ -26,7 +26,7 @@ void resetWorldGen()
     worldGen.minStoneMountainStart = 330;          // Stone layer is at least this many blocks from the top
     worldGen.maxStoneMountainStart = 400;          // The top of the stone layer is at most this many blocks from the top
 
-    worldGen.terrainBlendZone = 0.075f;
+    worldGen.terrainBlendZone = 0.045f; // 0.075f
 
     // Plain settings
     // Noise generation settings
@@ -286,7 +286,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     }
 
     // Used for displaying the current type of terrain (plains/mountains)
-    //savedBiomeNoise.assign(terrainNoise, terrainNoise + WIDTH);
+    savedBiomeNoise.assign(terrainNoise, terrainNoise + WIDTH);
 
     auto getCaveNoise1 = [&](int x, int y)
         {
@@ -381,6 +381,23 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         {
             stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
             dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
+
+            // Add variation to the plains terrain
+            if (terrainNoise[x] < 0.10f)
+            {
+                stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart + 12, stonePlainNoise[x]);
+                dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness + 12, dirtPlainNoise[x]);
+            }
+            else if (terrainNoise[x] < 0.25f)
+            {
+                stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart + 8, stonePlainNoise[x]);
+                dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness + 8, dirtPlainNoise[x]);
+            }
+            else if (terrainNoise[x] < 0.33f)
+            {
+                stoneStart = lerp(worldGen.minStonePlainStart - 4, worldGen.maxStonePlainStart + 4, stonePlainNoise[x]);
+                dirtThickness = lerp(worldGen.minDirtPlainThickness - 4, worldGen.maxDirtPlainThickness + 4, dirtPlainNoise[x]);
+            }
         }
         // Case 3: pure mountains.
         // terrainNoise is on the mountains side AND outside the blend zone.
@@ -389,6 +406,23 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         {
             stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
             dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
+
+            // Add variation to the mountains terrain
+            if (terrainNoise[x] > 0.90f)
+            {
+                stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart + 30, stoneMountainNoise[x]);
+                dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + 30, dirtMountainNoise[x]);
+            }
+            else if (terrainNoise[x] > 0.75f)
+            {
+                stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart + 20, stoneMountainNoise[x]);
+                dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + 20, dirtMountainNoise[x]);
+            }
+            else if (terrainNoise[x] > 0.66f)
+            {
+                stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart + 10, stoneMountainNoise[x]);
+                dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + 10, dirtMountainNoise[x]);
+            }
         }
 
         // Dirt sits on top of stone. Smaller y = higher up in the world, so subtracting
@@ -498,13 +532,22 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             {
                 b.type = Block::sand;
 
-                // Grass and dirt blocks can generate near biome edges
+                // Grass dirt, and clay blocks can generate near biome edges
                 if (getRandomChance(rng, blendChance))
                 {
                     if (y == dirtStart)
                         b.type = Block::grassBlock;
                     else
+                    {
                         b.type = Block::dirt;
+
+                        if (y > worldGen.clayThreshold)
+                        {
+                            if (getRandomChance(rng, worldGen.clayChance))
+                                b.type = Block::clay;
+                        }
+                    }
+                        
                 }
             }
 #pragma endregion
@@ -668,7 +711,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     }
 #pragma endregion
 
-
+#pragma region generate_trees
     if (worldGen.generateTrees)
     {
         for (int x = 0; x < WIDTH; x++)
@@ -707,6 +750,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             }
         }
     }
+#pragma endregion
 
 
 

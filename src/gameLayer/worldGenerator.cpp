@@ -26,7 +26,7 @@ void resetWorldGen()
     worldGen.minStoneMountainStart = 330;          // Stone layer is at least this many blocks from the top
     worldGen.maxStoneMountainStart = 400;          // The top of the stone layer is at most this many blocks from the top
 
-    worldGen.terrainBlendZone = 0.045f; // 0.075f
+    worldGen.terrainBlendZone = 0.045f;
 
     // Plain settings
     // Noise generation settings
@@ -375,54 +375,70 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         }
         // Case 2: pure plains.
         // terrainNoise is on the plains side AND outside the blend zone.
-        // Use plain settings only, with no mountain contamination, so plain settings are
-        // fully isolated to plain columns.
         else if (terrainNoise[x] < worldGen.plainThreshold)
         {
-            stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
-            dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
+            // Extra variation only kicks in for the RARE low tail of terrainNoise.
+            // Simplex noise clusters around 0.5, so values below variationStart are
+            // uncommon - those columns get the dramatic treatment, the rest stay flat.
+            const float variationStart = 0.33f;   // below this, variation ramps in
+            const float maxStoneOffset = 12.0f;   // most we shift the stone range by
+            const float maxDirtOffset = 12.0f;   // most we widen the dirt range by
 
-            // Add variation to the plains terrain
-            if (terrainNoise[x] < 0.10f)
-            {
-                stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart + 12, stonePlainNoise[x]);
-                dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness + 12, dirtPlainNoise[x]);
-            }
-            else if (terrainNoise[x] < 0.25f)
-            {
-                stoneStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart + 8, stonePlainNoise[x]);
-                dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness + 8, dirtPlainNoise[x]);
-            }
-            else if (terrainNoise[x] < 0.33f)
-            {
-                stoneStart = lerp(worldGen.minStonePlainStart - 4, worldGen.maxStonePlainStart + 4, stonePlainNoise[x]);
-                dirtThickness = lerp(worldGen.minDirtPlainThickness - 4, worldGen.maxDirtPlainThickness + 4, dirtPlainNoise[x]);
-            }
+            // depth = "how deep into the rare tail is this column?", as a 0..1 fraction.
+            //   terrainNoise == variationStart -> depth 0 (no extra variation)
+            //   terrainNoise == 0              -> depth 1 (max variation)
+            // Dividing by variationStart rescales the [0, variationStart] range to [0, 1],
+            // so the math below doesn't care how wide the tail happens to be. Because depth
+            // changes continuously, the variation eases in with no sudden steps.
+            float depth = 0.0f;
+            if (terrainNoise[x] < variationStart)
+                depth = (variationStart - terrainNoise[x]) / variationStart;
+
+            // Scale the offsets by depth: 0 for common columns, up to the max for the rarest.
+            float stoneOffset = depth * maxStoneOffset;
+            float dirtOffset = depth * maxDirtOffset;
+
+            // Allow hilly plains: subtract from the MIN so stoneStart can drop below its
+            // normal floor. Smaller stoneStart = higher surface = taller terrain. This only
+            // extends the tall end of the range, so rare columns can spike up into hills
+            // while neighbours stay low -> steeper, hillier plains. Subtracting from the min
+            // (not adding to the max) is also why the surface goes UP instead of down.
+            stoneStart = lerp(worldGen.minStonePlainStart - stoneOffset, worldGen.maxStonePlainStart, stonePlainNoise[x]);
+
+            // Allow the dirt layer to be thicker: widen only the MAX, never the min, so
+            // dirtThickness can grow but can never go negative (a negative thickness would
+            // flip dirtStart below stoneStart and wipe out the grass surface).
+            dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness + dirtOffset, dirtPlainNoise[x]);
         }
         // Case 3: pure mountains.
         // terrainNoise is on the mountains side AND outside the blend zone.
-        // Use mountain settings only, mirror of the plains branch.
+        // Mirror of the plains branch, but variation comes from the rare HIGH tail.
         else
         {
-            stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
-            dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
+            // Mountains use the high tail of terrainNoise, and bigger offsets than plains
+            // for more dramatic peaks.
+            const float variationStart = 0.66f;   // above this, variation ramps in
+            const float maxStoneOffset = 30.0f;
+            const float maxDirtOffset = 30.0f;
 
-            // Add variation to the mountains terrain
-            if (terrainNoise[x] > 0.90f)
-            {
-                stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart + 30, stoneMountainNoise[x]);
-                dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + 30, dirtMountainNoise[x]);
-            }
-            else if (terrainNoise[x] > 0.75f)
-            {
-                stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart + 20, stoneMountainNoise[x]);
-                dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + 20, dirtMountainNoise[x]);
-            }
-            else if (terrainNoise[x] > 0.66f)
-            {
-                stoneStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart + 10, stoneMountainNoise[x]);
-                dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + 10, dirtMountainNoise[x]);
-            }
+            // Same depth idea, flipped to measure distance into the HIGH tail:
+            //   terrainNoise == variationStart -> depth 0
+            //   terrainNoise == 1              -> depth 1
+            // Dividing by (1 - variationStart) rescales [variationStart, 1] to [0, 1].
+            float depth = 0.0f;
+            if (terrainNoise[x] > variationStart)
+                depth = (terrainNoise[x] - variationStart) / (1.0f - variationStart);
+
+            float stoneOffset = depth * maxStoneOffset;
+            float dirtOffset = depth * maxDirtOffset;
+
+            // Allow taller mountains: subtract from the MIN so stoneStart can drop lower
+            // (smaller y), pushing the surface higher. Same direction as plains, just a
+            // larger offset for bigger peaks.
+            stoneStart = lerp(worldGen.minStoneMountainStart - stoneOffset, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
+
+            // Allow the dirt layer to be thicker: widen only the max (keeps thickness >= 1).
+            dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + dirtOffset, dirtMountainNoise[x]);
         }
 
         // Dirt sits on top of stone. Smaller y = higher up in the world, so subtracting

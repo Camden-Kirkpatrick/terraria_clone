@@ -111,6 +111,12 @@ float lerp(float a, float b, float t)
     return a + (b - a) * t;
 }
 
+// Inverse of lerp: given a value in [a, b], returns its position in [0, 1].
+float invLerp(float a, float b, float v)
+{
+    return (v - a) / (b - a);
+}
+
 float terrainBlend(float terrainNoise)
 {
     // Edges of the blend zone
@@ -124,11 +130,7 @@ float terrainBlend(float terrainNoise)
     if (terrainNoise >= hi)
         return 1.0f;
 
-    float distToEdge = std::abs(terrainNoise - worldGen.plainThreshold);
-    float ratio = distToEdge / worldGen.terrainBlendZone;
-
-    return (terrainNoise < worldGen.plainThreshold) ?
-        0.5f - 0.5f * ratio : 0.5f + 0.5f * ratio;
+    return invLerp(lo, hi, terrainNoise);
 }
 
 void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed, bool resetWrldGen)

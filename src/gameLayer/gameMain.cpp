@@ -316,6 +316,11 @@ bool updateGame()
 								Block* b0 = gameData.gameMap.getBlockSafe(blockX + x, blockY - 1 + y);
 								if (b0 && b0->type == Block::door)
 									*b0 = {};
+
+								// Don't allow another block to be on the bottom half of a door
+								Block *b1 = gameData.gameMap.getBlockSafe(blockX + x, blockY + 1 + y);
+								if (b1 && isDoor)
+									*b1 = {};
 							}
 						}
 					}

@@ -111,6 +111,26 @@ float lerp(float a, float b, float t)
     return a + (b - a) * t;
 }
 
+float terrainBlend(float terrainNoise)
+{
+    // Edges of the blend zone
+    float lo = worldGen.plainThreshold - worldGen.terrainBlendZone;
+    float hi = worldGen.plainThreshold + worldGen.terrainBlendZone;
+
+    // Plains
+    if (terrainNoise <= lo)
+        return 0.0f;
+    // Mountains
+    if (terrainNoise >= hi)
+        return 1.0f;
+
+    float distToEdge = std::abs(terrainNoise - worldGen.plainThreshold);
+    float ratio = distToEdge / worldGen.terrainBlendZone;
+
+    return (terrainNoise < worldGen.plainThreshold) ?
+        0.5f - 0.5f * ratio : 0.5f + 0.5f * ratio;
+}
+
 void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed, bool resetWrldGen)
 {
     if (resetWrldGen)
@@ -788,22 +808,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
             int stoneStart;
 
-            // Blend zone between plains and mountains
-            if (terrainNoise[x] > worldGen.plainThreshold - worldGen.terrainBlendZone && terrainNoise[x] < worldGen.plainThreshold + worldGen.terrainBlendZone)
-            {
-                float distToEdge = std::abs(terrainNoise[x] - worldGen.plainThreshold);
-                float ratio = distToEdge / worldGen.terrainBlendZone;
-                float t;
+            float t = terrainBlend(terrainNoise[x]);
 
-                if (terrainNoise[x] < worldGen.plainThreshold)
-                    t = 0.5f - 0.5f * ratio;
-                else
-                    t = 0.5f + 0.5f * ratio;
-
-                stoneStart = lerp(stonePlainStart, stoneMountainStart, t);
-            }
             // Plains
-            else if (terrainNoise[x] < worldGen.plainThreshold)
+            if (t <= 0.0f)
             {
                 const float variationStart = 0.33f;
                 const float maxStoneOffset = 12.0f;
@@ -817,7 +825,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 stoneStart = lerp(worldGen.minStonePlainStart - stoneOffset, worldGen.maxStonePlainStart, stonePlainNoise[x]);
             }
             // Mountains
-            else
+            else if (t >= 1.0f)
             {
                 const float variationStart = 0.66f;
                 const float maxStoneOffset = 30.0f;
@@ -830,6 +838,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
                 stoneStart = lerp(worldGen.minStoneMountainStart - stoneOffset, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
             }
+            // Blend zone between plains and mountains
+            else
+                stoneStart = lerp(stonePlainStart, stoneMountainStart, t);
+
 
             // Store the current stoneStart
             stoneLayer[x] = stoneStart;
@@ -868,22 +880,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             int dirtThickness = 0;
             int dirtStart = 0;
 
-            // Blend zone between plains and mountains
-            if (terrainNoise[x] > worldGen.plainThreshold - worldGen.terrainBlendZone && terrainNoise[x] < worldGen.plainThreshold + worldGen.terrainBlendZone)
-            {
-                float distToEdge = std::abs(terrainNoise[x] - worldGen.plainThreshold);
-                float ratio = distToEdge / worldGen.terrainBlendZone;
-                float t;
+            float t = terrainBlend(terrainNoise[x]);
 
-                if (terrainNoise[x] < worldGen.plainThreshold)
-                    t = 0.5f - 0.5f * ratio;
-                else
-                    t = 0.5f + 0.5f * ratio;
-
-                dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, t);
-            }
             // Plains
-            else if (terrainNoise[x] < worldGen.plainThreshold)
+            if (t <= 0.0f)
             {
                 const float variationStart = 0.33f;
                 const float maxDirtOffset = 12.0f;
@@ -897,7 +897,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness + dirtOffset, dirtPlainNoise[x]);
             }
             // Mountains
-            else
+            else if (t >= 1.0f)
             {
                 const float variationStart = 0.66f;
                 const float maxDirtOffset = 30.0f;
@@ -910,6 +910,9 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
                 dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + dirtOffset, dirtMountainNoise[x]);
             }
+            // Blend zone between plains and mountains
+            else
+                dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, t);
 
             dirtStart = stoneLayer[x] - dirtThickness;
 

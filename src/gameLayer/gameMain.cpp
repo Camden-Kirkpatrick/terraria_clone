@@ -226,8 +226,9 @@ bool updateGame()
 	if (!showImGui)
 	{
 		// Remove a block
-		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && blockX < worldWidth && blockY < worldHeight)
 		{
+			// Wall blocks
 			if (shiftDown)
 			{
 				Block* b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
@@ -264,6 +265,7 @@ bool updateGame()
 				lastPlacedX = blockX;
 				lastPlacedY = blockY;
 
+				// Wall blocks
 				if (shiftDown)
 				{
 					// More than one block may be placed depending on the blockShape

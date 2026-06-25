@@ -49,12 +49,15 @@ void resetWorldGen()
     // Biome settings
     worldGen.biomeOctaves = 1;
     worldGen.biomeFrequency = 0.0005;
-    // When the biome noise is in this range, deserts will generate
-    worldGen.minDesertThreshold = 0.0f;
-    worldGen.maxDesertThreshold = 0.4f;
     // This is the width (in noise units) of the band near each boundary where blending happens
     // With 0.015, only columns whose noise is within 0.015 of a boundary will receive any grassy-biome blocks
     worldGen.biomeBlendZone = 0.03f;
+    // Desert settings
+    worldGen.minDesertThreshold = 0.0f;
+    worldGen.maxDesertThreshold = 0.4f;
+    // Tundra settings
+    worldGen.minTundraThreshold = 0.6f;
+    worldGen.maxTundraThreshold = 0.8f;
 
     // Cave settings
     worldGen.generateCaves = true;

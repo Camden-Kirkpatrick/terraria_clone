@@ -44,9 +44,13 @@ struct WorldGen
 	// Biome settings
 	int biomeOctaves;
 	float biomeFrequency;
+	float biomeBlendZone;
+	// Desert settings
 	float minDesertThreshold;
 	float maxDesertThreshold;
-	float biomeBlendZone;
+	// Tundra settings
+	float minTundraThreshold;
+	float maxTundraThreshold;
 
 	// Cave settings
 	bool generateCaves;

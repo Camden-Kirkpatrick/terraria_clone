@@ -41,12 +41,12 @@ struct WorldGen
 	int minStonePlainStart;
 	int maxStonePlainStart;
 
-	// Desert settings
+	// Biome settings
+	int biomeOctaves;
+	float biomeFrequency;
 	float minDesertThreshold;
 	float maxDesertThreshold;
-	int desertOctaves;
-	float desertFrequency;
-	float desertBlendZone;
+	float biomeBlendZone;
 
 	// Cave settings
 	bool generateCaves;

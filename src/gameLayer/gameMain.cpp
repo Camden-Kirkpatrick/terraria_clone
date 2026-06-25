@@ -776,13 +776,13 @@ bool updateGame()
 						if (ImGui::SliderFloat("##maxDesThresh", &worldGen.maxDesertThreshold, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
 
-						//ImGui::Text("Desert octaves:");  ImGui::SameLine(); ImGui::SliderInt("##desOct", &worldGen.desertOctaves, 1, 20);
-						ImGui::Text("Desert frequency:"); ImGui::SameLine();
-						if (ImGui::SliderFloat("##desFreq", &worldGen.desertFrequency, 0.00001f, 0.1f, "%.5f"))
+						//ImGui::Text("Biome octaves:");  ImGui::SameLine(); ImGui::SliderInt("##bioOct", &worldGen.desertOctaves, 1, 20);
+						ImGui::Text("Biome frequency:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##desFreq", &worldGen.biomeFrequency, 0.00001f, 0.1f, "%.5f"))
 							initGame(false, false);
 
 						ImGui::Text("Desert blend zone:"); ImGui::SameLine();
-						if (ImGui::SliderFloat("##desBlendZone", &worldGen.desertBlendZone, 0.0f, 1.0f, "%.5f"))
+						if (ImGui::SliderFloat("##desBlendZone", &worldGen.biomeBlendZone, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
 					}
 

@@ -117,6 +117,11 @@ float invLerp(float a, float b, float v)
     return (v - a) / (b - a);
 }
 
+// Converts a column's terrain noise into a plains<->mountains blend weight in [0, 1]:
+//   0.0 = pure plains, 1.0 = pure mountains, values between = blend.
+// Outside the blend zone it snaps to 0 or 1 so biomes stay distinct; inside the
+// zone it ramps smoothly across so the transition has no hard seam.
+// The result is meant to feed lerp(plainsValue, mountainsValue, t).
 float terrainBlend(float terrainNoise)
 {
     // Edges of the blend zone
@@ -142,6 +147,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     std::ranlux24_base rng;
 
+    // Tree textures
     Structure tree1;
     loadBlockDataFromFile(
         tree1.structureBlocks,

@@ -1130,7 +1130,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 if (biomeNoise[x] > worldGen.minTundraThreshold && biomeNoise[x] < worldGen.maxTundraThreshold)
                 {
                     // How close are we to the nearest edge of the desert
-                    distToEdge = std::min(biomeNoise[x] - worldGen.minDesertThreshold, worldGen.maxDesertThreshold - biomeNoise[x]);
+                    distToEdge = std::min(biomeNoise[x] - worldGen.minTundraThreshold, worldGen.maxTundraThreshold - biomeNoise[x]);
                     // Probability of placing grassy biome blocks instead of desert blocks.
                     // High near the desert boundary, zero in the interior.
                     // e.g. distToEdge=0.000 (boundary) -> chance=1.0, distToEdge=biomeBlendZone/2 (halfway) -> chance=0.5, distToEdge=biomeBlendZone (interior) -> chance=0.0
@@ -1141,10 +1141,9 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 if (y > stoneLayer[x] && biomeNoise[x] > worldGen.minTundraThreshold && biomeNoise[x] < worldGen.maxTundraThreshold)
                 {
                     // Stone can generate near biome edges
-                    //if (getRandomChance(rng, blendChance))
-                    //    b.type = Block::stone;
-
-                    if (getRandomChance(rng, 0.75f))
+                    if (getRandomChance(rng, blendChance))
+                        b.type = Block::stone;
+                    else if (getRandomChance(rng, 0.75f))
                         b.type = Block::snow;
                     else
                         b.type = Block::ice;
@@ -1168,21 +1167,21 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     b.type = Block::snow;
 
                     // Grass dirt, and clay blocks can generate near biome edges
-                    //if (getRandomChance(rng, blendChance))
-                    //{
-                    //    if (y == dirtLayer[x])
-                    //        b.type = Block::grassBlock;
-                    //    else
-                    //    {
-                    //        b.type = Block::dirt;
+                    if (getRandomChance(rng, blendChance))
+                    {
+                        if (y == dirtLayer[x])
+                            b.type = Block::grassBlock;
+                        else
+                        {
+                            b.type = Block::dirt;
 
-                    //        if (y > worldGen.clayThreshold)
-                    //        {
-                    //            if (getRandomChance(rng, worldGen.clayChance))
-                    //                b.type = Block::clay;
-                    //        }
-                    //    }
-                    //}
+                            if (y > worldGen.clayThreshold)
+                            {
+                                if (getRandomChance(rng, worldGen.clayChance))
+                                    b.type = Block::clay;
+                            }
+                        }
+                    }
                 }
 
                 b.randIndex = std::rand() % 4;

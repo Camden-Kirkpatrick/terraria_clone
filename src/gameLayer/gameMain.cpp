@@ -650,16 +650,16 @@ bool updateGame()
 				ImGui::BulletText("'-' / '=': zoom out / in");
 				ImGui::BulletText("'[' / ']': decrease / increase camera speed");
 
-				//int cameraX = (int)gameData.camera.target.x;
-				//if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())
-				//{
-				//	float bn = savedBiomeNoise[cameraX];
-				//	const char* branch =
-				//		(bn > worldGen.plainThreshold - worldGen.terrainBlendZone &&
-				//			bn < worldGen.plainThreshold + worldGen.terrainBlendZone) ? "BLEND" :
-				//		(bn < worldGen.plainThreshold) ? "PLAINS" : "MOUNTAINS";
-				//	ImGui::Text("Column %d  biomeNoise=%.5f  branch=%s", cameraX, bn, branch);
-				//}
+				int cameraX = (int)gameData.camera.target.x;
+				if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())
+				{
+					float bn = savedBiomeNoise[cameraX];
+					const char* branch =
+						(bn > worldGen.plainThreshold - worldGen.terrainBlendZone &&
+							bn < worldGen.plainThreshold + worldGen.terrainBlendZone) ? "BLEND" :
+						(bn < worldGen.plainThreshold) ? "PLAINS" : "MOUNTAINS";
+					ImGui::Text("Column %d  biomeNoise=%.5f  branch=%s", cameraX, bn, branch);
+				}
 
 				ImGui::SeparatorText("Camera");
 				ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);

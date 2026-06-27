@@ -781,8 +781,8 @@ bool updateGame()
 						if (ImGui::SliderFloat("##desFreq", &worldGen.biomeFrequency, 0.00001f, 0.1f, "%.5f"))
 							initGame(false, false);
 
-						ImGui::Text("Desert blend zone:"); ImGui::SameLine();
-						if (ImGui::SliderFloat("##desBlendZone", &worldGen.biomeBlendZone, 0.0f, 1.0f, "%.5f"))
+						ImGui::Text("Biome blend radius:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##bioBlendRad", &worldGen.biomeBlendRadius, 0, 200))
 							initGame(false, false);
 					}
 

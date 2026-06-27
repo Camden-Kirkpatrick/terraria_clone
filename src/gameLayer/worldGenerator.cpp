@@ -11,7 +11,14 @@ int worldWidth = DEFAULT_WORLD_WIDTH;
 int worldHeight = DEFAULT_WORLD_HEIGHT;
 int seed = DEFAULT_SEED;
 
-std::vector<float> savedBiomeNoise;
+std::vector<float> savedTerrainNoise;
+
+enum Biome
+{
+    Grasslands,
+    Desert,
+    Tundra
+};
 
 void resetWorldGen()
 {
@@ -49,9 +56,10 @@ void resetWorldGen()
     // Biome settings
     worldGen.biomeOctaves = 1;
     worldGen.biomeFrequency = 0.00033;
-    // This is the width (in noise units) of the band near each boundary where blending happens
-    // With 0.015, only columns whose noise is within 0.015 of a boundary will receive any grassy-biome blocks
-    worldGen.biomeBlendZone = 0.03f;
+    // How many tiles out from a biome border the blending reaches.
+    // With 40, only columns within 40 tiles of an actual biome change blend toward
+    // the neighboring biome's blocks; columns farther out stay pure (blendChance hits 0).
+    worldGen.biomeBlendRadius = 40;
     // Desert settings
     worldGen.minDesertThreshold = 0.0f;
     worldGen.maxDesertThreshold = 0.4f;
@@ -142,6 +150,16 @@ float terrainBlend(float terrainNoise)
     return invLerp(lo, hi, terrainNoise);
 }
 
+Biome biomeFromNoise(float biomeNoise)
+{
+    if (biomeNoise > worldGen.minDesertThreshold && biomeNoise < worldGen.maxDesertThreshold)
+        return Biome::Desert;
+    else if (biomeNoise > worldGen.minTundraThreshold && biomeNoise < worldGen.maxTundraThreshold)
+        return Biome::Tundra;
+    else
+        return Biome::Grasslands;
+}
+
 void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed, bool resetWrldGen)
 {
     if (resetWrldGen)
@@ -150,6 +168,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     gameMap.create(WIDTH, HEIGHT);
 
     std::ranlux24_base rng;
+
+    std::vector<Biome> biomeId(WIDTH);
+    std::vector<int> distToBorder(WIDTH);
+    std::vector<Biome> neighborBiome(WIDTH);
 
     // Tree textures
     Structure tree1;
@@ -309,6 +331,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         terrainNoise[i] = (terrainNoise[i] + 1) / 2;
 
         biomeNoise[i] = (biomeNoise[i] + 1) / 2;
+        // Find out what every columns biome is 
+        biomeId[i] = biomeFromNoise(biomeNoise[i]);
     }
     for (int i = 0; i < WIDTH * HEIGHT; i++)
     {
@@ -317,27 +341,62 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
     }
 
+    // Find distToBorder and neighborBiome for each column
+    for (int i = 0; i < WIDTH; i++)
+    {
+        Biome curBiome = biomeId[i];
+        Biome leftBiome;
+        Biome rightBiome;
+
+        distToBorder[i] = worldGen.biomeBlendRadius;
+        neighborBiome[i] = curBiome;
+
+        for (int j = 1; j < worldGen.biomeBlendRadius; j++)
+        {
+            if (i - j >= 0)
+            {
+                leftBiome = biomeId[i - j];
+                if (leftBiome != curBiome)
+                {
+                    distToBorder[i] = j;
+                    neighborBiome[i] = leftBiome;
+                    break;
+                }
+            }
+            if (i + j < WIDTH)
+            {
+                rightBiome = biomeId[i + j];
+                if (rightBiome != curBiome)
+                {
+                    distToBorder[i] = j;
+                    neighborBiome[i] = rightBiome;
+                    break;
+                }
+            }
+        }
+    }
+
     // Used for displaying the current type of terrain (plains/mountains)
-    savedBiomeNoise.assign(terrainNoise, terrainNoise + WIDTH);
+    savedTerrainNoise.assign(terrainNoise, terrainNoise + WIDTH);
 
     auto getCaveNoise1 = [&](int x, int y)
-        {
-            return caveNoise1[WIDTH * y + x];
-        };
+    {
+        return caveNoise1[WIDTH * y + x];
+    };
     auto getCaveNoise2 = [&](int x, int y)
-        {
-            return caveNoise2[WIDTH * y + x];
-        };
+    {
+        return caveNoise2[WIDTH * y + x];
+    };
     auto getCaveSelectorNoise = [&](int x, int y)
-        {
-            return caveSelectorNoise[WIDTH * y + x];
-        };
+    {
+        return caveSelectorNoise[WIDTH * y + x];
+    };
     // Blend the two cave shapes per-tile using the selector as the lerp weight.
     // Then a single band threshold on the result carves the actual caves.
     auto getFinalCaveNoise = [&](int x, int y)
-        {
-            return lerp(getCaveNoise1(x, y), getCaveNoise2(x, y), getCaveSelectorNoise(x, y));
-        };
+    {
+        return lerp(getCaveNoise1(x, y), getCaveNoise2(x, y), getCaveSelectorNoise(x, y));
+    };
 #pragma endregion
 
     // Go through every block in the map
@@ -961,6 +1020,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         for (int x = 0; x < WIDTH; x++)
         {
+            // Not grasslands, so skip this column
+            if (biomeId[x] != Biome::Grasslands)
+                continue;
+
             for (int y = 0; y < HEIGHT; y++)
             {
                 Block b;
@@ -998,7 +1061,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 else if (y == dirtLayer[x])
                     b.type = Block::grassBlock;
 
-                b.randIndex = std::rand() % 4;
+                b.randIndex = getRandomInt(rng, 0, 3);
 
                 gameMap.getBlockUnsafe(x, y) = b;
 
@@ -1014,28 +1077,22 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         for (int x = 0; x < WIDTH; x++)
         {
             // Not a desert, so skip this column
-            if (!(biomeNoise[x] > worldGen.minDesertThreshold) || !(biomeNoise[x] < worldGen.maxDesertThreshold))
+            if (biomeId[x] != Biome::Desert)
                 continue;
+
+            float blendChance = 0.0f;
+            // Probability of placing neighboring biome blocks instead of desert blocks.
+            // Based on distance (in tiles) to the nearest real biome border:
+            // high right at the border, fading to zero by blendRadius tiles in.
+            // e.g. distToBorder=1 (next to border) -> chance~1.0, distToBorder=blendRadius/2 -> chance=0.5, distToBorder=blendRadius (no border in range) -> chance=0.0
+            blendChance = 1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius;
 
             for (int y = 0; y < HEIGHT; y++)
             {
                 Block b;
 
-                float distToEdge = 0.0f;
-                float blendChance = 0.0f;
-
-                if (biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
-                {
-                    // How close are we to the nearest edge of the desert
-                    distToEdge = std::min(biomeNoise[x] - worldGen.minDesertThreshold, worldGen.maxDesertThreshold - biomeNoise[x]);
-                    // Probability of placing grassy biome blocks instead of desert blocks.
-                    // High near the desert boundary, zero in the interior.
-                    // e.g. distToEdge=0.000 (boundary) -> chance=1.0, distToEdge=biomeBlendZone/2 (halfway) -> chance=0.5, distToEdge=biomeBlendZone (interior) -> chance=0.0
-                    blendChance = 1.0f - (distToEdge / worldGen.biomeBlendZone);
-                }
-
-                // If we are in the stone layer and in the desert, use the correct blocks
-                if (y > stoneLayer[x] && biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
+                // If we are in the stone layer, use the correct desert blocks
+                if (y > stoneLayer[x])
                 {
                     // Stone can generate near biome edges
                     if (getRandomChance(rng, blendChance))
@@ -1078,7 +1135,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 }
 
                 // If we are higher up in the desert, sand generates instead of dirt and grass
-                else if (y >= dirtLayer[x] && biomeNoise[x] > worldGen.minDesertThreshold && biomeNoise[x] < worldGen.maxDesertThreshold)
+                else if (y >= dirtLayer[x])
                 {
                     b.type = Block::sand;
 
@@ -1101,7 +1158,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     }
                 }
 
-                b.randIndex = std::rand() % 4;
+                b.randIndex = getRandomInt(rng, 0, 3);
 
                 gameMap.getBlockUnsafe(x, y) = b;
 
@@ -1116,29 +1173,20 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         for (int x = 0; x < WIDTH; x++)
         {
-            // Not a desert, so skip this column
-            if (!(biomeNoise[x] > worldGen.minTundraThreshold) || !(biomeNoise[x] < worldGen.maxTundraThreshold))
+            // Not a tundra, so skip this column
+            if (biomeId[x] != Biome::Tundra)
                 continue;
+
+            float blendChance = 0.0f;
+
+            blendChance = 1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius;
 
             for (int y = 0; y < HEIGHT; y++)
             {
                 Block b;
 
-                float distToEdge = 0.0f;
-                float blendChance = 0.0f;
-
-                if (biomeNoise[x] > worldGen.minTundraThreshold && biomeNoise[x] < worldGen.maxTundraThreshold)
-                {
-                    // How close are we to the nearest edge of the desert
-                    distToEdge = std::min(biomeNoise[x] - worldGen.minTundraThreshold, worldGen.maxTundraThreshold - biomeNoise[x]);
-                    // Probability of placing grassy biome blocks instead of desert blocks.
-                    // High near the desert boundary, zero in the interior.
-                    // e.g. distToEdge=0.000 (boundary) -> chance=1.0, distToEdge=biomeBlendZone/2 (halfway) -> chance=0.5, distToEdge=biomeBlendZone (interior) -> chance=0.0
-                    blendChance = 1.0f - (distToEdge / worldGen.biomeBlendZone);
-                }
-
-                // If we are in the stone layer and in the desert, use the correct blocks
-                if (y > stoneLayer[x] && biomeNoise[x] > worldGen.minTundraThreshold && biomeNoise[x] < worldGen.maxTundraThreshold)
+                // If we are in the stone layer and in the tundra, use the correct blocks
+                if (y > stoneLayer[x])
                 {
                     // Stone can generate near biome edges
                     if (getRandomChance(rng, blendChance))
@@ -1148,21 +1196,21 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     else
                         b.type = Block::ice;
 
-                    // Rubies can generate deep in the stone layer
+                    // Sapphires can generate deep in the stone layer
                     if (y > worldGen.rubyThreshold)
                     {
                         if (getRandomChance(rng, worldGen.rubyChance))
                             b.type = Block::snowSapphire;
                     }
-                    // Not deep enough for rubies, but copper and other ores could still generate
+                    // Not deep enough for sapphires, other ores could still generate
                     else if (y > worldGen.oreThreshold)
                     {
                         // Add tundra ore in the future
                     }
                 }
 
-                // If we are higher up in the desert, sand generates instead of dirt and grass
-                else if (y >= dirtLayer[x] && biomeNoise[x] > worldGen.minTundraThreshold && biomeNoise[x] < worldGen.maxTundraThreshold)
+                // If we are higher up in the tundra, snow generates instead of dirt and grass
+                else if (y >= dirtLayer[x])
                 {
                     b.type = Block::snow;
 
@@ -1184,7 +1232,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     }
                 }
 
-                b.randIndex = std::rand() % 4;
+                b.randIndex = getRandomInt(rng, 0, 3);
 
                 gameMap.getBlockUnsafe(x, y) = b;
 

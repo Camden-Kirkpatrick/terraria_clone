@@ -864,10 +864,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 
 
-
-
-
-    // We need this later for the dirt layer, so we can determine where the dirt layer starts
     std::vector<int> stoneLayer(WIDTH, 0);
 
     auto generateStoneLayer = [&]()
@@ -1016,6 +1012,111 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 
 
+    // Return the correct block for the world, given a biome, and a position
+    auto blockFor = [&](Biome biome, int x, int y)
+    {
+        Block b;
+
+        if (biome == Biome::Grasslands)
+        {
+            if (y > stoneLayer[x])
+            {
+                b.type = Block::stone;
+                // Gold can generate further down in the stone layer
+                if (y > worldGen.oreThreshold)
+                {
+                    // worldGen.goldChance chance for gold to generate instead of stone
+                    if (getRandomChance(rng, worldGen.goldChance))
+                        b.type = Block::gold;
+                    // If gold doesn't generate, iron has a chance to
+                    else if (getRandomChance(rng, worldGen.ironChance))
+                        b.type = Block::iron;
+                }
+            }
+
+            // When y is above the dirtHeight threshold, dirt can generate
+            else if (y > dirtLayer[x])
+            {
+                b.type = Block::dirt;
+                // Clay can generate further down in the dirt layer
+                if (y > worldGen.clayThreshold)
+                {
+                    // worldGen.clayChance chance for clay to generate instead of dirt
+                    if (getRandomChance(rng, worldGen.clayChance))
+                        b.type = Block::clay;
+                }
+            }
+
+            // When y is exactly equal to the dirtHeight threshold, grass generates
+            else if (y == dirtLayer[x])
+                b.type = Block::grassBlock;
+        }
+
+        if (biome == Biome::Desert)
+        {
+            // If we are in the stone layer, use the correct desert blocks
+            if (y > stoneLayer[x])
+            {
+                if (getRandomChance(rng, 0.5f))
+                    b.type = Block::sand;
+                else
+                    b.type = Block::sandStone;
+
+                // Rubies can generate deep in the stone layer
+                if (y > worldGen.rubyThreshold)
+                {
+                    if (getRandomChance(rng, worldGen.rubyChance))
+                        b.type = Block::sandRuby;
+                    // Copper still has a chance to generate
+                    else if (getRandomChance(rng, worldGen.copperChance))
+                        b.type = Block::copper;
+                }
+                // Not deep enough for rubies, but copper and other ores could still generate
+                else if (y > worldGen.oreThreshold)
+                {
+                    if (getRandomChance(rng, worldGen.copperChance))
+                        b.type = Block::copper;
+                }
+            }
+
+            // If we are higher up in the desert, sand generates instead of dirt and grass
+            else if (y >= dirtLayer[x])
+                b.type = Block::sand;
+        }
+
+        if (biome == Biome::Tundra)
+        {
+            if (y > stoneLayer[x])
+            {
+                if (getRandomChance(rng, 0.75f))
+                    b.type = Block::snow;
+                else
+                    b.type = Block::ice;
+
+                // Sapphires can generate deep in the stone layer
+                if (y > worldGen.rubyThreshold)
+                {
+                    if (getRandomChance(rng, worldGen.rubyChance))
+                        b.type = Block::snowSapphire;
+                }
+                // Not deep enough for sapphires, other ores could still generate
+                else if (y > worldGen.oreThreshold)
+                {
+                    // Add tundra ore in the future
+                }
+            }
+
+            // If we are higher up in the tundra, snow generates instead of dirt and grass
+            else if (y >= dirtLayer[x])
+                b.type = Block::snow;
+
+        }
+
+        return b;
+    };
+
+
+
     auto generateGrasslands = [&]()
     {
         for (int x = 0; x < WIDTH; x++)
@@ -1024,42 +1125,21 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             if (biomeId[x] != Biome::Grasslands)
                 continue;
 
+            float blendChance = 0.0f;
+            // Probability of placing the neighboring biome's blocks instead of this biome's.
+            // Based on distance (in tiles) to the nearest real biome border, and capped at 0.5
+            // so the seam is a 50/50 mix: both biomes blend toward each other and meet halfway
+            // instead of overshooting and swapping (which would make the transition blend twice).
+            // e.g. distToBorder=1 (next to border) -> chance~0.5, distToBorder=blendRadius/2 -> chance=0.25, distToBorder=blendRadius (no border in range) -> chance=0.0
+            blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
+
             for (int y = 0; y < HEIGHT; y++)
             {
                 Block b;
 
-                // When y is deeper than the stone surface, stone can generate
-                if (y > stoneLayer[x])
-                {
-                    b.type = Block::stone;
-                    // Gold can generate further down in the stone layer
-                    if (y > worldGen.oreThreshold)
-                    {
-                        // worldGen.goldChance chance for gold to generate instead of stone
-                        if (getRandomChance(rng, worldGen.goldChance))
-                            b.type = Block::gold;
-                        // If gold doesn't generate, iron has a chance to
-                        else if (getRandomChance(rng, worldGen.ironChance))
-                            b.type = Block::iron;
-                    }
-                }
-
-                // When y is above the dirtHeight threshold, dirt can generate
-                else if (y > dirtLayer[x])
-                {
-                    b.type = Block::dirt;
-                    // Clay can generate further down in the dirt layer
-                    if (y > worldGen.clayThreshold)
-                    {
-                        // worldGen.clayChance chance for clay to generate instead of dirt
-                        if (getRandomChance(rng, worldGen.clayChance))
-                            b.type = Block::clay;
-                    }
-                }
-
-                // When y is exactly equal to the dirtHeight threshold, grass generates
-                else if (y == dirtLayer[x])
-                    b.type = Block::grassBlock;
+                b = blockFor(biomeId[x], x, y);
+                if (getRandomChance(rng, blendChance))
+                    b = blockFor(neighborBiome[x], x, y);
 
                 b.randIndex = getRandomInt(rng, 0, 3);
 
@@ -1081,82 +1161,16 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 continue;
 
             float blendChance = 0.0f;
-            // Probability of placing neighboring biome blocks instead of desert blocks.
-            // Based on distance (in tiles) to the nearest real biome border:
-            // high right at the border, fading to zero by blendRadius tiles in.
-            // e.g. distToBorder=1 (next to border) -> chance~1.0, distToBorder=blendRadius/2 -> chance=0.5, distToBorder=blendRadius (no border in range) -> chance=0.0
-            blendChance = 1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius;
+
+            blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
 
             for (int y = 0; y < HEIGHT; y++)
             {
                 Block b;
 
-                // If we are in the stone layer, use the correct desert blocks
-                if (y > stoneLayer[x])
-                {
-                    // Stone can generate near biome edges
-                    if (getRandomChance(rng, blendChance))
-                        b.type = Block::stone;
-                    else if (getRandomChance(rng, 0.5f))
-                        b.type = Block::sand;
-                    else
-                        b.type = Block::sandStone;
-
-                    // Rubies can generate deep in the stone layer
-                    if (y > worldGen.rubyThreshold)
-                    {
-                        if (getRandomChance(rng, worldGen.rubyChance))
-                            b.type = Block::sandRuby;
-                        // Copper still has a chance to generate
-                        else if (getRandomChance(rng, worldGen.copperChance))
-                            b.type = Block::copper;
-                        // Other ores can generate near biome edges
-                        if (getRandomChance(rng, blendChance))
-                        {
-                            if (getRandomChance(rng, worldGen.goldChance))
-                                b.type = Block::gold;
-                            else if (getRandomChance(rng, worldGen.ironChance))
-                                b.type = Block::iron;
-                        }
-                    }
-                    // Not deep enough for rubies, but copper and other ores could still generate
-                    else if (y > worldGen.oreThreshold)
-                    {
-                        if (getRandomChance(rng, worldGen.copperChance))
-                            b.type = Block::copper;
-                        else if (getRandomChance(rng, blendChance))
-                        {
-                            if (getRandomChance(rng, worldGen.goldChance))
-                                b.type = Block::gold;
-                            else if (getRandomChance(rng, worldGen.ironChance))
-                                b.type = Block::iron;
-                        }
-                    }
-                }
-
-                // If we are higher up in the desert, sand generates instead of dirt and grass
-                else if (y >= dirtLayer[x])
-                {
-                    b.type = Block::sand;
-
-                    // Grass dirt, and clay blocks can generate near biome edges
-                    if (getRandomChance(rng, blendChance))
-                    {
-                        if (y == dirtLayer[x])
-                            b.type = Block::grassBlock;
-                        else
-                        {
-                            b.type = Block::dirt;
-
-                            if (y > worldGen.clayThreshold)
-                            {
-                                if (getRandomChance(rng, worldGen.clayChance))
-                                    b.type = Block::clay;
-                            }
-                        }
-
-                    }
-                }
+                b = blockFor(biomeId[x], x, y);
+                if (getRandomChance(rng, blendChance))
+                    b = blockFor(neighborBiome[x], x, y);
 
                 b.randIndex = getRandomInt(rng, 0, 3);
 
@@ -1179,58 +1193,15 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
             float blendChance = 0.0f;
 
-            blendChance = 1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius;
+            blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
 
             for (int y = 0; y < HEIGHT; y++)
             {
                 Block b;
 
-                // If we are in the stone layer and in the tundra, use the correct blocks
-                if (y > stoneLayer[x])
-                {
-                    // Stone can generate near biome edges
-                    if (getRandomChance(rng, blendChance))
-                        b.type = Block::stone;
-                    else if (getRandomChance(rng, 0.75f))
-                        b.type = Block::snow;
-                    else
-                        b.type = Block::ice;
-
-                    // Sapphires can generate deep in the stone layer
-                    if (y > worldGen.rubyThreshold)
-                    {
-                        if (getRandomChance(rng, worldGen.rubyChance))
-                            b.type = Block::snowSapphire;
-                    }
-                    // Not deep enough for sapphires, other ores could still generate
-                    else if (y > worldGen.oreThreshold)
-                    {
-                        // Add tundra ore in the future
-                    }
-                }
-
-                // If we are higher up in the tundra, snow generates instead of dirt and grass
-                else if (y >= dirtLayer[x])
-                {
-                    b.type = Block::snow;
-
-                    // Grass dirt, and clay blocks can generate near biome edges
-                    if (getRandomChance(rng, blendChance))
-                    {
-                        if (y == dirtLayer[x])
-                            b.type = Block::grassBlock;
-                        else
-                        {
-                            b.type = Block::dirt;
-
-                            if (y > worldGen.clayThreshold)
-                            {
-                                if (getRandomChance(rng, worldGen.clayChance))
-                                    b.type = Block::clay;
-                            }
-                        }
-                    }
-                }
+                b = blockFor(biomeId[x], x, y);
+                if (getRandomChance(rng, blendChance))
+                    b = blockFor(neighborBiome[x], x, y);
 
                 b.randIndex = getRandomInt(rng, 0, 3);
 

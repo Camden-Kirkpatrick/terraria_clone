@@ -13,13 +13,6 @@ int seed = DEFAULT_SEED;
 
 std::vector<float> savedTerrainNoise;
 
-enum Biome
-{
-    Grasslands,
-    Desert,
-    Tundra
-};
-
 void resetWorldGen()
 {
     // Mountain settings
@@ -130,7 +123,7 @@ float invLerp(float a, float b, float v)
 }
 
 // Converts a column's terrain noise into a plains<->mountains blend weight in [0, 1]:
-//   0.0 = pure plains, 1.0 = pure mountains, values between = blend.
+// 0.0 = pure plains, 1.0 = pure mountains, values between = blend.
 // Outside the blend zone it snaps to 0 or 1 so biomes stay distinct; inside the
 // zone it ramps smoothly across so the transition has no hard seam.
 // The result is meant to feed lerp(plainsValue, mountainsValue, t).

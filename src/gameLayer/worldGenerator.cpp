@@ -53,6 +53,7 @@ void resetWorldGen()
     // With 40, only columns within 40 tiles of an actual biome change blend toward
     // the neighboring biome's blocks; columns farther out stay pure (blendChance hits 0).
     worldGen.biomeBlendRadius = 40;
+    worldGen.blendBiomes = true;
     // Desert settings
     worldGen.minDesertThreshold = 0.0f;
     worldGen.maxDesertThreshold = 0.4f;
@@ -1107,32 +1108,43 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
         return b;
     };
+    
 
 
 
-    auto generateGrasslands = [&]()
+
+
+
+    auto generateBiome = [&](Biome biome)
     {
+        float blendChance = 0.0f;
         for (int x = 0; x < WIDTH; x++)
         {
-            // Not grasslands, so skip this column
-            if (biomeId[x] != Biome::Grasslands)
+            // Not the desired biome, so skip this column
+            if (biomeId[x] != biome)
                 continue;
 
-            float blendChance = 0.0f;
-            // Probability of placing the neighboring biome's blocks instead of this biome's.
-            // Based on distance (in tiles) to the nearest real biome border, and capped at 0.5
-            // so the seam is a 50/50 mix: both biomes blend toward each other and meet halfway
-            // instead of overshooting and swapping (which would make the transition blend twice).
-            // e.g. distToBorder=1 (next to border) -> chance~0.5, distToBorder=blendRadius/2 -> chance=0.25, distToBorder=blendRadius (no border in range) -> chance=0.0
-            blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
+            if (worldGen.blendBiomes)
+            {
+                // Probability of placing the neighboring biome's blocks instead of this biome's.
+                // Based on distance (in tiles) to the nearest real biome border, and capped at 0.5
+                // so the seam is a 50/50 mix: both biomes blend toward each other and meet halfway
+                // instead of overshooting and swapping (which would make the transition blend twice).
+                // e.g. distToBorder=1 (next to border) -> chance~0.5, distToBorder=blendRadius/2 -> chance=0.25, distToBorder=blendRadius (no border in range) -> chance=0.0
+                blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
+            }
 
             for (int y = 0; y < HEIGHT; y++)
             {
                 Block b;
 
                 b = blockFor(biomeId[x], x, y);
-                if (getRandomChance(rng, blendChance))
-                    b = blockFor(neighborBiome[x], x, y);
+
+                if (worldGen.blendBiomes)
+                {
+                    if (getRandomChance(rng, blendChance))
+                        b = blockFor(neighborBiome[x], x, y);
+                }
 
                 b.randIndex = getRandomInt(rng, 0, 3);
 
@@ -1143,67 +1155,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         }
     };
 
-
-
-    auto generateDesert = [&]()
-    {
-        for (int x = 0; x < WIDTH; x++)
-        {
-            // Not a desert, so skip this column
-            if (biomeId[x] != Biome::Desert)
-                continue;
-
-            float blendChance = 0.0f;
-
-            blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
-
-            for (int y = 0; y < HEIGHT; y++)
-            {
-                Block b;
-
-                b = blockFor(biomeId[x], x, y);
-                if (getRandomChance(rng, blendChance))
-                    b = blockFor(neighborBiome[x], x, y);
-
-                b.randIndex = getRandomInt(rng, 0, 3);
-
-                gameMap.getBlockUnsafe(x, y) = b;
-
-                gameMap.getWallBlockUnsafe(x, y) = b;
-            }
-        }
-    };
-
-
-
-    auto generateTundra = [&]()
-    {
-        for (int x = 0; x < WIDTH; x++)
-        {
-            // Not a tundra, so skip this column
-            if (biomeId[x] != Biome::Tundra)
-                continue;
-
-            float blendChance = 0.0f;
-
-            blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
-
-            for (int y = 0; y < HEIGHT; y++)
-            {
-                Block b;
-
-                b = blockFor(biomeId[x], x, y);
-                if (getRandomChance(rng, blendChance))
-                    b = blockFor(neighborBiome[x], x, y);
-
-                b.randIndex = getRandomInt(rng, 0, 3);
-
-                gameMap.getBlockUnsafe(x, y) = b;
-
-                gameMap.getWallBlockUnsafe(x, y) = b;
-            }
-        }
-    };
 
 
 
@@ -1212,9 +1163,9 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     generateStoneLayer();
     generateDirtLayer();
-    generateGrasslands();
-    generateDesert();
-    generateTundra();
+    generateBiome(Biome::Grasslands);
+    generateBiome(Biome::Desert);
+    generateBiome(Biome::Tundra);
 
 
 

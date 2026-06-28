@@ -53,6 +53,7 @@ struct WorldGen
 	int biomeOctaves;
 	float biomeFrequency;
 	int biomeBlendRadius;
+	bool blendBiomes;
 	// Desert settings
 	float minDesertThreshold;
 	float maxDesertThreshold;

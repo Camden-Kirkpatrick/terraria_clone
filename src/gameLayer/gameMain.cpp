@@ -781,6 +781,9 @@ bool updateGame()
 						if (ImGui::SliderFloat("##desFreq", &worldGen.biomeFrequency, 0.00001f, 0.1f, "%.5f"))
 							initGame(false, false);
 
+						if (ImGui::Checkbox("Blend biomes", &worldGen.blendBiomes))
+							initGame(false, false);
+
 						ImGui::Text("Biome blend radius:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##bioBlendRad", &worldGen.biomeBlendRadius, 0, 200))
 							initGame(false, false);
@@ -894,9 +897,7 @@ bool updateGame()
 					if (ImGui::CollapsingHeader("Tree Settings"))
 					{
 						if (ImGui::Checkbox("Generate trees", &worldGen.generateTrees))
-						{
 							initGame(false, false);
-						}
 
 						ImGui::Text("Tree spawn chance:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##treeSpnChance", &worldGen.treeSpawnChance, 0.0f, 1.0f, "%.5f"))

@@ -864,6 +864,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         for (int x = 0; x < WIDTH; x++)
         {
+            rng.seed(seed + x);
+
             int stonePlainStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
             int stoneMountainStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
 
@@ -906,26 +908,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
             // Store the current stoneStart
             stoneLayer[x] = stoneStart;
-
-            for (int y = 0; y < HEIGHT; y++)
-            {
-                // Ignore, since these will be other blocks (grass, dirt, etc.)
-                if (y <= stoneStart)
-                    continue;
-
-                Block b;
-
-                b.type = Block::stone;
-
-                // Each block will use a random texture variation.
-                b.randIndex = std::rand() % 4;
-
-                // Set the map to use the correct block
-                gameMap.getBlockUnsafe(x, y) = b;
-
-                // Use the correct background based on the block placed
-                gameMap.getWallBlockUnsafe(x, y) = b;
-            }
         }
     };
 
@@ -935,6 +917,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         for (int x = 0; x < WIDTH; x++)
         {
+            rng.seed(seed + x);
+
             int dirtPlainThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
             int dirtMountainThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
 
@@ -978,29 +962,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             dirtStart = stoneLayer[x] - dirtThickness;
 
             dirtLayer[x] = dirtStart;
-
-            for (int y = 0; y < HEIGHT; y++)
-            {
-                // Ignore air
-                if (y < dirtStart)
-                    continue;
-                // Stop when the stone layer is reached
-                if (y > stoneLayer[x])
-                    break;
-
-                Block b;
-
-                if (y > dirtStart)
-                    b.type = Block::dirt;
-                else if (y == dirtStart)
-                    b.type = Block::grassBlock;
-
-                b.randIndex = std::rand() % 4;
-
-                gameMap.getBlockUnsafe(x, y) = b;
-
-                gameMap.getWallBlockUnsafe(x, y) = b;
-            }
         }
     };
 
@@ -1123,6 +1084,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             // Not the desired biome, so skip this column
             if (biomeId[x] != biome)
                 continue;
+
+            rng.seed(seed + x);
 
             if (worldGen.blendBiomes)
             {

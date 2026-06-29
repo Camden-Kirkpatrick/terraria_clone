@@ -31,12 +31,13 @@
 - [x] Copy/Paste blocks easily
 - [x] Save/Load structures to/from a file
 - [x] Tree generation
-- [ ] Add entities
-- [ ] Add a player
+- [ ] Procedural tree generation 
 - [ ] Add more biomes
-  - [ ] Tundra
+  - [x] Tundra
   - [ ] Jungle
   - [ ] Ocean
+- [ ] Add entities
+- [ ] Add a player
 - [ ] Sounds / Music
 - [ ] Game menu
 - [ ] Save/Load worlds

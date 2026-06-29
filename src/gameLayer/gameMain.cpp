@@ -658,9 +658,9 @@ bool updateGame()
 				ImGui::BulletText("'[' / ']': decrease / increase camera speed");
 
 				int cameraX = (int)gameData.camera.target.x;
-				if (cameraX >= 0 && cameraX < (int)savedBiomeNoise.size())
+				if (cameraX >= 0 && cameraX < (int)savedTerrainNoise.size())
 				{
-					float bn = savedBiomeNoise[cameraX];
+					float bn = savedTerrainNoise[cameraX];
 					const char* branch =
 						(bn > worldGen.plainThreshold - worldGen.terrainBlendZone &&
 							bn < worldGen.plainThreshold + worldGen.terrainBlendZone) ? "BLEND" :

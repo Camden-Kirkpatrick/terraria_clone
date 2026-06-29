@@ -1119,7 +1119,56 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     };
 
 
+    auto generateCaves = [&]()
+    {
+        float blendChance = 0.0f;
+        for (int x = 0; x < WIDTH; x++)
+        {
+            rng.seed(seed + x);
 
+            if (worldGen.blendBiomes)
+                blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
+
+            for (int y = 0; y < HEIGHT; y++)
+            {
+                // Band threshold: cave appears only when the *blended* noise lands in the
+                // cave band. AND-ing two separate band checks would give intersection
+                // (both noises agree); lerp-then-threshold gives a smooth morph between
+                // two cave styles across regions.
+                if (worldGen.generateCaves)
+                {
+                    bool generateCave = (
+                        getFinalCaveNoise(x, y) < worldGen.maxCaveThreshold && getFinalCaveNoise(x, y) > worldGen.minCaveThreshold
+                    );
+
+                    // Prevent caves from opening up to the void / edge of the map
+                    if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
+                    // Cave generation
+                    else if (generateCave)
+                    {
+                        Block b;
+                        b.type = Block::air;
+                        gameMap.getBlockUnsafe(x, y) = b;
+
+                        // The background block shouldn't be air in caves, but the foreground block should be air
+                        Block background;
+
+                        background = blockFor(biomeId[x], x, y);
+
+                        if (worldGen.blendBiomes)
+                        {
+                            if (getRandomChance(rng, blendChance))
+                                background = blockFor(neighborBiome[x], x, y);
+                        }
+
+                        background.randIndex = getRandomInt(rng, 0, 3);
+
+                        gameMap.getWallBlockUnsafe(x, y) = background;
+                    }
+                }
+            }
+        }
+    };
 
 
 
@@ -1129,6 +1178,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     generateBiome(Biome::Grasslands);
     generateBiome(Biome::Desert);
     generateBiome(Biome::Tundra);
+    generateCaves();
 
 
 

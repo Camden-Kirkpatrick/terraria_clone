@@ -34,8 +34,8 @@ struct Block
 		furnace,
 		painting,
 		sappling,
-		snowBlueRuby,
-		blueRubyBlock,
+		snowSapphire,
+		sapphireBlock,
 		door,
 		jar,
 		table,
@@ -92,7 +92,7 @@ struct Block
 		62, // goldBlock
 		58, // bricks
 		63, // snow
-		-1, // ice
+		63, // ice (use the snow wall)
 		66, // rubyBlock
 		-1, // platform
 		-1, // workBench

@@ -1,5 +1,6 @@
 #pragma once
 #include "gameMap.hpp"
+#include <cstdint>
 
 #define DEFAULT_WORLD_WIDTH 10000
 #define DEFAULT_WORLD_HEIGHT 500
@@ -8,6 +9,13 @@
 // Used to calculate min/maxNumWorms
 #define MAX_WORM_DIVISOR 100
 #define MIN_WORM_DIVISOR 400
+
+enum class Biome : uint8_t
+{
+	Grasslands,
+	Desert,
+	Tundra
+};
 
 struct WorldGen
 {
@@ -41,12 +49,17 @@ struct WorldGen
 	int minStonePlainStart;
 	int maxStonePlainStart;
 
+	// Biome settings
+	int biomeOctaves;
+	float biomeFrequency;
+	int biomeBlendRadius;
+	bool blendBiomes;
 	// Desert settings
 	float minDesertThreshold;
 	float maxDesertThreshold;
-	int desertOctaves;
-	float desertFrequency;
-	float desertBlendZone;
+	// Tundra settings
+	float minTundraThreshold;
+	float maxTundraThreshold;
 
 	// Cave settings
 	bool generateCaves;
@@ -90,9 +103,12 @@ extern int worldWidth;
 extern int worldHeight;
 extern int seed;
 
-extern std::vector<float> savedBiomeNoise;
+extern std::vector<float> savedTerrainNoise;
 
 void resetWorldGen();
 void flatWorld();
 float lerp(float a, float b, float t);
+float invLerp(float a, float b, float v);
+float terrainBlend(float terrainNoise);
+Biome biomeFromNoise(float biomeNoise);
 void generateWorld(GameMap& gameMap, const int WIDTH = DEFAULT_WORLD_WIDTH, const int HEIGHT = DEFAULT_WORLD_HEIGHT, int seed = DEFAULT_SEED, bool resetWorldGen = true);

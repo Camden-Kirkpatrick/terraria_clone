@@ -226,8 +226,9 @@ bool updateGame()
 	if (!showImGui)
 	{
 		// Remove a block
-		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && blockX < worldWidth && blockY < worldHeight)
 		{
+			// Wall blocks
 			if (shiftDown)
 			{
 				Block* b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
@@ -264,6 +265,7 @@ bool updateGame()
 				lastPlacedX = blockX;
 				lastPlacedY = blockY;
 
+				// Wall blocks
 				if (shiftDown)
 				{
 					// More than one block may be placed depending on the blockShape
@@ -314,6 +316,11 @@ bool updateGame()
 								Block* b0 = gameData.gameMap.getBlockSafe(blockX + x, blockY - 1 + y);
 								if (b0 && b0->type == Block::door)
 									*b0 = {};
+
+								// Don't allow another block to be on the bottom half of a door
+								Block *b1 = gameData.gameMap.getBlockSafe(blockX + x, blockY + 1 + y);
+								if (b1 && isDoor)
+									*b1 = {};
 							}
 						}
 					}
@@ -769,13 +776,16 @@ bool updateGame()
 						if (ImGui::SliderFloat("##maxDesThresh", &worldGen.maxDesertThreshold, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
 
-						//ImGui::Text("Desert octaves:");  ImGui::SameLine(); ImGui::SliderInt("##desOct", &worldGen.desertOctaves, 1, 20);
-						ImGui::Text("Desert frequency:"); ImGui::SameLine();
-						if (ImGui::SliderFloat("##desFreq", &worldGen.desertFrequency, 0.00001f, 0.1f, "%.5f"))
+						//ImGui::Text("Biome octaves:");  ImGui::SameLine(); ImGui::SliderInt("##bioOct", &worldGen.desertOctaves, 1, 20);
+						ImGui::Text("Biome frequency:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##desFreq", &worldGen.biomeFrequency, 0.00001f, 0.1f, "%.5f"))
 							initGame(false, false);
 
-						ImGui::Text("Desert blend zone:"); ImGui::SameLine();
-						if (ImGui::SliderFloat("##desBlendZone", &worldGen.desertBlendZone, 0.0f, 1.0f, "%.5f"))
+						if (ImGui::Checkbox("Blend biomes", &worldGen.blendBiomes))
+							initGame(false, false);
+
+						ImGui::Text("Biome blend radius:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##bioBlendRad", &worldGen.biomeBlendRadius, 0, 200))
 							initGame(false, false);
 					}
 
@@ -887,9 +897,7 @@ bool updateGame()
 					if (ImGui::CollapsingHeader("Tree Settings"))
 					{
 						if (ImGui::Checkbox("Generate trees", &worldGen.generateTrees))
-						{
 							initGame(false, false);
-						}
 
 						ImGui::Text("Tree spawn chance:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##treeSpnChance", &worldGen.treeSpawnChance, 0.0f, 1.0f, "%.5f"))

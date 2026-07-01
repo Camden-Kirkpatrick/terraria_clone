@@ -10,6 +10,13 @@
 #define MAX_WORM_DIVISOR 100
 #define MIN_WORM_DIVISOR 400
 
+// Used as offsets from the world seed
+#define BIOME_OFFSET 1000000
+#define ORE_OFFSET 2000000
+#define CAVE_OFFSET 3000000
+#define TUNNEL_OFFSET 4000000
+#define TREE_OFFSET 5000000
+
 enum class Biome : uint8_t
 {
 	Grasslands,

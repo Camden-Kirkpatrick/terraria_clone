@@ -203,6 +203,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     std::unique_ptr<FastNoiseSIMD> terrainNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> biomeNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> caveNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
+    //std::unique_ptr<FastNoiseSIMD> oreNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
 
     // Each generator gets a unique seed so their shapes don't match
     dirtNoiseGenerator->SetSeed(seed++);
@@ -210,6 +211,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     terrainNoiseGenerator->SetSeed(seed++);
     biomeNoiseGenerator->SetSeed(seed++);
     caveNoiseGenerator->SetSeed(seed++);
+    //oreNoiseGenerator->SetSeed(seed++);
 
 
     // Noise for mountains
@@ -313,6 +315,16 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     caveNoiseGenerator->FillNoiseSet(caveSelectorNoise, 0, 0, 0, HEIGHT, WIDTH, 1);
 
 
+    // Noise for ores
+    //oreNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    //oreNoiseGenerator->SetFractalOctaves(1);
+    //oreNoiseGenerator->SetFrequency(0.1f);
+
+    //float* oreNoise = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
+
+    //oreNoiseGenerator->FillNoiseSet(oreNoise, 0, 0, 0, HEIGHT, WIDTH, 1);
+
+
     // Noise output is in range [-1, 1], remap to [0, 1]
     for (int i = 0; i < WIDTH; i++)
     {
@@ -333,20 +345,37 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         caveNoise1[i] = (caveNoise1[i] + 1) / 2;
         caveNoise2[i] = (caveNoise2[i] + 1) / 2;
         caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
+
+        //oreNoise[i] = (oreNoise[i] + 1) / 2;
     }
 
-    // Find distToBorder and neighborBiome for each column
+    // For every column, find how many tiles away the nearest DIFFERENT biome is
+    // (distToBorder) and which biome that is (neighborBiome). These drive the blend:
+    // columns close to a border fade toward their neighbor's blocks, columns far from
+    // any border stay pure. Distance is measured in real tiles, not noise values, so
+    // blending only happens where biomes physically meet.
     for (int i = 0; i < WIDTH; i++)
     {
         Biome curBiome = biomeId[i];
         Biome leftBiome;
         Biome rightBiome;
 
+        // Defaults assume "no border within range": distance maxed out at the blend
+        // radius (which makes blendChance come out to 0), and neighbor is ourself.
+        // The search below only ever overrides these when it actually finds a border.
         distToBorder[i] = worldGen.biomeBlendRadius;
         neighborBiome[i] = curBiome;
 
+        // Walk outward from this column one step at a time, checking the same distance
+        // on BOTH sides each step (j tiles left and j tiles right). j starts at 1 because
+        // the first step looks at the immediate neighbors one tile to the left and right
+        // (distance 0 would just be this column again). Because j grows outward from 1,
+        // the first differing biome we hit is guaranteed to be the nearest one, so we
+        // record it and stop. We only care about borders within biomeBlendRadius, so the
+        // loop never needs to look farther than that.
         for (int j = 1; j < worldGen.biomeBlendRadius; j++)
         {
+            // Look j tiles to the left (skip if that would fall off the map edge).
             if (i - j >= 0)
             {
                 leftBiome = biomeId[i - j];
@@ -357,6 +386,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     break;
                 }
             }
+            // Look j tiles to the right (skip if that would fall off the map edge).
             if (i + j < WIDTH)
             {
                 rightBiome = biomeId[i + j];
@@ -391,69 +421,98 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         return lerp(getCaveNoise1(x, y), getCaveNoise2(x, y), getCaveSelectorNoise(x, y));
     };
+
+    //auto getOreNoise = [&](int x, int y)
+    //{
+    //    return oreNoise[WIDTH * y + x];
+    //};
 #pragma endregion
 
     std::vector<int> stoneLayer(WIDTH, 0);
 
+    // Computes the stone-surface height for every column and stores it in stoneLayer[x].
+    // This is just the heightmap pass: no blocks are placed here. Later passes read
+    // stoneLayer[x] to know where the stone begins in each column.
     auto generateStoneLayer = [&]()
     {
         for (int x = 0; x < WIDTH; x++)
         {
-            rng.seed(seed + x);
-
+            // Two candidate stone heights for this column: one if it were pure plains,
+            // one if it were pure mountains. Each is a lerp across that terrain type's
+            // [min, max] range, driven by its own per-column noise. We compute both up
+            // front because the blend-zone branch below needs to interpolate between them.
             int stonePlainStart = lerp(worldGen.minStonePlainStart, worldGen.maxStonePlainStart, stonePlainNoise[x]);
             int stoneMountainStart = lerp(worldGen.minStoneMountainStart, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
 
             int stoneStart;
 
+            // t: 0 = pure plains, 1 = pure mountains, in-between = blend zone.
             float t = terrainBlend(terrainNoise[x]);
 
             // Plains
             if (t <= 0.0f)
             {
-                const float variationStart = 0.33f;
-                const float maxStoneOffset = 12.0f;
+                // Extra height variation only kicks in for the rare LOW tail of terrainNoise.
+                // Simplex noise clusters around 0.5, so values below variationStart are
+                // uncommon - only those columns get dramatic hills, the rest stay flat.
+                const float variationStart = 0.33f;   // below this, variation ramps in
+                const float maxStoneOffset = 12.0f;   // most we shift the stone range by
 
+                // depth = how deep into the rare tail this column is, as a 0..1 fraction.
+                // terrainNoise == variationStart -> 0 (no variation); == 0 -> 1 (max variation).
+                // Dividing by variationStart rescales [0, variationStart] to [0, 1].
                 float depth = 0.0f;
                 if (terrainNoise[x] < variationStart)
                     depth = (variationStart - terrainNoise[x]) / variationStart;
 
                 float stoneOffset = depth * maxStoneOffset;
 
+                // Subtract the offset from the MIN so stoneStart can drop below its normal
+                // floor. Smaller stoneStart = higher surface = taller terrain, so rare
+                // columns spike up into hills while neighbours stay low.
                 stoneStart = lerp(worldGen.minStonePlainStart - stoneOffset, worldGen.maxStonePlainStart, stonePlainNoise[x]);
             }
             // Mountains
             else if (t >= 1.0f)
             {
-                const float variationStart = 0.66f;
+                // Mirror of the plains branch, but variation comes from the rare HIGH tail
+                // of terrainNoise, and the offsets are bigger for more dramatic peaks.
+                const float variationStart = 0.66f;   // above this, variation ramps in
                 const float maxStoneOffset = 30.0f;
 
+                // depth measured into the HIGH tail: variationStart -> 0, 1.0 -> 1.
+                // Dividing by (1 - variationStart) rescales [variationStart, 1] to [0, 1].
                 float depth = 0.0f;
                 if (terrainNoise[x] > variationStart)
                     depth = (terrainNoise[x] - variationStart) / (1.0f - variationStart);
 
                 float stoneOffset = depth * maxStoneOffset;
 
+                // Same direction as plains (subtract from min -> surface goes up), just a
+                // larger offset so peaks reach higher.
                 stoneStart = lerp(worldGen.minStoneMountainStart - stoneOffset, worldGen.maxStoneMountainStart, stoneMountainNoise[x]);
             }
-            // Blend zone between plains and mountains
+            // Blend zone: smoothly mix the plains and mountains heights by t so the two
+            // terrain types meet with no hard seam.
             else
                 stoneStart = lerp(stonePlainStart, stoneMountainStart, t);
 
-
-            // Store the current stoneStart
+            // Store the result for the dirt pass and the biome passes to read.
             stoneLayer[x] = stoneStart;
         }
     };
 
     std::vector<int> dirtLayer(WIDTH, 0);
 
+    // Computes the dirt-surface height for every column and stores it in dirtLayer[x].
+    // dirtLayer[x] is the y of the topmost dirt/surface block; it sits dirtThickness
+    // tiles above stoneLayer[x]. Like the stone pass, this only computes heights.
     auto generateDirtLayer = [&]()
     {
         for (int x = 0; x < WIDTH; x++)
         {
-            rng.seed(seed + x);
-
+            // Candidate dirt thicknesses for pure plains vs pure mountains, same idea
+            // as the stone pass: compute both, then pick or blend below.
             int dirtPlainThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness, dirtPlainNoise[x]);
             int dirtMountainThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness, dirtMountainNoise[x]);
 
@@ -474,6 +533,9 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
                 float dirtOffset = depth * maxDirtOffset;
 
+                // Widen only the MAX (never the min) so the dirt layer can get thicker on
+                // rare columns but can never go negative - a negative thickness would push
+                // dirtStart below stoneStart and wipe out the surface.
                 dirtThickness = lerp(worldGen.minDirtPlainThickness, worldGen.maxDirtPlainThickness + dirtOffset, dirtPlainNoise[x]);
             }
             // Mountains
@@ -488,12 +550,16 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
                 float dirtOffset = depth * maxDirtOffset;
 
+                // Same as plains: widen only the max so mountain dirt can get thick without
+                // ever inverting.
                 dirtThickness = lerp(worldGen.minDirtMountainThickness, worldGen.maxDirtMountainThickness + dirtOffset, dirtMountainNoise[x]);
             }
-            // Blend zone between plains and mountains
+            // Blend zone between plains and mountains.
             else
                 dirtThickness = lerp(dirtPlainThickness, dirtMountainThickness, t);
 
+            // Dirt sits on top of stone. Smaller y = higher up, so subtracting the
+            // thickness from the stone surface gives the y of the highest dirt block.
             dirtStart = stoneLayer[x] - dirtThickness;
 
             dirtLayer[x] = dirtStart;
@@ -609,13 +675,18 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     auto generateBiome = [&](Biome biome)
     {
         float blendChance = 0.0f;
+
         for (int x = 0; x < WIDTH; x++)
         {
+            // Reseed per column so each column's blocks depend only on (seed, x): a terrain
+            // edit in one column can't shift another, and a column can be regenerated on its own.
+            // The +BIOME_OFFSET keeps this pass's rolls from matching the cave/tree passes, which
+            // seed from the same column index.
+            rng.seed(seed + x + BIOME_OFFSET);
+
             // Not the desired biome, so skip this column
             if (biomeId[x] != biome)
                 continue;
-
-            rng.seed(seed + x);
 
             if (worldGen.blendBiomes)
             {
@@ -649,12 +720,72 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     };
 
 
+
+    //auto generateOres = [&]()
+    //{
+    //    float blendChance = 0.0f;
+    //    bool generateOre;
+
+    //    for (int x = 0; x < WIDTH; x++)
+    //    {
+    //        rng.seed(seed + x + ORE_OFFSET);
+
+    //        if (worldGen.blendBiomes)
+    //            blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
+
+    //        for (int y = worldGen.oreThreshold; y < HEIGHT; y++)
+    //        {
+    //            // Band threshold: cave appears only when the *blended* noise lands in the
+    //            // cave band. AND-ing two separate band checks would give intersection
+    //            // (both noises agree); lerp-then-threshold gives a smooth morph between
+    //            // two cave styles across regions.
+    //            if (worldGen.generateCaves)
+    //            {
+    //                if (biomeId[x] != Biome::Grasslands)
+    //                    continue;
+
+    //                generateOre = (
+    //                    getOreNoise(x, y) < 0.1f && getOreNoise(x, y) > 0.075f
+    //                );
+
+    //                // Prevent caves from opening up to the void / edge of the map
+    //                if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
+    //                // Cave generation
+    //                else if (generateOre)
+    //                {
+    //                    Block b;
+    //                    b.type = Block::gold;
+    //                    gameMap.getBlockUnsafe(x, y) = b;
+
+    //                    // The background block shouldn't be air in caves, but the foreground block should be air
+    //                    Block background;
+
+    //                    background = blockFor(biomeId[x], x, y);
+
+    //                    if (worldGen.blendBiomes)
+    //                    {
+    //                        if (getRandomChance(rng, blendChance))
+    //                            background = blockFor(neighborBiome[x], x, y);
+    //                    }
+
+    //                    background.randIndex = getRandomInt(rng, 0, 3);
+
+    //                    gameMap.getWallBlockUnsafe(x, y) = background;
+    //                }
+    //            }
+    //        }
+    //    }
+    //};
+
+
+
     auto generateCaves = [&]()
     {
         float blendChance = 0.0f;
+
         for (int x = 0; x < WIDTH; x++)
         {
-            rng.seed(seed + x);
+            rng.seed(seed + x + CAVE_OFFSET);
 
             if (worldGen.blendBiomes)
                 blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
@@ -701,9 +832,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     };
 
 
+
     auto generateTunnels = [&]()
     {
-        rng.seed(seed + 2112);
+        rng.seed(seed + TUNNEL_OFFSET);
 
         // Depending on the world size, there can be more or less tunnels
         worldGen.minNumWorms = (int)(worldWidth / MIN_WORM_DIVISOR);
@@ -805,12 +937,15 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     };
 
 
+
     auto generateTrees = [&]()
     {
         if (worldGen.generateTrees)
         {
             for (int x = 0; x < WIDTH; x++)
             {
+                rng.seed(seed + x + TREE_OFFSET);
+
                 if (getRandomChance(rng, worldGen.treeSpawnChance))
                 {
                     Structure tree = trees[getRandomInt(rng, 0, 2)];
@@ -847,12 +982,15 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         }
     };
 
+
+
     // Generate the world
     generateStoneLayer();
     generateDirtLayer();
     generateBiome(Biome::Grasslands);
     generateBiome(Biome::Desert);
     generateBiome(Biome::Tundra);
+    //generateOres();
     generateCaves();
     generateTunnels();
     generateTrees();

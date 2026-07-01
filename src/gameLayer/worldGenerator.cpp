@@ -168,36 +168,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     std::vector<int> distToBorder(WIDTH);
     std::vector<Biome> neighborBiome(WIDTH);
 
-    // Tree textures
-    Structure tree1;
-    loadBlockDataFromFile(
-        tree1.structureBlocks,
-        tree1.structureWallBlocks,
-        tree1.w,
-        tree1.h,
-        RESOURCES_PATH "structures/tree1.bin"
-    );
-
-    Structure tree2;
-    loadBlockDataFromFile(
-        tree2.structureBlocks,
-        tree2.structureWallBlocks,
-        tree2.w,
-        tree2.h,
-        RESOURCES_PATH "structures/tree2.bin"
-    );
-
-    Structure tree3;
-    loadBlockDataFromFile(
-        tree3.structureBlocks,
-        tree3.structureWallBlocks,
-        tree3.w,
-        tree3.h,
-        RESOURCES_PATH "structures/tree3.bin"
-    );
-
-    Structure trees[3] = { tree1, tree2, tree3 };
-
+    // Leaf textures for trees
     Structure leaves1;
     loadBlockDataFromFile(
         leaves1.structureBlocks,
@@ -206,6 +177,44 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         leaves1.h,
         RESOURCES_PATH "structures/leaves1.bin"
     );
+
+    Structure leaves2;
+    loadBlockDataFromFile(
+        leaves2.structureBlocks,
+        leaves2.structureWallBlocks,
+        leaves2.w,
+        leaves2.h,
+        RESOURCES_PATH "structures/leaves2.bin"
+    );
+
+    Structure leaves3;
+    loadBlockDataFromFile(
+        leaves3.structureBlocks,
+        leaves3.structureWallBlocks,
+        leaves3.w,
+        leaves3.h,
+        RESOURCES_PATH "structures/leaves3.bin"
+    );
+
+    Structure leaves4;
+    loadBlockDataFromFile(
+        leaves4.structureBlocks,
+        leaves4.structureWallBlocks,
+        leaves4.w,
+        leaves4.h,
+        RESOURCES_PATH "structures/leaves4.bin"
+    );
+
+    Structure leaves5;
+    loadBlockDataFromFile(
+        leaves5.structureBlocks,
+        leaves5.structureWallBlocks,
+        leaves5.w,
+        leaves5.h,
+        RESOURCES_PATH "structures/leaves5.bin"
+    );
+
+    Structure leaves[5] = { leaves1, leaves2, leaves3, leaves4, leaves5 };
 
 #pragma region generate_noise
     // Noise generators for different layers, biomes, and caves
@@ -947,35 +956,77 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
                 if (getRandomChance(rng, worldGen.treeSpawnChance))
                 {
-                    Structure tree = trees[getRandomInt(rng, 0, 2)];
-    
+                    // Pick a random set of leaves
+                    int leavesIndex = getRandomInt(rng, 0, 4);
+                    Structure treeLeaves = leaves[leavesIndex];
+                    
+                    // Start at the surface (dirtLayer[x]), so we ignore all air blocks
                     for (int y = dirtLayer[x]; y < HEIGHT; y++)
                     {
                         // Get the current block type
                         uint16_t type = gameMap.getBlockType(x, y);
-                        // Ignore all other blocks
+                        // Trees can only generate if there is a grass block under them
                         if (type != Block::grassBlock)
                             break;
-                        // Generate a tree
                         else
                         {
                             Vector2 spawnPos = { (float)x, (float)y };
+                            int minTreeHeight;
+                            int maxTreeHeight;
 
-                            int minTreeHeight = 3;
-                            int maxTreeHeight = 12;
+                            // Depending on the leaves being used, the tree height changes
+                            // More leaves = taller trees, Less leaves = smaller trees
+                            switch (leavesIndex)
+                            {
+                                case 0:
+                                    minTreeHeight = 3;
+                                    maxTreeHeight = 5;
+                                    break;
+
+                                case 1:
+                                    minTreeHeight = 5;
+                                    maxTreeHeight = 7;
+                                    break;
+
+                                case 2:
+                                    minTreeHeight = 7;
+                                    maxTreeHeight = 9;
+                                    break;
+
+                                case 3:
+                                    minTreeHeight = 9;
+                                    maxTreeHeight = 11;
+                                    break;
+
+                                case 4:
+                                    minTreeHeight = 11;
+                                    maxTreeHeight = 13;
+                                    break;
+                                
+                                // Invalid leavesIndex
+                                default:
+                                    minTreeHeight = 0;
+                                    maxTreeHeight = 0;
+                                    break;
+                            }
+
+                            // How many wood logs tall should the tree be?
                             int treeHeight = getRandomInt(rng, minTreeHeight, maxTreeHeight);
 
+                            // Place the wood logs in the world
                             for (int i = y - 1; i >= y - treeHeight; i--)
                                 gameMap.getBlockUnsafe(x, i).type = Block::woodLog;
 
-                            spawnPos.x -= leaves1.w / 2;
-                            spawnPos.y = y - treeHeight - minTreeHeight;
+                            // The place where we paste the leaves (top-left corner of the structure)
+                            spawnPos.x -= treeLeaves.w / 2;
+                            spawnPos.y = y - treeHeight - treeLeaves.h;
 
-                            leaves1.pasteIntoMap(gameMap, spawnPos);
-    
+                            treeLeaves.pasteIntoMap(gameMap, spawnPos);
+
                             // Leave a gap between trees
                             x += 5;
-  
+                            
+                            // Break, since we only care about the surface block
                             break;
                         }
                     }

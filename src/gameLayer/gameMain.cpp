@@ -282,6 +282,7 @@ bool updateGame()
 						}
 					}
 				}
+				// Normal blocks
 				else
 				{
 					// ----- Special Case for Doors ----
@@ -564,14 +565,14 @@ bool updateGame()
 				if (Block::wallColumn[b.type] == -1)
 					continue;
 
-					DrawTexturePro(
-						assetManager.textures,
-						getTextureAtlas(Block::wallColumn[b.type], b.randIndex, 32, 32),
-						{ (float)blockX + x, (float)blockY + y, 1, 1 },
-						{ 0, 0 },
-						0.0f,
-						{ 255, 255, 255, 175 }
-					);
+				DrawTexturePro(
+					assetManager.textures,
+					getTextureAtlas(Block::wallColumn[b.type], b.randIndex, 32, 32),
+					{ (float)blockX + x, (float)blockY + y, 1, 1 },
+					{ 0, 0 },
+					0.0f,
+					{ 255, 255, 255, 175 }
+				);
 			}
 		}
 

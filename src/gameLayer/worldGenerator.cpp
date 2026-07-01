@@ -197,6 +197,16 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     );
 
     Structure trees[3] = { tree1, tree2, tree3 };
+
+    Structure leaves1;
+    loadBlockDataFromFile(
+        leaves1.structureBlocks,
+        leaves1.structureWallBlocks,
+        leaves1.w,
+        leaves1.h,
+        RESOURCES_PATH "structures/leaves1.bin"
+    );
+
 #pragma region generate_noise
     // Noise generators for different layers, biomes, and caves
     std::unique_ptr<FastNoiseSIMD> dirtNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
@@ -939,32 +949,35 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 {
                     Structure tree = trees[getRandomInt(rng, 0, 2)];
     
-                    for (int y = 0; y < HEIGHT; y++)
+                    for (int y = dirtLayer[x]; y < HEIGHT; y++)
                     {
                         // Get the current block type
                         uint16_t type = gameMap.getBlockType(x, y);
-                        // Ignore air blocks
-                        if (type == Block::air)
-                            continue;
+                        // Ignore all other blocks
+                        if (type != Block::grassBlock)
+                            break;
                         // Generate a tree
-                        else if (type == Block::grassBlock)
+                        else
                         {
                             Vector2 spawnPos = { (float)x, (float)y };
-    
-                            // Top-left of the tree (tree start)
-                            spawnPos.x -= tree.w / 2;
-                            spawnPos.y -= tree.h;
-    
-                            tree.pasteIntoMap(gameMap, spawnPos);
+
+                            int minTreeHeight = 3;
+                            int maxTreeHeight = 12;
+                            int treeHeight = getRandomInt(rng, minTreeHeight, maxTreeHeight);
+
+                            for (int i = y - 1; i >= y - treeHeight; i--)
+                                gameMap.getBlockUnsafe(x, i).type = Block::woodLog;
+
+                            spawnPos.x -= leaves1.w / 2;
+                            spawnPos.y = y - treeHeight - minTreeHeight;
+
+                            leaves1.pasteIntoMap(gameMap, spawnPos);
     
                             // Leave a gap between trees
                             x += 5;
-    
+  
                             break;
                         }
-                        // Not a grass block
-                        else
-                            break;
                     }
                 }
             }
@@ -979,10 +992,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     generateBiome(Biome::Grasslands);
     generateBiome(Biome::Desert);
     generateBiome(Biome::Tundra);
-    generateTrees();
     generateOres();
     generateCaves();
     generateTunnels();
+    generateTrees();
 
     // Free resources
     FastNoiseSIMD::FreeNoiseSet(dirtPlainNoise);

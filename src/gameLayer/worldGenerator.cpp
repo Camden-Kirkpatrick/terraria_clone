@@ -203,7 +203,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     std::unique_ptr<FastNoiseSIMD> terrainNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> biomeNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
     std::unique_ptr<FastNoiseSIMD> caveNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
-    //std::unique_ptr<FastNoiseSIMD> oreNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
+    std::unique_ptr<FastNoiseSIMD> oreNoiseGenerator(FastNoiseSIMD::NewFastNoiseSIMD());
 
     // Each generator gets a unique seed so their shapes don't match
     dirtNoiseGenerator->SetSeed(seed++);
@@ -211,7 +211,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     terrainNoiseGenerator->SetSeed(seed++);
     biomeNoiseGenerator->SetSeed(seed++);
     caveNoiseGenerator->SetSeed(seed++);
-    //oreNoiseGenerator->SetSeed(seed++);
+    oreNoiseGenerator->SetSeed(seed++);
 
 
     // Noise for mountains
@@ -316,13 +316,13 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 
     // Noise for ores
-    //oreNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    //oreNoiseGenerator->SetFractalOctaves(1);
-    //oreNoiseGenerator->SetFrequency(0.1f);
+    oreNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    oreNoiseGenerator->SetFractalOctaves(1);
+    oreNoiseGenerator->SetFrequency(0.1f);
 
-    //float* oreNoise = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
+    float* oreNoise = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
 
-    //oreNoiseGenerator->FillNoiseSet(oreNoise, 0, 0, 0, HEIGHT, WIDTH, 1);
+    oreNoiseGenerator->FillNoiseSet(oreNoise, 0, 0, 0, HEIGHT, WIDTH, 1);
 
 
     // Noise output is in range [-1, 1], remap to [0, 1]
@@ -346,7 +346,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         caveNoise2[i] = (caveNoise2[i] + 1) / 2;
         caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
 
-        //oreNoise[i] = (oreNoise[i] + 1) / 2;
+        oreNoise[i] = (oreNoise[i] + 1) / 2;
     }
 
     // For every column, find how many tiles away the nearest DIFFERENT biome is
@@ -422,10 +422,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         return lerp(getCaveNoise1(x, y), getCaveNoise2(x, y), getCaveSelectorNoise(x, y));
     };
 
-    //auto getOreNoise = [&](int x, int y)
-    //{
-    //    return oreNoise[WIDTH * y + x];
-    //};
+    auto getOreNoise = [&](int x, int y)
+    {
+        return oreNoise[WIDTH * y + x];
+    };
 #pragma endregion
 
     std::vector<int> stoneLayer(WIDTH, 0);
@@ -579,15 +579,15 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             {
                 b.type = Block::stone;
                 // Gold can generate further down in the stone layer
-                if (y > worldGen.oreThreshold)
-                {
-                    // worldGen.goldChance chance for gold to generate instead of stone
-                    if (getRandomChance(rng, worldGen.goldChance))
-                        b.type = Block::gold;
-                    // If gold doesn't generate, iron has a chance to
-                    else if (getRandomChance(rng, worldGen.ironChance))
-                        b.type = Block::iron;
-                }
+                //if (y > worldGen.oreThreshold)
+                //{
+                //    // worldGen.goldChance chance for gold to generate instead of stone
+                //    if (getRandomChance(rng, worldGen.goldChance))
+                //        b.type = Block::gold;
+                //    // If gold doesn't generate, iron has a chance to
+                //    else if (getRandomChance(rng, worldGen.ironChance))
+                //        b.type = Block::iron;
+                //}
             }
 
             // When y is above the dirtHeight threshold, dirt can generate
@@ -721,61 +721,61 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
 
 
-    //auto generateOres = [&]()
-    //{
-    //    float blendChance = 0.0f;
-    //    bool generateOre;
+    auto generateOres = [&]()
+    {
+        float blendChance = 0.0f;
+        bool generateOre;
 
-    //    for (int x = 0; x < WIDTH; x++)
-    //    {
-    //        rng.seed(seed + x + ORE_OFFSET);
+        for (int x = 0; x < WIDTH; x++)
+        {
+            rng.seed(seed + x + ORE_OFFSET);
 
-    //        if (worldGen.blendBiomes)
-    //            blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
+            if (worldGen.blendBiomes)
+                blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
 
-    //        for (int y = worldGen.oreThreshold; y < HEIGHT; y++)
-    //        {
-    //            // Band threshold: cave appears only when the *blended* noise lands in the
-    //            // cave band. AND-ing two separate band checks would give intersection
-    //            // (both noises agree); lerp-then-threshold gives a smooth morph between
-    //            // two cave styles across regions.
-    //            if (worldGen.generateCaves)
-    //            {
-    //                if (biomeId[x] != Biome::Grasslands)
-    //                    continue;
+            for (int y = worldGen.oreThreshold; y < HEIGHT; y++)
+            {
+                // Band threshold: cave appears only when the *blended* noise lands in the
+                // cave band. AND-ing two separate band checks would give intersection
+                // (both noises agree); lerp-then-threshold gives a smooth morph between
+                // two cave styles across regions.
+                if (worldGen.generateCaves)
+                {
+                    if (biomeId[x] != Biome::Grasslands)
+                        continue;
 
-    //                generateOre = (
-    //                    getOreNoise(x, y) < 0.1f && getOreNoise(x, y) > 0.075f
-    //                );
+                    generateOre = (
+                        getOreNoise(x, y) < 0.1f && getOreNoise(x, y) > 0.075f
+                    );
 
-    //                // Prevent caves from opening up to the void / edge of the map
-    //                if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
-    //                // Cave generation
-    //                else if (generateOre)
-    //                {
-    //                    Block b;
-    //                    b.type = Block::gold;
-    //                    gameMap.getBlockUnsafe(x, y) = b;
+                    // Prevent caves from opening up to the void / edge of the map
+                    if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
+                    // Cave generation
+                    else if (generateOre)
+                    {
+                        Block b;
+                        b.type = Block::gold;
+                        gameMap.getBlockUnsafe(x, y) = b;
 
-    //                    // The background block shouldn't be air in caves, but the foreground block should be air
-    //                    Block background;
+                        // The background block shouldn't be air in caves, but the foreground block should be air
+                        Block background;
 
-    //                    background = blockFor(biomeId[x], x, y);
+                        background = blockFor(biomeId[x], x, y);
 
-    //                    if (worldGen.blendBiomes)
-    //                    {
-    //                        if (getRandomChance(rng, blendChance))
-    //                            background = blockFor(neighborBiome[x], x, y);
-    //                    }
+                        if (worldGen.blendBiomes)
+                        {
+                            if (getRandomChance(rng, blendChance))
+                                background = blockFor(neighborBiome[x], x, y);
+                        }
 
-    //                    background.randIndex = getRandomInt(rng, 0, 3);
+                        background.randIndex = getRandomInt(rng, 0, 3);
 
-    //                    gameMap.getWallBlockUnsafe(x, y) = background;
-    //                }
-    //            }
-    //        }
-    //    }
-    //};
+                        gameMap.getWallBlockUnsafe(x, y) = background;
+                    }
+                }
+            }
+        }
+    };
 
 
 
@@ -990,7 +990,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     generateBiome(Biome::Grasslands);
     generateBiome(Biome::Desert);
     generateBiome(Biome::Tundra);
-    //generateOres();
+    generateOres();
     generateCaves();
     generateTunnels();
     generateTrees();

@@ -726,9 +726,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         if (worldGen.generateOre)
         {
-            bool generateOre;
-            uint16_t ores[2] = { Block::gold, Block::iron };
-            uint16_t ore = ores[0];
+            bool generateIronOre;
+            bool generateGoldOre;
             float blendChance = 0.0f;
 
             for (int x = 0; x < WIDTH; x++)
@@ -740,22 +739,24 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
                 for (int y = worldGen.oreThreshold; y < HEIGHT; y++)
                 {
-                    if (biomeId[x] != Biome::Grasslands)
-                        continue;
-
-                    generateOre = (
-                        getOreNoise(x, y) < 0.1f && getOreNoise(x, y) > 0.075f
+                    // Gold is slightly more rare than iron
+                    generateGoldOre = (
+                        getOreNoise(x, y) < 0.033f
                     );
 
-                    if (x % 2 == 0 && y % 2 == 0)
-                        ore = ores[0];
-                    else
-                        ore = ores[1];
+                    // Since gold and iron generate when the noise is low (gold), or high (iron), they generate in their own groups
+                    generateIronOre = (
+                        getOreNoise(x, y) > 0.95f
+                    );
 
-                    if (generateOre)
+                    if (generateGoldOre || generateIronOre)
                     {
                         Block b;
-                        b.type = ore;
+
+                        if (generateGoldOre)
+                            b.type = Block::gold;
+                        else if (generateIronOre)
+                            b.type = Block::iron;
                         gameMap.getBlockUnsafe(x, y) = b;
 
                         Block background;

@@ -579,16 +579,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             if (y > stoneLayer[x])
             {
                 b.type = Block::stone;
-                // Gold can generate further down in the stone layer
-                //if (y > worldGen.oreThreshold)
-                //{
-                //    // worldGen.goldChance chance for gold to generate instead of stone
-                //    if (getRandomChance(rng, worldGen.goldChance))
-                //        b.type = Block::gold;
-                //    // If gold doesn't generate, iron has a chance to
-                //    else if (getRandomChance(rng, worldGen.ironChance))
-                //        b.type = Block::iron;
-                //}
             }
 
             // When y is above the dirtHeight threshold, dirt can generate
@@ -712,9 +702,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 }
 
                 b.randIndex = getRandomInt(rng, 0, 3);
-
                 gameMap.getBlockUnsafe(x, y) = b;
-
                 gameMap.getWallBlockUnsafe(x, y) = b;
             }
         }
@@ -757,10 +745,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                             b.type = Block::gold;
                         else if (generateIronOre)
                             b.type = Block::iron;
+
                         gameMap.getBlockUnsafe(x, y) = b;
 
                         Block background;
-
                         background = blockFor(biomeId[x], x, y);
 
                         if (worldGen.blendBiomes)
@@ -770,7 +758,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                         }
 
                         background.randIndex = getRandomInt(rng, 0, 3);
-
                         gameMap.getWallBlockUnsafe(x, y) = background;
                     }
                 }
@@ -791,7 +778,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             if (worldGen.blendBiomes)
                 blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
 
-            for (int y = 0; y < HEIGHT; y++)
+            // Start at the surface (dirtLayer[x]), so we ignore all air blocks
+            for (int y = dirtLayer[x]; y < HEIGHT; y++)
             {
                 // Band threshold: cave appears only when the *blended* noise lands in the
                 // cave band. AND-ing two separate band checks would give intersection
@@ -911,7 +899,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
         // to fit that band, skip the worm pass - getRandomInt asserts when min > max.
         int wormMinX = 10;
         int wormMaxX = WIDTH - 10;
-        int wormMinY = 350;
+        int wormMinY = 375;
         int wormMaxY = HEIGHT - 10;
         if (worldGen.generateWorms && wormMaxX > wormMinX && wormMaxY > wormMinY)
         {
@@ -991,10 +979,10 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     generateBiome(Biome::Grasslands);
     generateBiome(Biome::Desert);
     generateBiome(Biome::Tundra);
+    generateTrees();
     generateOres();
     generateCaves();
     generateTunnels();
-    generateTrees();
 
     // Free resources
     FastNoiseSIMD::FreeNoiseSet(dirtPlainNoise);

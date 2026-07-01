@@ -866,6 +866,8 @@ bool updateGame()
 
 					if (ImGui::CollapsingHeader("Special Material Settings"))
 					{
+						if (ImGui::Checkbox("Generate ore", &worldGen.generateOre))
+							initGame(false, false);
 						ImGui::Text("Ore threshold:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##oreThresh", &worldGen.oreThreshold, 0, 499))
 							initGame(false, false);

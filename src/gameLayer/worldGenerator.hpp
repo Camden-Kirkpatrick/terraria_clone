@@ -77,6 +77,7 @@ struct WorldGen
 
 	// Special block settings
 	// Ores
+	bool generateOre;
 	int oreThreshold;
 	float goldChance;
 	float ironChance;

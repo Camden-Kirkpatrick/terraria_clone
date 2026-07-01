@@ -71,6 +71,7 @@ void resetWorldGen()
 
     // Special block settings
     // Ores
+    worldGen.generateOre = true;
     worldGen.oreThreshold = 375;
     worldGen.goldChance = 0.01f;
     worldGen.ironChance = 0.02f;
@@ -723,23 +724,21 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     auto generateOres = [&]()
     {
-        float blendChance = 0.0f;
-        bool generateOre;
-
-        for (int x = 0; x < WIDTH; x++)
+        if (worldGen.generateOre)
         {
-            rng.seed(seed + x + ORE_OFFSET);
+            bool generateOre;
+            uint16_t ores[2] = { Block::gold, Block::iron };
+            uint16_t ore = ores[0];
+            float blendChance = 0.0f;
 
-            if (worldGen.blendBiomes)
-                blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
-
-            for (int y = worldGen.oreThreshold; y < HEIGHT; y++)
+            for (int x = 0; x < WIDTH; x++)
             {
-                // Band threshold: cave appears only when the *blended* noise lands in the
-                // cave band. AND-ing two separate band checks would give intersection
-                // (both noises agree); lerp-then-threshold gives a smooth morph between
-                // two cave styles across regions.
-                if (worldGen.generateCaves)
+                rng.seed(seed + x + ORE_OFFSET);
+
+                if (worldGen.blendBiomes)
+                    blendChance = 0.5f * (1.0f - (float)distToBorder[x] / worldGen.biomeBlendRadius);
+
+                for (int y = worldGen.oreThreshold; y < HEIGHT; y++)
                 {
                     if (biomeId[x] != Biome::Grasslands)
                         continue;
@@ -748,16 +747,17 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                         getOreNoise(x, y) < 0.1f && getOreNoise(x, y) > 0.075f
                     );
 
-                    // Prevent caves from opening up to the void / edge of the map
-                    if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
-                    // Cave generation
-                    else if (generateOre)
+                    if (x % 2 == 0 && y % 2 == 0)
+                        ore = ores[0];
+                    else
+                        ore = ores[1];
+
+                    if (generateOre)
                     {
                         Block b;
-                        b.type = Block::gold;
+                        b.type = ore;
                         gameMap.getBlockUnsafe(x, y) = b;
 
-                        // The background block shouldn't be air in caves, but the foreground block should be air
                         Block background;
 
                         background = blockFor(biomeId[x], x, y);

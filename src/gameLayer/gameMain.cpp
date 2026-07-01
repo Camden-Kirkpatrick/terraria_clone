@@ -424,6 +424,13 @@ bool updateGame()
 			if (b.type == Block::air)
 				continue;
 
+			if (b.type == Block::grass)
+			{	
+				// Only allow grass to be on top of grass blocks
+				if (gameData.gameMap.getBlockUnsafe(x, y + 1).type != Block::grassBlock)
+					b = {};
+			}
+
 			// Set block properties
 			float size = 1.0f; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
 

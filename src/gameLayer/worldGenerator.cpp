@@ -616,6 +616,13 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             // When y is exactly equal to the dirtHeight threshold, grass generates
             else if (y == dirtLayer[x])
                 b.type = Block::grassBlock;
+
+            // Chance for grass to generate on grass blocks
+            else if (y == dirtLayer[x] - 1)
+            {
+                if (getRandomChance(rng, 0.5f))
+                    b.type = Block::grass;
+            }
         }
 
         if (biome == Biome::Desert)

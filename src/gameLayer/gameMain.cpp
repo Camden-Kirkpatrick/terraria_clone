@@ -424,13 +424,6 @@ bool updateGame()
 			if (b.type == Block::air)
 				continue;
 
-			if (b.type == Block::grass)
-			{	
-				// Only allow grass to be on top of grass blocks
-				if (gameData.gameMap.getBlockUnsafe(x, y + 1).type != Block::grassBlock)
-					b = {};
-			}
-
 			// Set block properties
 			float size = 1.0f; // 1 world unit per block; zoom scales this to 100x100 pixels on screen
 
@@ -441,13 +434,20 @@ bool updateGame()
 
 			Texture2D textureAtlas = assetManager.textures;
 			Rectangle textureAtlasRect;
-			if (b.type == 31)
+			if (b.type == Block::door)
 			{
 				textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 64);
 				drawHeight = 2.0f * size;
 			}
 			else
 				textureAtlasRect = getTextureAtlas(b.type, b.randIndex, 32, 32);
+
+			// Only allow grass to be on top of grass blocks
+			if (b.type == Block::grass)
+			{
+				if (gameData.gameMap.getBlockUnsafe(x, y + 1).type != Block::grassBlock)
+					b = {};
+			}
 
 #pragma region wood_log_leaves
 			// Special handling for wood logs: they have different textures based on adjacent leaves
@@ -883,10 +883,10 @@ bool updateGame()
 						if (ImGui::SliderFloat("##gldChance", &worldGen.goldChance, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
 						ImGui::Text("Iron chance:"); ImGui::SameLine();
-						if (ImGui::SliderFloat("##irnChance", &worldGen.ironChance, 0.0f, 1.0f, "%.5f"))
+						if (ImGui::SliderFloat("##irnChance", &worldGen.ironChance, 1.0f, 0.0f, "%.5f"))
 							initGame(false, false);
 						ImGui::Text("Copper chance:"); ImGui::SameLine();
-						if (ImGui::SliderFloat("##copChance", &worldGen.copperChance, 0.0f, 1.0f, "%.5f"))
+						if (ImGui::SliderFloat("##copChance", &worldGen.copperChance, 1.0f, 0.0f, "%.5f"))
 							initGame(false, false);
 
 						ImGui::Text("Ruby threshold:"); ImGui::SameLine();

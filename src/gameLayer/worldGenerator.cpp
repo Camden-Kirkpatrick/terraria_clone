@@ -73,9 +73,9 @@ void resetWorldGen()
     // Ores
     worldGen.generateOre = true;
     worldGen.oreThreshold = 375;
-    worldGen.goldChance = 0.01f;
-    worldGen.ironChance = 0.02f;
-    worldGen.copperChance = 0.03f;
+    worldGen.goldChance = 0.033f;
+    worldGen.ironChance = 0.95f;
+    worldGen.copperChance = 0.925f;
     // Rubies
     worldGen.rubyThreshold = 450;
     worldGen.rubyChance = 0.002f;
@@ -97,7 +97,7 @@ void resetWorldGen()
 
     // Tree settings
     worldGen.generateTrees = true;
-    worldGen.treeSpawnChance = 0.04f;
+    worldGen.treeSpawnChance = 0.05f;
 }
 
 void flatWorld()
@@ -726,9 +726,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         if (worldGen.generateOre)
         {
-            bool generateIronOre = false;;
-            bool generateGoldOre = false;;
-            bool generateCopperOre = false;
             float blendChance = 0.0f;
 
             for (int x = 0; x < WIDTH; x++)
@@ -741,17 +738,20 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 for (int y = worldGen.oreThreshold; y < HEIGHT; y++)
                 {
                     Block b;
+                    bool generateIronOre = false;;
+                    bool generateGoldOre = false;;
+                    bool generateCopperOre = false;
 
                     // Since gold and iron generate when the noise is low (gold), or high (iron), they generate in their own veins
                     if (biomeId[x] == Biome::Grasslands)
                     {
                         // Gold is slightly more rare than iron
                         generateGoldOre = (
-                            getOreNoise(x, y) < 0.033f
+                            getOreNoise(x, y) <  worldGen.goldChance // 0.033f
                         );
 
                         generateIronOre = (
-                            getOreNoise(x, y) > 0.95f
+                            getOreNoise(x, y) > worldGen.ironChance //0.95f
                         );
 
                         if (generateGoldOre)
@@ -763,7 +763,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     else if (biomeId[x] == Biome::Desert)
                     {
                         generateCopperOre = (
-                            getOreNoise(x, y) > 0.925f
+                            getOreNoise(x, y) > worldGen.copperChance //0.925f
                         );
 
                         if (generateCopperOre)
@@ -830,7 +830,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                         }
 
                         background.randIndex = getRandomInt(rng, 0, 3);
-
                         gameMap.getWallBlockUnsafe(x, y) = background;
                     }
                 }

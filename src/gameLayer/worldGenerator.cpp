@@ -640,15 +640,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 {
                     if (getRandomChance(rng, worldGen.rubyChance))
                         b.type = Block::sandRuby;
-                    // Copper still has a chance to generate
-                    else if (getRandomChance(rng, worldGen.copperChance))
-                        b.type = Block::copper;
-                }
-                // Not deep enough for rubies, but copper and other ores could still generate
-                else if (y > worldGen.oreThreshold)
-                {
-                    if (getRandomChance(rng, worldGen.copperChance))
-                        b.type = Block::copper;
                 }
             }
 
@@ -671,11 +662,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 {
                     if (getRandomChance(rng, worldGen.rubyChance))
                         b.type = Block::snowSapphire;
-                }
-                // Not deep enough for sapphires, other ores could still generate
-                else if (y > worldGen.oreThreshold)
-                {
-                    // Add tundra ore in the future
                 }
             }
 
@@ -720,6 +706,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 Block b;
 
                 b = blockFor(biomeId[x], x, y);
+                b.randIndex = getRandomInt(rng, 0, 3);
 
                 if (worldGen.blendBiomes)
                 {
@@ -727,7 +714,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                         b = blockFor(neighborBiome[x], x, y);
                 }
 
-                b.randIndex = getRandomInt(rng, 0, 3);
                 gameMap.getBlockUnsafe(x, y) = b;
                 gameMap.getWallBlockUnsafe(x, y) = b;
             }
@@ -756,7 +742,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 {
                     Block b;
 
-                    // Since gold and iron generate when the noise is low (gold), or high (iron), they generate in their own groups
+                    // Since gold and iron generate when the noise is low (gold), or high (iron), they generate in their own veins
                     if (biomeId[x] == Biome::Grasslands)
                     {
                         // Gold is slightly more rare than iron
@@ -787,20 +773,11 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     // This block is not an ore, so ignore it
                     if (!generateIronOre && !generateGoldOre && !generateCopperOre)
                         continue;
- 
+
+                    b.randIndex = getRandomInt(rng, 0, 3);
+
                     gameMap.getBlockUnsafe(x, y) = b;
-
-                    Block background;
-                    background = blockFor(biomeId[x], x, y);
-
-                    if (worldGen.blendBiomes)
-                    {
-                        if (getRandomChance(rng, blendChance))
-                            background = blockFor(neighborBiome[x], x, y);
-                    }
-
-                    background.randIndex = getRandomInt(rng, 0, 3);
-                    gameMap.getWallBlockUnsafe(x, y) = background;
+                    gameMap.getWallBlockUnsafe(x, y) = b;
                 }
             }
         }
@@ -1046,7 +1023,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                             treeLeaves.pasteIntoMap(gameMap, spawnPos);
 
                             // Leave a gap between trees
-                            x += 5;
+                            x += 9;
                             
                             // Break, since we only care about the surface block
                             break;

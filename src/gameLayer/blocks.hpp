@@ -97,6 +97,10 @@ struct Block
 		-1, // platform
 		-1, // workBench
 		59, // glass
+		-1, // furnace
+		-1, // painting
+		-1, // sappling
+		63, // snowSapphire
 	};
 
 	void sanitize()

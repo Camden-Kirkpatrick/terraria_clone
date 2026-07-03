@@ -321,18 +321,18 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
 
     caveNoiseGenerator->FillNoiseSet(caveNoise2, 0, 0, 0, HEIGHT, WIDTH, 1);
 
-    // Cave selector noise
-    // Slow-frequency selector that picks which cave shape dominates in each region.
-    // Lower frequency than the cave noises so a region commits to one style across
-    // many tiles instead of flickering. Value near 0 = mostly caveNoise1's shape,
-    // value near 1 = mostly caveNoise2's shape, in-between = smooth blend.
-    caveNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
-    caveNoiseGenerator->SetFractalOctaves(1);
-    caveNoiseGenerator->SetFrequency(0.0025f);
+    //// Cave selector noise
+    //// Slow-frequency selector that picks which cave shape dominates in each region.
+    //// Lower frequency than the cave noises so a region commits to one style across
+    //// many tiles instead of flickering. Value near 0 = mostly caveNoise1's shape,
+    //// value near 1 = mostly caveNoise2's shape, in-between = smooth blend.
+    //caveNoiseGenerator->SetNoiseType(FastNoiseSIMD::NoiseType::SimplexFractal);
+    //caveNoiseGenerator->SetFractalOctaves(1);
+    //caveNoiseGenerator->SetFrequency(0.0025f);
 
-    float* caveSelectorNoise = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
+    //float* caveSelectorNoise = FastNoiseSIMD::GetEmptySet(WIDTH * HEIGHT);
 
-    caveNoiseGenerator->FillNoiseSet(caveSelectorNoise, 0, 0, 0, HEIGHT, WIDTH, 1);
+    //caveNoiseGenerator->FillNoiseSet(caveSelectorNoise, 0, 0, 0, HEIGHT, WIDTH, 1);
 
 
     // Noise for ores
@@ -364,7 +364,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         caveNoise1[i] = (caveNoise1[i] + 1) / 2;
         caveNoise2[i] = (caveNoise2[i] + 1) / 2;
-        caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
+        //caveSelectorNoise[i] = (caveSelectorNoise[i] + 1) / 2;
 
         oreNoise[i] = (oreNoise[i] + 1) / 2;
     }
@@ -431,16 +431,16 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         return caveNoise2[WIDTH * y + x];
     };
-    auto getCaveSelectorNoise = [&](int x, int y)
-    {
-        return caveSelectorNoise[WIDTH * y + x];
-    };
+    //auto getCaveSelectorNoise = [&](int x, int y)
+    //{
+    //    return caveSelectorNoise[WIDTH * y + x];
+    //};
     // Blend the two cave shapes per-tile using the selector as the lerp weight.
     // Then a single band threshold on the result carves the actual caves.
-    auto getFinalCaveNoise = [&](int x, int y)
-    {
-        return lerp(getCaveNoise1(x, y), getCaveNoise2(x, y), getCaveSelectorNoise(x, y));
-    };
+    //auto getFinalCaveNoise = [&](int x, int y)
+    //{
+    //    return lerp(getCaveNoise1(x, y), getCaveNoise2(x, y), getCaveSelectorNoise(x, y));
+    //};
 
     auto getOreNoise = [&](int x, int y)
     {
@@ -625,7 +625,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             }
         }
 
-        if (biome == Biome::Desert)
+        else if (biome == Biome::Desert)
         {
             // If we are in the stone layer, use the correct desert blocks
             if (y > stoneLayer[x])
@@ -648,7 +648,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 b.type = Block::sand;
         }
 
-        if (biome == Biome::Tundra)
+        else if (biome == Biome::Tundra)
         {
             if (y > stoneLayer[x])
             {
@@ -668,7 +668,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             // If we are higher up in the tundra, snow generates instead of dirt and grass
             else if (y >= dirtLayer[x])
                 b.type = Block::snow;
-
         }
 
         return b;
@@ -777,7 +776,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     b.randIndex = getRandomInt(rng, 0, 3);
 
                     gameMap.getBlockUnsafe(x, y) = b;
-                    gameMap.getWallBlockUnsafe(x, y) = b;
                 }
             }
         }
@@ -806,32 +804,35 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 if (worldGen.generateCaves)
                 {
                     bool generateCave = (
-                        getFinalCaveNoise(x, y) < worldGen.maxCaveThreshold && getFinalCaveNoise(x, y) > worldGen.minCaveThreshold
+                        //getFinalCaveNoise(x, y) < worldGen.maxCaveThreshold && getFinalCaveNoise(x, y) > worldGen.minCaveThreshold
+                        getCaveNoise1(x, y) < worldGen.maxCaveThreshold && getCaveNoise1(x, y) > worldGen.minCaveThreshold
                     );
 
+                    if (!generateCave)
+                        continue;
+
                     // Prevent caves from opening up to the void / edge of the map
-                    if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1) {}
+                    if (y == HEIGHT - 1 || x == 0 || x == WIDTH - 1)
+                        continue;
+
                     // Cave generation
-                    else if (generateCave)
+                    Block b;
+                    b.type = Block::air;
+                    gameMap.getBlockUnsafe(x, y) = b;
+
+                    // The background block shouldn't be air in caves, but the foreground block should be air
+                    Block background;
+
+                    background = blockFor(biomeId[x], x, y);
+
+                    if (worldGen.blendBiomes)
                     {
-                        Block b;
-                        b.type = Block::air;
-                        gameMap.getBlockUnsafe(x, y) = b;
-
-                        // The background block shouldn't be air in caves, but the foreground block should be air
-                        Block background;
-
-                        background = blockFor(biomeId[x], x, y);
-
-                        if (worldGen.blendBiomes)
-                        {
-                            if (getRandomChance(rng, blendChance))
-                                background = blockFor(neighborBiome[x], x, y);
-                        }
-
-                        background.randIndex = getRandomInt(rng, 0, 3);
-                        gameMap.getWallBlockUnsafe(x, y) = background;
+                        if (getRandomChance(rng, blendChance))
+                            background = blockFor(neighborBiome[x], x, y);
                     }
+
+                    background.randIndex = getRandomInt(rng, 0, 3);
+                    gameMap.getWallBlockUnsafe(x, y) = background;
                 }
             }
         }
@@ -1053,6 +1054,6 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     FastNoiseSIMD::FreeNoiseSet(stoneMountainNoise);
     FastNoiseSIMD::FreeNoiseSet(terrainNoise);
     FastNoiseSIMD::FreeNoiseSet(caveNoise1);
-    FastNoiseSIMD::FreeNoiseSet(caveNoise2);
-    FastNoiseSIMD::FreeNoiseSet(caveSelectorNoise);
+    //FastNoiseSIMD::FreeNoiseSet(caveNoise2);
+    //FastNoiseSIMD::FreeNoiseSet(caveSelectorNoise);
 }

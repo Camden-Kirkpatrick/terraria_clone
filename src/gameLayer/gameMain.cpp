@@ -804,9 +804,11 @@ bool updateGame()
 							initGame(false, false);
 						}
 
-						//ImGui::Text("Cave octaves:");  ImGui::SameLine(); ImGui::SliderInt("##caveOctOct", &worldGen.caveOctaves, 1, 20);
+						ImGui::Text("Cave octaves:");  ImGui::SameLine();
+						if(ImGui::SliderInt("##caveOct", &worldGen.caveOctaves, 1, 10))
+							initGame(false, false);
 						ImGui::Text("Cave frequency:"); ImGui::SameLine();
-						if (ImGui::SliderFloat("##caveFreq", &worldGen.caveFrequency, 0.00001f, 0.1f, "%.5f"))
+						if (ImGui::SliderFloat("##caveFreq", &worldGen.caveFrequency, 0.00001f, 0.5f, "%.5f"))
 							initGame(false, false);
 
 						ImGui::Text("Min cave threshold:"); ImGui::SameLine();
@@ -814,6 +816,13 @@ bool updateGame()
 							initGame(false, false);
 						ImGui::Text("Max cave threshold:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##maxCaveThresh", &worldGen.maxCaveThreshold, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+
+						ImGui::Text("Cave open threshold:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##caveOpenThresh", &worldGen.caveOpenThreshold, 0.0f, 1.0f, "%.5f"))
+							initGame(false, false);
+						ImGui::Text("Max cave ceiling depth:"); ImGui::SameLine();
+						if (ImGui::SliderFloat("##maxCaveCeilingDepth", &worldGen.maxCaveCeilingDepth, 0.0f, 300.0f, "%.1f"))
 							initGame(false, false);
 
 						if (ImGui::Checkbox("Generate tunnels", &worldGen.generateWorms))

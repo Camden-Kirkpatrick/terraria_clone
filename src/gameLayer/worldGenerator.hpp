@@ -74,6 +74,10 @@ struct WorldGen
 	float caveFrequency;
 	float minCaveThreshold;
 	float maxCaveThreshold;
+	// Caves reach the surface where caveDepthNoise is above this threshold;
+	// below it, a solid cap covers them (ramping down to maxCaveCeilingDepth tiles thick).
+	float caveOpenThreshold;
+	float maxCaveCeilingDepth;
 
 	// Special block settings
 	// Ores

@@ -14,7 +14,8 @@
 [![Watch the video](https://img.youtube.com/vi/cEhbzT8-38I/maxresdefault.jpg)](https://www.youtube.com/watch?v=cEhbzT8-38I)
 ## Video (v1.5.0)
 [![Watch the video](https://img.youtube.com/vi/irFjFR9b87E/maxresdefault.jpg)](https://www.youtube.com/watch?v=irFjFR9b87E)
-
+## Video (v1.6.0)
+[![Watch the video](https://img.youtube.com/vi/yxPPpMebnrQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=yxPPpMebnrQ)
 
 ## Features
 - [x] Random world generation
@@ -31,7 +32,7 @@
 - [x] Copy/Paste blocks easily
 - [x] Save/Load structures to/from a file
 - [x] Tree generation
-- [ ] Procedural tree generation 
+- [x] Procedural tree generation 
 - [ ] Add more biomes
   - [x] Tundra
   - [ ] Jungle

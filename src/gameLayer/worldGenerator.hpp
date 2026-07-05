@@ -26,7 +26,10 @@ enum class Biome : uint8_t
 
 struct WorldGen
 {
-	int avgWorldHeight; // Calculated in generateWorld
+	// Calculated in generateWorld
+	int avgWorldHeight;
+	// Walls don't appear until past this threshold
+	int wallStartDepth;
 
 	// Terrain settings
 	int terrainOctaves;

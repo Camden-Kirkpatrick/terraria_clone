@@ -16,6 +16,7 @@ std::vector<float> savedTerrainNoise;
 void resetWorldGen()
 {
     worldGen.avgWorldHeight = 0;
+    worldGen.wallStartDepth = 10;
 
     // Terrain settings
     worldGen.terrainOctaves = 1;
@@ -729,7 +730,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 }
 
                 gameMap.getBlockUnsafe(x, y) = b;
-                gameMap.getWallBlockUnsafe(x, y) = b;
+                if (y >= dirtLayer[x] + worldGen.wallStartDepth)
+                    gameMap.getWallBlockUnsafe(x, y) = b;
             }
         }
     };
@@ -861,19 +863,22 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                     b.type = Block::air;
                     gameMap.getBlockUnsafe(x, y) = b;
 
-                    // The background block shouldn't be air in caves, but the foreground block should be air
-                    Block background;
-
-                    background = blockFor(biomeId[x], x, y);
-
-                    if (worldGen.blendBiomes)
+                    if (y >= dirtLayer[x] + worldGen.wallStartDepth)
                     {
-                        if (getRandomChance(rng, blendChance))
-                            background = blockFor(neighborBiome[x], x, y);
-                    }
+                        // The background block shouldn't be air in caves, but the foreground block should be air
+                        Block background;
 
-                    background.randIndex = getRandomInt(rng, 0, 3);
-                    gameMap.getWallBlockUnsafe(x, y) = background;
+                        background = blockFor(biomeId[x], x, y);
+
+                        if (worldGen.blendBiomes)
+                        {
+                            if (getRandomChance(rng, blendChance))
+                                background = blockFor(neighborBiome[x], x, y);
+                        }
+
+                        background.randIndex = getRandomInt(rng, 0, 3);
+                        gameMap.getWallBlockUnsafe(x, y) = background;
+                    }
                 }
             }
         }

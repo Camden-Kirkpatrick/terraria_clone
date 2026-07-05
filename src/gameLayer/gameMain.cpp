@@ -59,6 +59,13 @@ AssetManager assetManager; // Global asset manager instance to load and store te
 bool showImGui = true;
 bool showAdvancedSettings = false; // Hide or show certain settings
 
+// Shows a help tooltip for the most recently submitted widget when it is hovered.
+static void HelpTooltip(const char* text)
+{
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip("%s", text);
+}
+
 bool initGame(bool resetWorldGen, bool resetCamera)
 {
 	// Load assets (textures)
@@ -665,38 +672,44 @@ bool updateGame()
 				ImGui::BulletText("'-' / '=': zoom out / in");
 				ImGui::BulletText("'[' / ']': decrease / increase camera speed");
 
-				int cameraX = (int)gameData.camera.target.x;
-				if (cameraX >= 0 && cameraX < (int)savedTerrainNoise.size())
-				{
-					float bn = savedTerrainNoise[cameraX];
-					const char* branch =
-						(bn > worldGen.plainThreshold - worldGen.terrainBlendZone &&
-							bn < worldGen.plainThreshold + worldGen.terrainBlendZone) ? "BLEND" :
-						(bn < worldGen.plainThreshold) ? "PLAINS" : "MOUNTAINS";
-					ImGui::Text("Column %d  biomeNoise=%.5f  branch=%s", cameraX, bn, branch);
-				}
+				//int cameraX = (int)gameData.camera.target.x;
+				//if (cameraX >= 0 && cameraX < (int)savedTerrainNoise.size())
+				//{
+				//	float bn = savedTerrainNoise[cameraX];
+				//	const char* branch =
+				//		(bn > worldGen.plainThreshold - worldGen.terrainBlendZone &&
+				//			bn < worldGen.plainThreshold + worldGen.terrainBlendZone) ? "BLEND" :
+				//		(bn < worldGen.plainThreshold) ? "PLAINS" : "MOUNTAINS";
+				//	ImGui::Text("Column %d  biomeNoise=%.5f  branch=%s", cameraX, bn, branch);
+				//}
 
 				ImGui::SeparatorText("Camera");
 				ImGui::Text("Camera zoom:");  ImGui::SameLine(); ImGui::SliderFloat("##camZoom", &gameData.camera.zoom, MIN_CAM_ZOOM, MAX_CAM_ZOOM);
+				HelpTooltip("How far in the camera is zoomed. Higher = closer view.");
 				ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
+				HelpTooltip("How fast the camera pans with WASD.");
 
 				ImGui::SeparatorText("World");
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.85f, 0.4f, 1.0f));
+				ImGui::TextWrapped("Note: changing any world setting below regenerates the world, which may take a moment on large worlds.");
+				ImGui::PopStyleColor();
 				ImGui::Text("World width"); ImGui::SameLine();
 				if (ImGui::SliderInt("##worldWidth", &worldWidth, 25, 10000))
 					initGame(false, false);
+				HelpTooltip("Width of the world in blocks. Changing this regenerates the world.");
 				ImGui::Text("World height"); ImGui::SameLine();
 				if (ImGui::SliderInt("##worldHeight", &worldHeight, 375, 1000))
 					initGame(false, false);
+				HelpTooltip("Height of the world in blocks. Changing this regenerates the world.");
 				ImGui::Text("Seed:"); ImGui::SameLine();
 				if (ImGui::InputInt("##seed", &seed))
 					initGame(false, false);
+				HelpTooltip("Seed for the random number generator. The same seed with the same settings always produces the same world.");
 
 				ImGui::Text("Average world height: %d", worldGen.avgWorldHeight);
-
-				ImGui::Text("Wall start depth:"); ImGui::SameLine();
-				if (ImGui::SliderInt("##wallStart", &worldGen.wallStartDepth, 0, 500))
-					initGame(false, false);
+				HelpTooltip("Read-only: the mean surface height across every column, computed after generation.");
 				
+
 
 				ImGui::SeparatorText("Actions");
 				if (ImGui::Button("Reset world generation settings"))
@@ -727,24 +740,30 @@ bool updateGame()
 						ImGui::Text("Dirt mountain frequency:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##dirtMtnFreq", &worldGen.dirtMountainFrequency, 0.00001f, 0.1f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("How rapidly the mountain dirt surface rises and falls. Higher = bumpier, more frequent hills; lower = broader, smoother mountains.");
 
 						ImGui::Text("Min dirt mountain thickness:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##minDirtMtnThick", &worldGen.minDirtMountainThickness, 1, 50))
 							initGame(false, false);
+						HelpTooltip("Thinnest the dirt layer over stone can be on mountains (blocks).");
 						ImGui::Text("Max dirt mountain thickness:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##maxDirtMtnThick", &worldGen.maxDirtMountainThickness, 1, 50))
 							initGame(false, false);
+						HelpTooltip("Thickest the dirt layer over stone can be on mountains (blocks).");
 
 						//ImGui::Text("Stone mountain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnMtnOct", &worldGen.stoneMountainOctaves, 1, 20);
 						ImGui::Text("Stone mountain frequency:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##stnMtnFreq", &worldGen.stoneMountainFrequency, 0.00001f, 0.1f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("How rapidly the mountain stone surface height varies. Higher = jaggier stone; lower = smoother.");
 						ImGui::Text("Min stone mountain start:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##minStoneMtnStart", &worldGen.minStoneMountainStart, 330, 400))
 							initGame(false, false);
+						HelpTooltip("Highest the mountain stone surface can start, measured in blocks down from the top of the world. Smaller = taller peaks.");
 						ImGui::Text("Max stone mountain start:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##maxStoneMtnStart", &worldGen.maxStoneMountainStart, 330, 400))
 							initGame(false, false);
+						HelpTooltip("Lowest the mountain stone surface can start, in blocks down from the top. Larger = deeper base.");
 					}
 
 					if (ImGui::CollapsingHeader("Plains Settings"))
@@ -753,25 +772,31 @@ bool updateGame()
 						ImGui::Text("Dirt plain frequency:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##dirtPlnFreq", &worldGen.dirtPlainFrequency, 0.00001f, 0.1f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("How rapidly the plains dirt surface undulates. Higher = bumpier plains; lower = flatter.");
 
 						ImGui::Text("Min dirt plain thickness:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##minDirtPlnThick", &worldGen.minDirtPlainThickness, 1, 50))
 							initGame(false, false);
+						HelpTooltip("Thinnest the dirt layer over stone can be on plains (blocks).");
 						ImGui::Text("Max dirt plain thickness:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##maxDirtPlnThick", &worldGen.maxDirtPlainThickness, 1, 50))
 							initGame(false, false);
+						HelpTooltip("Thickest the dirt layer over stone can be on plains (blocks).");
 
 						//ImGui::Text("Stone plain octaves:");  ImGui::SameLine(); ImGui::SliderInt("##stnPlnOct", &worldGen.stonePlainOctaves, 1, 20);
 						ImGui::Text("Stone plain frequency:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##stnPlnFreq", &worldGen.stonePlainFrequency, 0.00001f, 0.1f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("How rapidly the plains stone surface height varies.");
 
 						ImGui::Text("Min stone plain start:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##minStonePlnStart", &worldGen.minStonePlainStart, 330, 400))
 							initGame(false, false);
+						HelpTooltip("Highest the plains stone surface can start, in blocks down from the top. Smaller = higher ground.");
 						ImGui::Text("Max stone plain start:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##maxStonePlnStart", &worldGen.maxStonePlainStart, 330, 400))
 							initGame(false, false);
+						HelpTooltip("Lowest the plains stone surface can start, in blocks down from the top.");
 					}
 
 					if (ImGui::CollapsingHeader("Terrain and Biome Settings"))
@@ -780,28 +805,35 @@ bool updateGame()
 						ImGui::Text("Terrain frequency:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##terrFreq", &worldGen.terrainFrequency, 0.00001f, 0.01f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("How often terrain switches between plains and mountains across the world. Higher = alternates more often; lower = large continuous regions.");
 						ImGui::Text("Terrain blend zone:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##terrBlendZone", &worldGen.terrainBlendZone, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Width of the transition band between plains and mountains. Wider = longer, gentler slopes between them.");
 
 						ImGui::Text("Min desert threshold:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##minDesThresh", &worldGen.minDesertThreshold, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Lower edge of the biome-noise band that becomes desert.");
 						ImGui::Text("Max desert threshold:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##maxDesThresh", &worldGen.maxDesertThreshold, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Upper edge of the biome-noise band that becomes desert. The wider the min-max band, the more desert.");
 
 						//ImGui::Text("Biome octaves:");  ImGui::SameLine(); ImGui::SliderInt("##bioOct", &worldGen.desertOctaves, 1, 20);
 						ImGui::Text("Biome frequency:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##desFreq", &worldGen.biomeFrequency, 0.00001f, 0.1f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Size of biome regions. Higher = smaller, more frequent biomes; lower = large sprawling ones.");
 
 						if (ImGui::Checkbox("Blend biomes", &worldGen.blendBiomes))
 							initGame(false, false);
+						HelpTooltip("Fade blocks across biome borders instead of a hard edge.");
 
 						ImGui::Text("Biome blend radius:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##bioBlendRad", &worldGen.biomeBlendRadius, 0, 200))
 							initGame(false, false);
+						HelpTooltip("How many blocks wide the fade between neighboring biomes is (requires \"Blend biomes\").");
 					}
 
 					if (ImGui::CollapsingHeader("Cave and Tunnel Settings"))
@@ -810,34 +842,48 @@ bool updateGame()
 						{
 							initGame(false, false);
 						}
+						HelpTooltip("Toggle cave generation.");
 
-						ImGui::Text("Cave octaves:");  ImGui::SameLine();
-						if(ImGui::SliderInt("##caveOct", &worldGen.caveOctaves, 1, 10))
+						ImGui::Text("Wall start depth:"); ImGui::SameLine();
+						if (ImGui::SliderInt("##wallStart", &worldGen.wallStartDepth, 0, 500))
 							initGame(false, false);
+						HelpTooltip("How many blocks below each column's surface the background wall begins. Lower = walls closer to the surface; the top blocks stay wall-free so surface caves open to the sky.");
+
+						//ImGui::Text("Cave octaves:");  ImGui::SameLine();
+						//if(ImGui::SliderInt("##caveOct", &worldGen.caveOctaves, 1, 10))
+						//	initGame(false, false);
+						//HelpTooltip("Roughness of cave edges. Higher = rougher, more jagged; lower = smoother, rounder.");
 						ImGui::Text("Cave frequency:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##caveFreq", &worldGen.caveFrequency, 0.00001f, 0.5f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Scale of caves. Lower = large sprawling caverns; higher = small, dense, scattered pockets.");
 
 						ImGui::Text("Min cave threshold:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##minCaveThresh", &worldGen.minCaveThreshold, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Lower edge of the noise band that becomes a cave. The gap between min and max controls how open caves are.");
 						ImGui::Text("Max cave threshold:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##maxCaveThresh", &worldGen.maxCaveThreshold, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Upper edge of the noise band that becomes a cave. Wide min-max = open caverns; narrow = thin tunnels.");
 
 						ImGui::Text("Cave open threshold:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##caveOpenThresh", &worldGen.caveOpenThreshold, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("How often caves break through to the surface. Higher = rarer surface openings; at 1.0 the surface stays sealed.");
 						ImGui::Text("Max cave ceiling depth:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##maxCaveCeilingDepth", &worldGen.maxCaveCeilingDepth, 0.0f, 300.0f, "%.1f"))
 							initGame(false, false);
+						HelpTooltip("In capped columns, the thickest layer of solid ground above the caves (blocks). Larger = caves start deeper below the surface.");
 
 						if (ImGui::Checkbox("Generate tunnels", &worldGen.generateWorms))
 						{
 							initGame(false, false);
 						}
+						HelpTooltip("Toggle tunnel generation.");
 
 						ImGui::Text("Current number of tunnels: %d", worldGen.curNumWorms);
+						HelpTooltip("Read-only: how many tunnels were carved in the current world.");
 
 						ImGui::Text("Min tunnel length:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##minTunlLen", &worldGen.minWormLength, 50, 500))
@@ -847,13 +893,15 @@ bool updateGame()
 								worldGen.maxWormLength = worldGen.minWormLength;
 							initGame(false, false);
 						}
-						ImGui::Text("Max tunnel width:"); ImGui::SameLine();
+						HelpTooltip("Shortest a tunnel can be, in steps.");
+						ImGui::Text("Max tunnel length:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##maxTunlLen", &worldGen.maxWormLength, 50, 500))
 						{
 							if (worldGen.maxWormLength < worldGen.minWormLength)
 								worldGen.minWormLength = worldGen.maxWormLength;
 							initGame(false, false);
 						}
+						HelpTooltip("Longest a tunnel can be, in steps.");
 
 						ImGui::Text("Min tunnel width:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##minTunlWidth", &worldGen.minWormWidth, 1, 20))
@@ -863,6 +911,7 @@ bool updateGame()
 								worldGen.maxWormWidth = worldGen.minWormWidth;
 							initGame(false, false);
 						}
+						HelpTooltip("Narrowest a tunnel can be, in blocks.");
 						ImGui::Text("Max tunnel width:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##maxTunlWidth", &worldGen.maxWormWidth, 1, 20))
 						{
@@ -870,6 +919,7 @@ bool updateGame()
 								worldGen.minWormWidth = worldGen.maxWormWidth;
 							initGame(false, false);
 						}
+						HelpTooltip("Widest a tunnel can be, in blocks.");
 
 						ImGui::Text("Min tunnel turn angle:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##minTunlAngle", &worldGen.minWormTurnAngle, -0.2f, 0.2f))
@@ -879,6 +929,7 @@ bool updateGame()
 								worldGen.maxWormTurnAngle = worldGen.minWormTurnAngle;
 							initGame(false, false);
 						}
+						HelpTooltip("Sharpest turn a tunnel can make toward one side each step. Wider range = twistier tunnels.");
 						ImGui::Text("Max tunnel turn angle:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##maxTunlAngle", &worldGen.maxWormTurnAngle, -0.2f, 0.2f))
 						{
@@ -886,48 +937,60 @@ bool updateGame()
 								worldGen.minWormTurnAngle = worldGen.maxWormTurnAngle;
 							initGame(false, false);
 						}
+						HelpTooltip("Sharpest turn a tunnel can make toward the other side each step. Narrow range = smoother sweeping curves.");
 					}
 
 					if (ImGui::CollapsingHeader("Special Material Settings"))
 					{
 						if (ImGui::Checkbox("Generate ore", &worldGen.generateOre))
 							initGame(false, false);
+						HelpTooltip("Toggle ore generation.");
 						ImGui::Text("Ore threshold:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##oreThresh", &worldGen.oreThreshold, 0, 499))
 							initGame(false, false);
+						HelpTooltip("Highest point ores can appear, in blocks down from the top. Larger = ores restricted to deeper down.");
 						ImGui::Text("Gold chance:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##gldChance", &worldGen.goldChance, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Per-eligible-block chance to place gold.");
 						ImGui::Text("Iron chance:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##irnChance", &worldGen.ironChance, 1.0f, 0.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Per-eligible-block chance to place iron.");
 						ImGui::Text("Copper chance:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##copChance", &worldGen.copperChance, 1.0f, 0.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Per-eligible-block chance to place copper.");
 
 						ImGui::Text("Ruby threshold:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##rubThresh", &worldGen.rubyThreshold, 0, 499))
 							initGame(false, false);
+						HelpTooltip("Depth (blocks down from the top) below which rubies and sapphires can appear.");
 						ImGui::Text("Ruby chance:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##rubChance", &worldGen.rubyChance, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Per-eligible-block chance to place a ruby or sapphire.");
 
 						ImGui::Text("Clay threshold:"); ImGui::SameLine();
 						if (ImGui::SliderInt("##clyThresh", &worldGen.clayThreshold, 0, 499))
 							initGame(false, false);
+						HelpTooltip("Depth (blocks down from the top) below which clay can replace dirt.");
 						ImGui::Text("Clay chance:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##clyChance", &worldGen.clayChance, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Chance for clay instead of dirt below the clay threshold.");
 					}
 
 					if (ImGui::CollapsingHeader("Tree Settings"))
 					{
 						if (ImGui::Checkbox("Generate trees", &worldGen.generateTrees))
 							initGame(false, false);
+						HelpTooltip("Toggle tree generation.");
 
 						ImGui::Text("Tree spawn chance:"); ImGui::SameLine();
 						if (ImGui::SliderFloat("##treeSpnChance", &worldGen.treeSpawnChance, 0.0f, 1.0f, "%.5f"))
 							initGame(false, false);
+						HelpTooltip("Per-surface-column chance to place a tree.");
 					}
 				}
 

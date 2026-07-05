@@ -26,6 +26,8 @@ enum class Biome : uint8_t
 
 struct WorldGen
 {
+	int avgWorldHeight; // Calculated in generateWorld
+
 	// Terrain settings
 	int terrainOctaves;
 	float terrainFrequency;

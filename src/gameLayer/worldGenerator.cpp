@@ -15,6 +15,13 @@ std::vector<float> savedTerrainNoise;
 
 void resetWorldGen()
 {
+    worldGen.avgWorldHeight = 0;
+
+    // Terrain settings
+    worldGen.terrainOctaves = 1;
+    worldGen.terrainFrequency = 0.002f;
+    worldGen.terrainBlendZone = 0.045f;
+
     // Mountain settings
     // Noise generation settings
     worldGen.dirtMountainOctaves = 1;              // 1 octave = smooth gentle hills
@@ -26,8 +33,6 @@ void resetWorldGen()
     worldGen.maxDirtMountainThickness = 50;        // Maximum blocks of dirt above stone
     worldGen.minStoneMountainStart = 330;          // Stone layer is at least this many blocks from the top
     worldGen.maxStoneMountainStart = 400;          // The top of the stone layer is at most this many blocks from the top
-
-    worldGen.terrainBlendZone = 0.045f;
 
     // Plain settings
     // Noise generation settings
@@ -41,10 +46,6 @@ void resetWorldGen()
     worldGen.maxDirtPlainThickness = 10;
     worldGen.minStonePlainStart = 330;
     worldGen.maxStonePlainStart = 340;
-
-    // Terrain settings
-    worldGen.terrainOctaves = 1;
-    worldGen.terrainFrequency = 0.002f;
 
     // Biome settings
     worldGen.biomeOctaves = 1;
@@ -751,8 +752,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
                 for (int y = worldGen.oreThreshold; y < HEIGHT; y++)
                 {
                     Block b;
-                    bool generateIronOre = false;;
-                    bool generateGoldOre = false;;
+                    bool generateIronOre = false;
+                    bool generateGoldOre = false;
                     bool generateCopperOre = false;
 
                     // Since gold and iron generate when the noise is low (gold), or high (iron), they generate in their own veins
@@ -812,7 +813,7 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
             // Decide how far below the surface this column starts carving caves, so
             // caves only sometimes break through to the surface instead of everywhere.
             // caveDepthNoise is a low-frequency, per-column value in [0, 1]:
-            //   - high noise (>= caveOpenThreshold) -> column is "open", caves reach the surface
+            //   - high noise (>= caveOpenThreshold) -> column is "open", caves can reach the surface
             //   - low  noise                        -> column is "capped" by solid ground
             //
             // t is the cap amount as a 0..1 weight. Subtracting the noise from the
@@ -1079,6 +1080,14 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     // Generate the world
     generateStoneLayer();
     generateDirtLayer();
+
+    int totalHeight = 0;
+
+    for (int x = 0; x < WIDTH; x++)
+        totalHeight += dirtLayer[x];
+
+    worldGen.avgWorldHeight = std::round((float)totalHeight / WIDTH);
+
     generateBiome(Biome::Grasslands);
     generateBiome(Biome::Desert);
     generateBiome(Biome::Tundra);

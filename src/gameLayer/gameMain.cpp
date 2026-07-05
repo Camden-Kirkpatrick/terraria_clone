@@ -691,6 +691,8 @@ bool updateGame()
 				if (ImGui::InputInt("##seed", &seed))
 					initGame(false, false);
 
+				ImGui::Text("Average world height: %d", worldGen.avgWorldHeight);
+
 				ImGui::SeparatorText("Actions");
 				if (ImGui::Button("Reset world generation settings"))
 				{

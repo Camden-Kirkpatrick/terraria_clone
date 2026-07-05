@@ -693,6 +693,11 @@ bool updateGame()
 
 				ImGui::Text("Average world height: %d", worldGen.avgWorldHeight);
 
+				ImGui::Text("Wall start depth:"); ImGui::SameLine();
+				if (ImGui::SliderInt("##wallStart", &worldGen.wallStartDepth, 0, 500))
+					initGame(false, false);
+				
+
 				ImGui::SeparatorText("Actions");
 				if (ImGui::Button("Reset world generation settings"))
 				{

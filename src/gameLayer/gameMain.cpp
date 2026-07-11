@@ -230,33 +230,43 @@ bool updateGame()
 		gameData.hoverMode = GameData::HoverMode::blockLayer;
 
 #pragma region place_break_blocks
+	static const int BLOCK_INTERACT_DIST = 5;
 	// Don't allow placing and breaking blocks while the ImGui menu is shown
 	if (!showImGui)
 	{
+		// Only allow interacting within BLOCK_INTERACT_DIST blocks of the screen center.
+		// camera.target is the world point under the screen center (offset == screen center).
+		// Compare squared distances to avoid a sqrt. mousePos is computed once at the top of update().
+		bool inReach = Vector2DistanceSqr(mousePos, gameData.camera.target)
+			<= BLOCK_INTERACT_DIST * BLOCK_INTERACT_DIST;
+
 		// Remove a block
 		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && blockX < worldWidth && blockY < worldHeight)
 		{
-			// Wall blocks
-			if (shiftDown)
+			if (inReach)
 			{
-				Block* b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
-				if (b)
-					*b = {};
-			}
-			else
-			{
-				Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
-
-				// ----- Special Case for Doors ----
-				// Block above the current block
-				Block* b0 = gameData.gameMap.getBlockSafe(blockX, blockY - 1);
-				// Pressing left click on the bottom block of the door, also breaks the door
-				if (b0->type == Block::door)
-					*b0 = {};
-				// ----------------------------------
-				// Break normal block
+				// Wall blocks
+				if (shiftDown)
+				{
+					Block* b = gameData.gameMap.getWallBlockSafe(blockX, blockY);
+					if (b)
+						*b = {};
+				}
 				else
-					*b = {};
+				{
+					Block* b = gameData.gameMap.getBlockSafe(blockX, blockY);
+
+					// ----- Special Case for Doors ----
+					// Block above the current block
+					Block* b0 = gameData.gameMap.getBlockSafe(blockX, blockY - 1);
+					// Pressing left click on the bottom block of the door, also breaks the door
+					if (b0->type == Block::door)
+						*b0 = {};
+					// ----------------------------------
+					// Break normal block
+					else
+						*b = {};
+				}
 			}
 		}
 
@@ -267,69 +277,72 @@ bool updateGame()
 		// Place a block
 		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
 		{
-			// If the cursor is on a new block, place it with a fresh random texture
-			if (blockX != lastPlacedX || blockY != lastPlacedY)
+			if (inReach)
 			{
-				lastPlacedX = blockX;
-				lastPlacedY = blockY;
-
-				// Wall blocks
-				if (shiftDown)
+				// If the cursor is on a new block, place it with a fresh random texture
+				if (blockX != lastPlacedX || blockY != lastPlacedY)
 				{
-					// More than one block may be placed depending on the blockShape
-					for (int x = 0; x < gameData.blockShape.x; x++)
+					lastPlacedX = blockX;
+					lastPlacedY = blockY;
+
+					// Wall blocks
+					if (shiftDown)
 					{
-						for (int y = 0; y < gameData.blockShape.y; y++)
+						// More than one block may be placed depending on the blockShape
+						for (int x = 0; x < gameData.blockShape.x; x++)
 						{
-							Block* b = gameData.gameMap.getWallBlockSafe(blockX + x, blockY + y);
-							if (b)
+							for (int y = 0; y < gameData.blockShape.y; y++)
 							{
-								b->type = gameData.curBlock;
-								b->randIndex = std::rand() % 4; // Pick a random texture when placing a block
+								Block* b = gameData.gameMap.getWallBlockSafe(blockX + x, blockY + y);
+								if (b)
+								{
+									b->type = gameData.curBlock;
+									b->randIndex = std::rand() % 4; // Pick a random texture when placing a block
+								}
 							}
 						}
 					}
-				}
-				// Normal blocks
-				else
-				{
-					// ----- Special Case for Doors ----
-					bool isDoor = gameData.curBlock == Block::door;
-					int stopY = gameData.blockShape.y;
-					int incY = 1;
-
-					// If the current block is a door, and we want to draw an area of doors, then we have to get a 1x2 area
-					if (isDoor)
+					// Normal blocks
+					else
 					{
-						stopY = gameData.blockShape.y * 2;
-						incY = 2;
-					}
-					// ----------------------------------
+						// ----- Special Case for Doors ----
+						bool isDoor = gameData.curBlock == Block::door;
+						int stopY = gameData.blockShape.y;
+						int incY = 1;
 
-					for (int x = 0; x < gameData.blockShape.x; x++)
-					{
-						for (int y = 0; y < stopY; y += incY)
+						// If the current block is a door, and we want to draw an area of doors, then we have to get a 1x2 area
+						if (isDoor)
 						{
-							Block* b = gameData.gameMap.getBlockSafe(blockX + x, blockY + y);
-							if (b)
+							stopY = gameData.blockShape.y * 2;
+							incY = 2;
+						}
+						// ----------------------------------
+
+						for (int x = 0; x < gameData.blockShape.x; x++)
+						{
+							for (int y = 0; y < stopY; y += incY)
 							{
-								b->type = gameData.curBlock;
-								b->randIndex = gameData.nextBlockVariant;
+								Block* b = gameData.gameMap.getBlockSafe(blockX + x, blockY + y);
+								if (b)
+								{
+									b->type = gameData.curBlock;
+									b->randIndex = gameData.nextBlockVariant;
 
-								if (isDoor) 
-									gameData.nextBlockVariant = std::rand() % 2; // doors only have 2 variations
-								else
-									gameData.nextBlockVariant = std::rand() % 4;
+									if (isDoor)
+										gameData.nextBlockVariant = std::rand() % 2; // doors only have 2 variations
+									else
+										gameData.nextBlockVariant = std::rand() % 4;
 
-								// Don't allow a door to be on the bottom half of another door
-								Block* b0 = gameData.gameMap.getBlockSafe(blockX + x, blockY - 1 + y);
-								if (b0 && b0->type == Block::door)
-									*b0 = {};
+									// Don't allow a door to be on the bottom half of another door
+									Block* b0 = gameData.gameMap.getBlockSafe(blockX + x, blockY - 1 + y);
+									if (b0 && b0->type == Block::door)
+										*b0 = {};
 
-								// Don't allow another block to be on the bottom half of a door
-								Block *b1 = gameData.gameMap.getBlockSafe(blockX + x, blockY + 1 + y);
-								if (b1 && isDoor)
-									*b1 = {};
+									// Don't allow another block to be on the bottom half of a door
+									Block* b1 = gameData.gameMap.getBlockSafe(blockX + x, blockY + 1 + y);
+									if (b1 && isDoor)
+										*b1 = {};
+								}
 							}
 						}
 					}
@@ -679,6 +692,12 @@ bool updateGame()
 		DrawRectangleLinesEx(test2.getAABB(), 0.1f, RED);
 	}
 
+	Transform2D middle;
+	middle.pos = { gameData.camera.target.x, gameData.camera.target.y };
+	middle.w = 1;
+	middle.h = 1;
+
+	DrawRectangleLinesEx(middle.getAABB(), 0.1f, ORANGE);
 
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.

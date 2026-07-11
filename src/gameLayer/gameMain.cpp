@@ -658,10 +658,26 @@ bool updateGame()
 	test.w = 1;
 	test.h = 1;
 
-	if (test.intersectPoint(mousePos))
+	Transform2D test2;
+	test2.pos = mousePos;
+	test2.w = 1;
+	test2.h = 1;
+
+	//if (test.intersectPoint(mousePos))
+	//	DrawRectangleLinesEx(test.getAABB(), 0.1f, GREEN);
+	//else
+	//	DrawRectangleLinesEx(test.getAABB(), 0.1f, BLUE);
+
+	if (test.intersectTransform(test2))
+	{
 		DrawRectangleLinesEx(test.getAABB(), 0.1f, GREEN);
+		DrawRectangleLinesEx(test2.getAABB(), 0.1f, GREEN);
+	}
 	else
+	{
 		DrawRectangleLinesEx(test.getAABB(), 0.1f, BLUE);
+		DrawRectangleLinesEx(test2.getAABB(), 0.1f, RED);
+	}
 
 
 

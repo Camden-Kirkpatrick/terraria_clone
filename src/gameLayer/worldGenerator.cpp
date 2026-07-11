@@ -451,8 +451,8 @@ void generateWorld(GameMap& gameMap, const int WIDTH, const int HEIGHT, int seed
     {
         return caveSelectorNoise[WIDTH * y + x];
     };
-     //Blend the two cave shapes per-tile using the selector as the lerp weight.
-     //Then a single band threshold on the result carves the actual caves.
+    // Blend the two cave shapes per-tile using the selector as the lerp weight.
+    // Then a single band threshold on the result carves the actual caves.
     auto getFinalCaveNoise = [&](int x, int y)
     {
         return lerp(getCaveNoise1(x, y), getCaveNoise2(x, y), getCaveSelectorNoise(x, y));

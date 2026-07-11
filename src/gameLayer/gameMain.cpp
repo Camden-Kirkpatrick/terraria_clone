@@ -6,6 +6,7 @@
 #include "worldGenerator.hpp"
 #include "structure.hpp"
 #include "saveMap.hpp"
+#include "physics.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <imgui.h>
@@ -120,9 +121,9 @@ bool updateGame()
 
 
 	// This is used to show which block the mouse is hovered on (selection frame)
-	Vector2 worldPos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
-	int blockX = (int)floor(worldPos.x);
-	int blockY = (int)floor(worldPos.y);
+	Vector2 mousePos = GetScreenToWorld2D(GetMousePosition(), gameData.camera);
+	int blockX = (int)floor(mousePos.x);
+	int blockY = (int)floor(mousePos.y);
 
 	// Select the block the mouse/selection frame is hovering over
 	if (IsMouseButtonPressed(MOUSE_BUTTON_MIDDLE))
@@ -649,6 +650,18 @@ bool updateGame()
 
 		DrawRectangleLinesEx(rect, 0.1f, { 20, 101, 250, 145 });
 	}
+
+
+
+	Transform2D test;
+	test.pos = { 5000.5f, 335.5f };
+	test.w = 1;
+	test.h = 1;
+
+	if (test.intersectPoint(mousePos))
+		DrawRectangleLinesEx(test.getAABB(), 0.1f, GREEN);
+	else
+		DrawRectangleLinesEx(test.getAABB(), 0.1f, BLUE);
 
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.

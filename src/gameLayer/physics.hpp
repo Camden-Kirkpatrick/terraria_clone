@@ -16,4 +16,40 @@ struct Transform2D
 	Vector2 getTopRight()		const { return { pos.x + w * 0.5f, pos.y - h * 0.5f }; }
 	Vector2 getBottomLeft()		const { return { pos.x - w * 0.5f, pos.y + h * 0.5f }; }
 	Vector2 getBottomRight()	const { return { pos.x + w * 0.5f, pos.y + h * 0.5f }; }
+
+	// Get the top-left corner of the entity
+	// AABB = Axis Aligned Bounding Box (Outline box around the entity)
+	Rectangle getAABB()
+	{
+		return { pos.x - w * 0.5f, pos.y - h * 0.5f, w, h };
+	}
+
+	bool intersectPoint(Vector2 point, float delta = 0)
+	{
+		Rectangle aabb = getAABB();
+		aabb.x -= delta;
+		aabb.y -= delta;
+		aabb.width += 2 * delta;
+		aabb.height += 2 * delta;
+
+		return CheckCollisionPointRec(point, aabb);
+	}
+
+	bool intersectTransform(Transform2D other, float delta = 0)
+	{
+		Rectangle a = getAABB();
+		Rectangle b = other.getAABB();
+
+		a.x -= delta;
+		a.y -= delta;
+		a.width += 2 * delta;
+		a.height += 2 * delta;
+
+		b.x -= delta;
+		b.y -= delta;
+		b.width += 2 * delta;
+		b.height += 2 * delta;
+
+		return CheckCollisionRecs(a, b);
+	}
 };

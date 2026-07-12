@@ -240,6 +240,8 @@ bool updateGame()
 		bool inReach = Vector2DistanceSqr(mousePos, gameData.camera.target)
 			<= BLOCK_INTERACT_DIST * BLOCK_INTERACT_DIST;
 
+		inReach = true; // Disable limited-distance block interaction
+
 		// Remove a block
 		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && blockX < worldWidth && blockY < worldHeight)
 		{
@@ -666,38 +668,32 @@ bool updateGame()
 
 
 
-	Transform2D test;
-	test.pos = { 5000.5f, 335.5f };
-	test.w = 1;
-	test.h = 1;
+	//Transform2D test;
+	//test.pos = { 5000.5f, 335.5f };
+	//test.w = 1;
+	//test.h = 1;
 
-	Transform2D test2;
-	test2.pos = mousePos;
-	test2.w = 1;
-	test2.h = 1;
+	//Transform2D test2;
+	//test2.pos = mousePos;
+	//test2.w = 1;
+	//test2.h = 1;
 
 	//if (test.intersectPoint(mousePos))
 	//	DrawRectangleLinesEx(test.getAABB(), 0.1f, GREEN);
 	//else
 	//	DrawRectangleLinesEx(test.getAABB(), 0.1f, BLUE);
 
-	if (test.intersectTransform(test2))
-	{
-		DrawRectangleLinesEx(test.getAABB(), 0.1f, GREEN);
-		DrawRectangleLinesEx(test2.getAABB(), 0.1f, GREEN);
-	}
-	else
-	{
-		DrawRectangleLinesEx(test.getAABB(), 0.1f, BLUE);
-		DrawRectangleLinesEx(test2.getAABB(), 0.1f, RED);
-	}
+	//if (test.intersectTransform(test2))
+	//{
+	//	DrawRectangleLinesEx(test.getAABB(), 0.1f, GREEN);
+	//	DrawRectangleLinesEx(test2.getAABB(), 0.1f, GREEN);
+	//}
+	//else
+	//{
+	//	DrawRectangleLinesEx(test.getAABB(), 0.1f, BLUE);
+	//	DrawRectangleLinesEx(test2.getAABB(), 0.1f, RED);
+	//}
 
-	Transform2D middle;
-	middle.pos = { gameData.camera.target.x, gameData.camera.target.y };
-	middle.w = 1;
-	middle.h = 1;
-
-	DrawRectangleLinesEx(middle.getAABB(), 0.1f, ORANGE);
 
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.

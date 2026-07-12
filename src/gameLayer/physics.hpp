@@ -1,5 +1,97 @@
 #pragma once
 #include <raylib.h>
+#include <raymath.h>
+
+
+
+// Vector2 operator overloads
+inline Vector2 operator+(const Vector2& a, const Vector2& b)
+{
+	return { a.x + b.x, a.y + b.y };
+}
+
+inline Vector2 operator-(const Vector2& a, const Vector2& b)
+{
+	return { a.x - b.x, a.y - b.y };
+}
+
+inline Vector2 operator*(const Vector2& a, float scalar)
+{
+	return { a.x * scalar, a.y * scalar };
+}
+
+inline Vector2 operator/(const Vector2& a, float scalar)
+{
+	return { a.x / scalar, a.y / scalar };
+}
+
+inline Vector2& operator*=(Vector2& a, float scalar)
+{
+	a.x *= scalar;
+	a.y *= scalar;
+	return a;
+}
+
+inline Vector2& operator/=(Vector2& a, float scalar)
+{
+	a.x /= scalar;
+	a.y /= scalar;
+	return a;
+}
+
+inline Vector2& operator+=(Vector2& a, float scalar)
+{
+	a.x += scalar;
+	a.y += scalar;
+	return a;
+}
+
+inline Vector2& operator-=(Vector2& a, float scalar)
+{
+	a.x -= scalar;
+	a.y -= scalar;
+	return a;
+}
+
+
+inline bool operator==(const Vector2& a, const Vector2& b)
+{
+	return a.x == b.x && a.y == b.y;
+}
+
+inline bool operator!=(const Vector2& a, const Vector2& b)
+{
+	return !(a == b);
+}
+
+inline Vector2& operator+=(Vector2& a, const Vector2& b)
+{
+	a.x += b.x;
+	a.y += b.y;
+	return a;
+}
+
+inline Vector2& operator-=(Vector2& a, const Vector2& b)
+{
+	a.x -= b.x;
+	a.y -= b.y;
+	return a;
+}
+
+inline Vector2& operator*=(Vector2& a, const Vector2& b)
+{
+	a.x *= b.x;
+	a.y *= b.y;
+	return a;
+}
+
+inline Vector2& operator/=(Vector2& a, const Vector2& b)
+{
+	a.x /= b.x;
+	a.y /= b.y;
+	return a;
+}
+
 
 struct Transform2D
 {
@@ -51,5 +143,46 @@ struct Transform2D
 		b.height += 2 * delta;
 
 		return CheckCollisionRecs(a, b);
+	}
+};
+
+struct PhysicalEntity
+{
+	Transform2D transform; // position and size
+	Vector2 lastPosition = {}; // movement direction = new position - old position
+
+	Vector2 velocity = {};
+	Vector2 acceleration = {};
+
+	void teleport(Vector2 pos)
+	{
+		transform.pos = pos;
+		lastPosition = pos;
+	}
+
+	void updateForces(float deltaTime)
+	{
+		velocity += acceleration * deltaTime;
+		transform.pos += velocity * deltaTime;
+
+		Vector2 dragVector = Vector2{ velocity.x * std::abs(velocity.x),
+									  velocity.y * std::abs(velocity.y) };
+		float drag = 0.01f;
+
+		if (Vector2Length(dragVector) * drag * deltaTime > Vector2Length(velocity))
+			velocity = {};
+		else
+			velocity -= dragVector * drag * deltaTime;
+
+		if (Vector2Length(velocity) < 0.01f)
+			velocity = {};
+
+		acceleration = {};
+	}
+
+	// Called at the end of the frame
+	void updateFinal()
+	{
+		lastPosition = { transform.pos.x, transform.pos.y };
 	}
 };

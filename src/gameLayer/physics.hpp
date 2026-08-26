@@ -1,6 +1,7 @@
 #pragma once
 #include <raylib.h>
 #include <raymath.h>
+#include <cstdlib>
 
 
 
@@ -99,7 +100,8 @@ struct Transform2D
 	float w = 0;
 	float h = 0;
 
-	Vector2 getCenter()			const { return { pos.x, pos.y }; }
+	// Get different points of the entities bounding box
+	Vector2 getCenter()			const { return { pos.x, pos.y }; } // default position
 	Vector2 getTop()			const { return { pos.x, pos.y - h * 0.5f }; }
 	Vector2 getBottom()			const { return { pos.x, pos.y + h * 0.5f}; }
 	Vector2 getLeft()			const { return { pos.x - w * 0.5f, pos.y }; }
@@ -111,6 +113,7 @@ struct Transform2D
 
 	// Get the top-left corner of the entity
 	// AABB = Axis Aligned Bounding Box (Outline box around the entity)
+	// Used for rendering the sprite, since rendering starts at the top-left of the entity
 	Rectangle getAABB()
 	{
 		return { pos.x - w * 0.5f, pos.y - h * 0.5f, w, h };
@@ -119,6 +122,7 @@ struct Transform2D
 	bool intersectPoint(Vector2 point, float delta = 0)
 	{
 		Rectangle aabb = getAABB();
+		// delta will be useful to change the size
 		aabb.x -= delta;
 		aabb.y -= delta;
 		aabb.width += 2 * delta;
@@ -127,6 +131,7 @@ struct Transform2D
 		return CheckCollisionPointRec(point, aabb);
 	}
 
+	// Check to see if two AABB intersect
 	bool intersectTransform(Transform2D other, float delta = 0)
 	{
 		Rectangle a = getAABB();
@@ -165,15 +170,24 @@ struct PhysicalEntity
 		velocity += acceleration * deltaTime;
 		transform.pos += velocity * deltaTime;
 
+		// Apply a drag force so that the object's velocity eventually reaches zero
+		// Quadratic drag: v * |v| gives an opposing force that scales with
+		// speed squared and keeps velocity's sign, so subtracting it below
+		// always pushes back toward zero.
 		Vector2 dragVector = Vector2{ velocity.x * std::abs(velocity.x),
 									  velocity.y * std::abs(velocity.y) };
 		float drag = 0.01f;
 
+		// Amount of velocity drag would remove this frame = dragVector * drag * deltaTime.
+		// If that's larger than the velocity we have left, subtracting it would
+		// overshoot past zero and push us backwards, so just clamp to a full stop.
 		if (Vector2Length(dragVector) * drag * deltaTime > Vector2Length(velocity))
 			velocity = {};
 		else
 			velocity -= dragVector * drag * deltaTime;
 
+		// At very low speeds v^2 is tiny, so drag can never quite reach zero and
+		// the object drifts forever. Snap to rest once we're crawling slow enough.
 		if (Vector2Length(velocity) < 0.01f)
 			velocity = {};
 

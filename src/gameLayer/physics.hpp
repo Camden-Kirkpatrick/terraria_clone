@@ -199,4 +199,9 @@ struct PhysicalEntity
 	{
 		lastPosition = { transform.pos.x, transform.pos.y };
 	}
+
+	Vector2& getPosition()
+	{
+		return transform.pos;
+	}
 };

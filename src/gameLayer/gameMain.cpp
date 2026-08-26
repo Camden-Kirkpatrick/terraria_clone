@@ -51,7 +51,10 @@ struct GameData
 	char structureFile[100] = {}; // Name of the file the structure is saved to/loaded from
 	bool previewStructure = true; // Show a preview of the structure before it's placed
 	bool previewSelection = true; // Show the selection outline rectangle
+
+	PhysicalEntity player;
 } gameData;
+
 
 AssetManager assetManager; // Global asset manager instance to load and store textures
 
@@ -83,9 +86,14 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 		gameData.camera.zoom = DEFAULT_CAM_ZOOM;
 		gameData.cameraSpeed = DEFAULT_CAM_SPEED;
 	}
-	
+
+	gameData.player.teleport({ 5000, 335 });
+	gameData.player.transform.w = 0.9f;
+	gameData.player.transform.h = 1.8f;
+
 	return true;
 }
+
 
 bool updateGame()
 {
@@ -100,10 +108,15 @@ bool updateGame()
 #pragma region keyboard_input
 	// Camera movement: shift the target (the world point we're looking at).
 	// Multiplying by deltaTime makes the speed framerate-independent.
-	if (IsKeyDown(KEY_A)) { gameData.camera.target.x -= gameData.cameraSpeed * deltaTime; } // pan left
-	if (IsKeyDown(KEY_D)) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
-	if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
-	if (IsKeyDown(KEY_S)) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
+	//if (IsKeyDown(KEY_A)) { gameData.camera.target.x -= gameData.cameraSpeed * deltaTime; } // pan left
+	//if (IsKeyDown(KEY_D)) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
+	//if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
+	//if (IsKeyDown(KEY_S)) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
+
+	if (IsKeyDown(KEY_LEFT))  { gameData.player.transform.pos.x -= gameData.cameraSpeed * deltaTime; } // pan left
+	if (IsKeyDown(KEY_RIGHT)) { gameData.player.transform.pos.x += gameData.cameraSpeed * deltaTime; } // pan right
+	if (IsKeyDown(KEY_UP))    { gameData.player.transform.pos.y -= gameData.cameraSpeed * deltaTime; } // pan up
+	if (IsKeyDown(KEY_DOWN))  { gameData.player.transform.pos.y += gameData.cameraSpeed * deltaTime; } // pan down
 	 
 	// Camera zoom
 	if (IsKeyDown(KEY_MINUS)) { gameData.camera.zoom -= INC_CAM_ZOOM; }
@@ -360,6 +373,12 @@ bool updateGame()
 		}
 	}
 #pragma endregion
+#pragma endregion
+
+#pragma region entities
+	gameData.player.updateForces(deltaTime);
+	gameData.camera.target = gameData.player.getPosition();
+	gameData.player.updateFinal();
 #pragma endregion
 
 #pragma region rendering 

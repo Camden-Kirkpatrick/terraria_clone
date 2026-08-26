@@ -9,4 +9,5 @@ void AssetManager::loadAll()
 	frame = LoadTexture(RESOURCES_PATH "frame.png");
 	// The wood logs texture atlas (for tree blocks)
 	woodLogs = LoadTexture(RESOURCES_PATH "treetextures.png");
+	player = LoadTexture(RESOURCES_PATH "player.png");
 }

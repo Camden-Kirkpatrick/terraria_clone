@@ -713,7 +713,32 @@ bool updateGame()
 	//	DrawRectangleLinesEx(test2.getAABB(), 0.1f, RED);
 	//}
 
+	// The sprite we DRAW is a bit bigger than the collision box, so the
+	// player's hair can stick out past the top without being solid.
+	Transform2D playerSprite = gameData.player.transform; // copy the player's position
+	playerSprite.w = 1;   // visual width  (collision box is 0.9)
+	playerSprite.h = 2;   // visual height (collision box is 1.8)
 
+	// Sprite is taller than the collision box; nudge it up so their bottoms (feet) align and the extra height becomes hair.
+	playerSprite.pos.y -= (playerSprite.h - gameData.player.transform.h) / 2;
+
+	// Draw the player texture in world space
+	DrawTexturePro(
+		assetManager.player,
+		{ 0, 0, (float)assetManager.player.width, (float)assetManager.player.height },
+		playerSprite.getAABB(),
+		{ 0, 0 },
+		0.0f,
+		WHITE
+	);
+
+	// Debug: draw the actual collision box (0.9 x 1.8) as a translucent blue
+	// outline so we can see it's shorter than the sprite and sits at the feet.
+	DrawRectangleLinesEx(
+		gameData.player.transform.getAABB(),
+		0.1f,
+		{ 20, 101, 250, 120 }
+	);
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
 	EndMode2D();

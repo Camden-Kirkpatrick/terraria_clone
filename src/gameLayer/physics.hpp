@@ -165,6 +165,11 @@ struct PhysicalEntity
 		lastPosition = pos;
 	}
 
+	void applyGravity()
+	{
+		acceleration += {0, 20.0f};
+	}
+
 	void updateForces(float deltaTime)
 	{
 		velocity += acceleration * deltaTime;

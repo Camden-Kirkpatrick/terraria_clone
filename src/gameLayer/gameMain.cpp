@@ -376,8 +376,12 @@ bool updateGame()
 #pragma endregion
 
 #pragma region entities
+	gameData.player.applyGravity();
+
 	gameData.player.updateForces(deltaTime);
+
 	gameData.camera.target = gameData.player.getPosition();
+
 	gameData.player.updateFinal();
 #pragma endregion
 

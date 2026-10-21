@@ -376,7 +376,7 @@ bool updateGame()
 #pragma endregion
 
 #pragma region entities
-	gameData.player.applyGravity();
+	//gameData.player.applyGravity();
 
 	gameData.player.updateForces(deltaTime);
 
@@ -691,31 +691,26 @@ bool updateGame()
 
 
 
-	//Transform2D test;
-	//test.pos = { 5000.5f, 335.5f };
-	//test.w = 1;
-	//test.h = 1;
+	Transform2D test;
+	test.pos = { 5000.5f, 335.5f };
+	test.w = 1;
+	test.h = 1;
 
-	//Transform2D test2;
-	//test2.pos = mousePos;
-	//test2.w = 1;
-	//test2.h = 1;
+	Transform2D test2;
+	test2.pos = mousePos;
+	test2.w = 1;
+	test2.h = 1;
 
-	//if (test.intersectPoint(mousePos))
-	//	DrawRectangleLinesEx(test.getAABB(), 0.1f, GREEN);
-	//else
-	//	DrawRectangleLinesEx(test.getAABB(), 0.1f, BLUE);
-
-	//if (test.intersectTransform(test2))
-	//{
-	//	DrawRectangleLinesEx(test.getAABB(), 0.1f, GREEN);
-	//	DrawRectangleLinesEx(test2.getAABB(), 0.1f, GREEN);
-	//}
-	//else
-	//{
-	//	DrawRectangleLinesEx(test.getAABB(), 0.1f, BLUE);
-	//	DrawRectangleLinesEx(test2.getAABB(), 0.1f, RED);
-	//}
+	if (test.intersectTransform(test2))
+	{
+		DrawRectangleLinesEx(test.getAABB(), 0.1f, GREEN);
+		DrawRectangleLinesEx(test2.getAABB(), 0.1f, GREEN);
+	}
+	else
+	{
+		DrawRectangleLinesEx(test.getAABB(), 0.1f, BLUE);
+		DrawRectangleLinesEx(test2.getAABB(), 0.1f, RED);
+	}
 
 	// The sprite we DRAW is a bit bigger than the collision box, so the
 	// player's hair can stick out past the top without being solid.
@@ -738,11 +733,11 @@ bool updateGame()
 
 	// Debug: draw the actual collision box (0.9 x 1.8) as a translucent blue
 	// outline so we can see it's shorter than the sprite and sits at the feet.
-	DrawRectangleLinesEx(
-		gameData.player.transform.getAABB(),
-		0.1f,
-		{ 20, 101, 250, 120 }
-	);
+	//DrawRectangleLinesEx(
+	//	gameData.player.transform.getAABB(),
+	//	0.1f,
+	//	{ 20, 101, 250, 120 }
+	//);
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
 	EndMode2D();

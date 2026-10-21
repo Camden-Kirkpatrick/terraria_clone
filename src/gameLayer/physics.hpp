@@ -3,7 +3,7 @@
 #include <raymath.h>
 #include <cstdlib>
 
-
+struct GameMap;
 
 // Vector2 operator overloads
 inline Vector2 operator+(const Vector2& a, const Vector2& b)
@@ -159,6 +159,12 @@ struct PhysicalEntity
 	Vector2 velocity = {};
 	Vector2 acceleration = {};
 
+	// What sides of the block am I touching?
+	bool upTouch = 0;
+	bool downTouch = 0;
+	bool leftTouch = 0;
+	bool rightTouch = 0;
+
 	void teleport(Vector2 pos)
 	{
 		transform.pos = pos;
@@ -209,4 +215,6 @@ struct PhysicalEntity
 	{
 		return transform.pos;
 	}
+
+	Vector2 performCollisionOnOneAxis(GameMap& mapData, Vector2 pos, Vector2 delta);
 };

@@ -3,6 +3,7 @@
 #include <raymath.h>
 #include <cstdlib>
 
+// Forward declaration of GameMap, since we only use it by reference here
 struct GameMap;
 
 // Vector2 operator overloads

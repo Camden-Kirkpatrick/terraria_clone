@@ -160,7 +160,7 @@ struct PhysicalEntity
 	Vector2 velocity = {};
 	Vector2 acceleration = {};
 
-	// What sides of the block am I touching?
+	// Which sides of the player are touching a block?
 	bool upTouch = 0;
 	bool downTouch = 0;
 	bool leftTouch = 0;

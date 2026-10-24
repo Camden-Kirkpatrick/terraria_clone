@@ -85,5 +85,19 @@ Vector2 PhysicalEntity::performCollisionOnOneAxis(GameMap& mapData, Vector2 pos,
 			}
 		}
 	}
+	return pos;
+}
+
+
+
+void PhysicalEntity::checkCollisionOnce(Vector2& pos, GameMap& mapData)
+{
+	Vector2 delta = pos - lastPosition;
+
+	// Move the player on the x-axis
+	Vector2 newPos = performCollisionOnOneAxis(mapData, { pos.x, lastPosition.y }, { delta.x, 0 });
+
+	// MOve the player on the y-axis
+	pos = performCollisionOnOneAxis(mapData, { newPos.x, pos.y }, { 0, delta.y });
 }
 

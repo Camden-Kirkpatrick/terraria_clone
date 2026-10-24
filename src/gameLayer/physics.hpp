@@ -218,4 +218,6 @@ struct PhysicalEntity
 	}
 
 	Vector2 performCollisionOnOneAxis(GameMap& mapData, Vector2 pos, Vector2 delta);
+
+	void checkCollisionOnce(Vector2& pos, GameMap& mapData);
 };

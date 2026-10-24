@@ -133,6 +133,11 @@ struct Transform2D
 	}
 
 	// Check to see if two AABB intersect
+	// delta insets (shrinks) both boxes by that amount on every side before testing overlap.
+	// A small negative delta (e.g. -0.00005) is used by collision resolution so that two
+	// boxes sitting exactly flush (touching, zero gap) aren't flagged as colliding just
+	// because floating point drift nudged them a hair past flush. Applied evenly to both
+	// boxes so the result doesn't depend on which one is "this" vs "other".
 	bool intersectTransform(Transform2D other, float delta = 0)
 	{
 		Rectangle a = getAABB();

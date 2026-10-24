@@ -11,6 +11,7 @@ Vector2 PhysicalEntity::performCollisionOnOneAxis(GameMap& mapData, Vector2 pos,
 	Vector2 dimensions = { transform.w, transform.h };
 
 	// A bounding box with the blocks the player might be colliding with
+	// +1/-1 accounts for 1 extra block for rare cases where we get something like 9.9999999, and not 10
 	int minX = floor(pos.x - dimensions.x / 2.0f - 1);
 	int maxX = ceil(pos.x + dimensions.x / 2.0f + 1);
 	int minY = floor(pos.y - dimensions.y / 2.0f - 1);

@@ -101,3 +101,73 @@ void PhysicalEntity::checkCollisionOnce(Vector2& pos, GameMap& mapData)
 	pos = performCollisionOnOneAxis(mapData, { newPos.x, pos.y }, { 0, delta.y });
 }
 
+
+
+void PhysicalEntity::resolveConstraints(GameMap& mapData)
+{
+	upTouch = false;
+	downTouch = false;
+	leftTouch = false;
+	rightTouch = false;
+
+	Vector2& pos = transform.pos;
+
+	float distance = Vector2Distance(lastPosition, pos);
+
+	if (distance == 0)
+	{
+		// No movement happened
+		return;
+	}
+
+	float GRANULARITY = 0.8f;
+
+	// Normal behavior
+	if (distance <= GRANULARITY)
+	{
+		checkCollisionOnce(pos, mapData);
+	}
+	// The player moved too much this frame (high delta time value)
+	else
+	{
+		Vector2 newPos = lastPosition;
+		Vector2 delta = pos - lastPosition;
+		delta = Vector2Normalize(delta);
+		delta *= GRANULARITY * 0.99f;
+
+		do
+		{
+			newPos += delta;
+			Vector2 posTest = newPos;
+			checkCollisionOnce(newPos, mapData);
+
+			// If this is true, that means that newPos changed because there was a collision
+			if (newPos != posTest)
+			{
+				pos = newPos;
+				goto end;
+			}
+		} while (Vector2Length((newPos + delta) - pos) > GRANULARITY);
+
+		// Check for a collision one last time
+		checkCollisionOnce(pos, mapData);
+	}
+
+end:
+	if (pos.x - transform.w / 2 < 0)
+		pos.x = transform.w / 2;
+	if (pos.x + transform.w / 2 > mapData.w)
+		pos.x = mapData.w - transform.w / 2;
+	if (pos.y + transform.h / 2 > mapData.h)
+		pos.y = mapData.h - transform.h / 2;
+
+	if (leftTouch && velocity.x < 0)
+		velocity.x = 0;
+	if (rightTouch && velocity.x > 0)
+		velocity.x = 0;
+
+	if (upTouch && velocity.y < 0)
+		velocity.y = 0;
+	if (downTouch && velocity.y > 0)
+		velocity.y = 0;
+}

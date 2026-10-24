@@ -87,6 +87,8 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 		gameData.cameraSpeed = DEFAULT_CAM_SPEED;
 	}
 
+	gameData.player.teleport({ (float)worldWidth / 2, 325 });
+
 	gameData.player.teleport({ 5000, 335 });
 	gameData.player.transform.w = 0.9f;
 	gameData.player.transform.h = 1.8f;
@@ -376,9 +378,11 @@ bool updateGame()
 #pragma endregion
 
 #pragma region entities
-	//gameData.player.applyGravity();
+	gameData.player.applyGravity();
 
 	gameData.player.updateForces(deltaTime);
+
+	gameData.player.resolveConstraints(gameData.gameMap);
 
 	gameData.camera.target = gameData.player.getPosition();
 

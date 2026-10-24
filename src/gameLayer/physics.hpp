@@ -174,7 +174,7 @@ struct PhysicalEntity
 
 	void applyGravity()
 	{
-		acceleration += {0, 20.0f};
+		acceleration += {0, 200.0f};
 	}
 
 	void updateForces(float deltaTime)

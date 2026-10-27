@@ -783,7 +783,7 @@ bool updateGame()
 				ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 				HelpTooltip("How fast the camera pans with WASD.");
 
-				//ImGui::Checkbox("Gravity", &gameData.isGravity);
+				ImGui::Checkbox("Gravity", &gameData.isGravity);
 
 				ImGui::SeparatorText("World");
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.85f, 0.4f, 1.0f));

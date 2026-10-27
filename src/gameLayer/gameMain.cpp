@@ -88,6 +88,7 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 		gameData.cameraSpeed = DEFAULT_CAM_SPEED;
 	}
 
+	// We add 0.5, since that spawns the player in the center of the block, not the left edge
 	float playerX = (float)worldWidth / 2 + 0.5f;
 	float playerY = 335.0f;
 	bool isClear = false;
@@ -124,6 +125,9 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 			gameData.player.teleport({ playerX, playerY });
 		}
 	}
+
+	// Guarantees the final playerX/playerY gets applied even if neither loop above ever adjusted it
+	gameData.player.teleport({ playerX, playerY });
 
 	gameData.player.transform.w = 0.9f;
 	gameData.player.transform.h = 1.8f;

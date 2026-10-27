@@ -19,7 +19,7 @@
 #define INC_CAM_ZOOM 0.25f
 #define MIN_CAM_SPEED 1.0f
 #define MAX_CAM_SPEED 1000.0f
-#define DEFAULT_CAM_SPEED 100.0f
+#define DEFAULT_CAM_SPEED 50.0f
 #define INC_CAM_SPEED 0.333f
 
 struct GameData
@@ -53,6 +53,7 @@ struct GameData
 	bool previewSelection = true; // Show the selection outline rectangle
 
 	PhysicalEntity player;
+	bool detectCollisions = true;
 	bool isGravity = false;
 } gameData;
 
@@ -415,7 +416,8 @@ bool updateGame()
 
 	gameData.player.updateForces(deltaTime);
 
-	gameData.player.resolveConstraints(gameData.gameMap);
+	if (gameData.detectCollisions)
+		gameData.player.resolveConstraints(gameData.gameMap);
 
 	gameData.camera.target = gameData.player.getPosition();
 
@@ -814,6 +816,7 @@ bool updateGame()
 				ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 				HelpTooltip("How fast the camera pans with WASD.");
 
+				ImGui::Checkbox("Detect Collisions", &gameData.detectCollisions);
 				ImGui::Checkbox("Gravity", &gameData.isGravity);
 
 				ImGui::SeparatorText("World");

@@ -113,6 +113,7 @@ void PhysicalEntity::resolveConstraints(GameMap& mapData)
 
 	Vector2& pos = transform.pos;
 
+	// Distance moved since last frame
 	float distance = Vector2Distance(lastPosition, pos);
 
 	if (distance == 0)
@@ -134,7 +135,7 @@ void PhysicalEntity::resolveConstraints(GameMap& mapData)
 		Vector2 newPos = lastPosition;
 		Vector2 delta = pos - lastPosition;
 		delta = Vector2Normalize(delta);
-		delta *= GRANULARITY * 0.99f;
+		delta *= GRANULARITY;
 
 		do
 		{
@@ -148,7 +149,7 @@ void PhysicalEntity::resolveConstraints(GameMap& mapData)
 				pos = newPos;
 				goto end;
 			}
-		} while (Vector2Length((newPos + delta) - pos) > GRANULARITY);
+		} while (Vector2Length(pos - newPos) > GRANULARITY);
 
 		// Check for a collision one last time
 		checkCollisionOnce(pos, mapData);

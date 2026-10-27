@@ -53,6 +53,7 @@ struct GameData
 	bool previewSelection = true; // Show the selection outline rectangle
 
 	PhysicalEntity player;
+	bool isGravity = false;
 } gameData;
 
 
@@ -89,7 +90,7 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 
 	gameData.player.teleport({ (float)worldWidth / 2, 325 });
 
-	gameData.player.teleport({ 5000, 335 });
+	gameData.player.teleport({ (float)worldWidth / 2, 335 });
 	gameData.player.transform.w = 0.9f;
 	gameData.player.transform.h = 1.8f;
 
@@ -378,7 +379,8 @@ bool updateGame()
 #pragma endregion
 
 #pragma region entities
-	gameData.player.applyGravity();
+	if (gameData.isGravity)
+		gameData.player.applyGravity();
 
 	gameData.player.updateForces(deltaTime);
 
@@ -780,6 +782,8 @@ bool updateGame()
 				HelpTooltip("How far in the camera is zoomed. Higher = closer view.");
 				ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 				HelpTooltip("How fast the camera pans with WASD.");
+
+				//ImGui::Checkbox("Gravity", &gameData.isGravity);
 
 				ImGui::SeparatorText("World");
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.85f, 0.4f, 1.0f));

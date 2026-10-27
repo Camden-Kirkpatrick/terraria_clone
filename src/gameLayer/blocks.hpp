@@ -115,6 +115,7 @@ struct Block
 		{
 			case air:
 			case leaves:
+			case grass:
 			case platform:
 			case workBench:
 			case painting:

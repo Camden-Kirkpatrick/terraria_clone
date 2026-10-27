@@ -23,7 +23,7 @@
 #define INC_CAM_SPEED 0.333f
 
 struct GameData
-{ 
+{
 	GameMap gameMap = {};
 	Camera2D camera = {};
 	float cameraSpeed = 0.0f;
@@ -46,8 +46,8 @@ struct GameData
 
 	Structure copyStructures[10] = {}; // A Structure is a grid of blocks (similar to a map) that can be saved and loaded to/from a file
 	int curStructureIdx = 0; // Keep track of the structure currently selected
-	Vector2 selectionStart = {-1, -1}; // Beginning of the area to be copied
-	Vector2 selectionEnd = {-1, -1}; // End of the area to be copied
+	Vector2 selectionStart = { -1, -1 }; // Beginning of the area to be copied
+	Vector2 selectionEnd = { -1, -1 }; // End of the area to be copied
 	char structureFile[100] = {}; // Name of the file the structure is saved to/loaded from
 	bool previewStructure = true; // Show a preview of the structure before it's placed
 	bool previewSelection = true; // Show the selection outline rectangle
@@ -88,9 +88,30 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 		gameData.cameraSpeed = DEFAULT_CAM_SPEED;
 	}
 
-	gameData.player.teleport({ (float)worldWidth / 2, 325 });
+	float playerX = (float)worldWidth / 2 + 0.5f;
+	float playerY = 335.0f;
+	bool isClear = false;
 
-	gameData.player.teleport({ (float)worldWidth / 2, 335 });
+	// Make sure the spawn position is not obstructed, so the player is not inside a block
+	while (!isClear)
+	{
+		if (
+			gameData.gameMap.getBlockUnsafe(playerX, playerY).isCollidable() ||
+			gameData.gameMap.getBlockUnsafe(playerX + 1, playerY).isCollidable() ||
+			gameData.gameMap.getBlockUnsafe(playerX - 1, playerY).isCollidable() ||
+			gameData.gameMap.getBlockUnsafe(playerX, playerY + 1).isCollidable() ||
+			gameData.gameMap.getBlockUnsafe(playerX, playerY - 1).isCollidable()
+		)
+		{
+			playerY--;
+			gameData.player.teleport({ playerX, playerY });
+		}
+		else
+		{
+			isClear = true;
+		}
+	}
+
 	gameData.player.transform.w = 0.9f;
 	gameData.player.transform.h = 1.8f;
 

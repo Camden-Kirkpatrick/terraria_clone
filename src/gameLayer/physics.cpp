@@ -23,64 +23,65 @@ Vector2 PhysicalEntity::performCollisionOnOneAxis(GameMap& mapData, Vector2 pos,
 	maxX = std::min(mapData.w, maxX);
 	maxY = std::min(mapData.h, maxY);
 
+	// Check for a collision with all blocks inside the bounding box
 	for (int y = minY; y < maxY; y++)
 	{
 		for (int x = minX; x < maxX; x++)
 		{
-			// Can we collide with this type of block?
-			if (mapData.getBlockUnsafe(x, y).isCollidable())
+			// If we can't collide with this type of block, don't check for a collision
+			if (!mapData.getBlockUnsafe(x, y).isCollidable())
+				continue;
+
+			Transform2D entity;
+			entity.pos = pos;
+			entity.w = dimensions.x;
+			entity.h = dimensions.y;
+
+			Transform2D block;
+			block.pos = { x + 0.5f, y + 0.5f };
+			block.w = 1;
+			block.h = 1;
+
+			// Is there a collision?
+			if (entity.intersectTransform(block, -0.00005f))
 			{
-				Transform2D entity;
-				entity.pos = pos;
-				entity.w = dimensions.x;
-				entity.h = dimensions.y;
-
-				Transform2D block;
-				block.pos = { x + 0.5f, y + 0.5f };
-				block.w = 1;
-				block.h = 1;
-
-				// Is there a collision?
-				if (entity.intersectTransform(block, -0.00005f))
+				// Did we move horizontally?
+				if (delta.x != 0)
 				{
-					// Did we move horizontally?
-					if (delta.x != 0)
+					// Did we move left?
+					if (delta.x < 0)
 					{
-						// Did we move left?
-						if (delta.x < 0)
-						{
-							leftTouch = 1;
-							// x is the x value in the top-left corner of the block
-							// add 1 to get to the right side
-							// add half the player width to put it one block to the right
-							pos.x = x + 1.0f + dimensions.x / 2;
-							return pos;
-						}
-						else // We moved right
-						{
-							rightTouch = 1;
-							// We are on the left side of the block, and we are pushing
-							// the player left, so we dont need to subtract 1 
-							pos.x = x - dimensions.x / 2;
-							return pos;
-						}
+						leftTouch = 1;
+						// x is the x value in the top-left corner of the block
+						// add 1 to get to the right side
+						// add half the player width to put it one block to the right
+						pos.x = x + 1.0f + dimensions.x / 2;
+						return pos;
 					}
-					// Did we move vertically?
-					else if (delta.y != 0)
+					else // We moved right
 					{
-						// Did we move up?
-						if (delta.y < 0)
-						{
-							upTouch = 1;
-							pos.y = y + 1.0f + dimensions.y / 2;
-							return pos;
-						}
-						else // We moved down
-						{
-							downTouch = 1;
-							pos.y = y - dimensions.y / 2;
-							return pos;
-						}
+						rightTouch = 1;
+						// We are on the left side of the block, and we are pushing
+						// the player left, so we dont need to subtract 1 
+						pos.x = x - dimensions.x / 2;
+						return pos;
+					}
+				}
+				// Did we move vertically?
+				else if (delta.y != 0)
+				{
+					// Did we move up?
+					if (delta.y < 0)
+					{
+						upTouch = 1;
+						pos.y = y + 1.0f + dimensions.y / 2;
+						return pos;
+					}
+					else // We moved down
+					{
+						downTouch = 1;
+						pos.y = y - dimensions.y / 2;
+						return pos;
 					}
 				}
 			}
@@ -156,18 +157,20 @@ void PhysicalEntity::resolveConstraints(GameMap& mapData)
 	}
 
 end:
-	if (pos.x - transform.w / 2 < 0)
+	// Ensure the player stays in-bound of the world
+	if (pos.x - transform.w / 2 < 0) // The player can't go left of the left world edge
 		pos.x = transform.w / 2;
-	if (pos.x + transform.w / 2 > mapData.w)
+	if (pos.x + transform.w / 2 > mapData.w) // The player can't go right of the right world edge
 		pos.x = mapData.w - transform.w / 2;
-	if (pos.y + transform.h / 2 > mapData.h)
+	if (pos.y + transform.h / 2 > mapData.h) // The player can't fall below the bottom world edge
 		pos.y = mapData.h - transform.h / 2;
 
+	// If the player is touching a block and was moving, set the correct speed to 0,
+	// so the player is not trying to ram into the block continuously
 	if (leftTouch && velocity.x < 0)
 		velocity.x = 0;
 	if (rightTouch && velocity.x > 0)
 		velocity.x = 0;
-
 	if (upTouch && velocity.y < 0)
 		velocity.y = 0;
 	if (downTouch && velocity.y > 0)

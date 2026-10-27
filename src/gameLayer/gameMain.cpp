@@ -91,6 +91,7 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 	float playerX = (float)worldWidth / 2 + 0.5f;
 	float playerY = 335.0f;
 	bool isClear = false;
+	bool onGround = false;
 
 	// Make sure the spawn position is not obstructed, so the player is not inside a block
 	while (!isClear)
@@ -109,6 +110,18 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 		else
 		{
 			isClear = true;
+		}
+	}
+
+	// Ensure the player is on the ground, not floating
+	while (!onGround)
+	{
+		if (gameData.gameMap.getBlockUnsafe(playerX, playerY + 1).isCollidable())
+			onGround = true;
+		else
+		{
+			playerY++;
+			gameData.player.teleport({ playerX, playerY });
 		}
 	}
 

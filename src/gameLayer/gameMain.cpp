@@ -147,13 +147,6 @@ bool updateGame()
 	gameData.camera.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
 
 #pragma region keyboard_input
-	// Camera movement: shift the target (the world point we're looking at).
-	// Multiplying by deltaTime makes the speed framerate-independent.
-	//if (IsKeyDown(KEY_A)) { gameData.camera.target.x -= gameData.cameraSpeed * deltaTime; } // pan left
-	//if (IsKeyDown(KEY_D)) { gameData.camera.target.x += gameData.cameraSpeed * deltaTime; } // pan right
-	//if (IsKeyDown(KEY_W)) { gameData.camera.target.y -= gameData.cameraSpeed * deltaTime; } // pan up
-	//if (IsKeyDown(KEY_S)) { gameData.camera.target.y += gameData.cameraSpeed * deltaTime; } // pan down
-
 	if (IsKeyDown(KEY_LEFT))  { gameData.player.transform.pos.x -= gameData.cameraSpeed * deltaTime; } // pan left
 	if (IsKeyDown(KEY_RIGHT)) { gameData.player.transform.pos.x += gameData.cameraSpeed * deltaTime; } // pan right
 	if (IsKeyDown(KEY_UP))    { gameData.player.transform.pos.y -= gameData.cameraSpeed * deltaTime; } // pan up

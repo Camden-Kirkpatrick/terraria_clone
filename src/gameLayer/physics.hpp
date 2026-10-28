@@ -177,9 +177,15 @@ struct PhysicalEntity
 		lastPosition = pos;
 	}
 
-	void applyGravity()
+	void applyGravity(bool resetGrav)
 	{
-		acceleration += {0, 100.0f};
+		if (resetGrav)
+		{
+			acceleration.y = 0.0f;
+			velocity.y = 0.0f;
+		}
+		else
+			acceleration += {0.0f, 50.0f};
 	}
 
 	void updateForces(float deltaTime)

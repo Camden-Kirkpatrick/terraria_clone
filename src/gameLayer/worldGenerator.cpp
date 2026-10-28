@@ -7,7 +7,7 @@
 #include <iostream>
 
 WorldGen worldGen;
-int worldWidth = 100;
+int worldWidth = DEFAULT_WORLD_WIDTH;
 int worldHeight = DEFAULT_WORLD_HEIGHT;
 int seed = DEFAULT_SEED;
 

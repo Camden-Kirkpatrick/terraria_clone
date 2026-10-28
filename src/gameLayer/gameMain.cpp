@@ -19,7 +19,7 @@
 #define INC_CAM_ZOOM 0.25f
 #define MIN_CAM_SPEED 1.0f
 #define MAX_CAM_SPEED 1000.0f
-#define DEFAULT_CAM_SPEED 50.0f
+#define DEFAULT_CAM_SPEED 20.0f
 #define INC_CAM_SPEED 0.333f
 
 struct GameData
@@ -148,10 +148,10 @@ bool updateGame()
 	gameData.camera.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
 
 #pragma region keyboard_input
-	if (IsKeyDown(KEY_LEFT))  { gameData.player.transform.pos.x -= gameData.cameraSpeed * deltaTime; } // pan left
-	if (IsKeyDown(KEY_RIGHT)) { gameData.player.transform.pos.x += gameData.cameraSpeed * deltaTime; } // pan right
-	if (IsKeyDown(KEY_UP))    { gameData.player.transform.pos.y -= gameData.cameraSpeed * deltaTime; } // pan up
-	if (IsKeyDown(KEY_DOWN))  { gameData.player.transform.pos.y += gameData.cameraSpeed * deltaTime; } // pan down
+	if (IsKeyDown(KEY_A))  { gameData.player.transform.pos.x -= gameData.cameraSpeed * deltaTime; } // pan left
+	if (IsKeyDown(KEY_D)) { gameData.player.transform.pos.x += gameData.cameraSpeed * deltaTime; } // pan right
+	if (IsKeyDown(KEY_W))    { gameData.player.transform.pos.y -= gameData.cameraSpeed * deltaTime; } // pan up
+	if (IsKeyDown(KEY_S))  { gameData.player.transform.pos.y += gameData.cameraSpeed * deltaTime; } // pan down
 	 
 	// Camera zoom
 	if (IsKeyDown(KEY_MINUS)) { gameData.camera.zoom -= INC_CAM_ZOOM; }
@@ -412,7 +412,9 @@ bool updateGame()
 
 #pragma region entities
 	if (gameData.isGravity)
-		gameData.player.applyGravity();
+		gameData.player.applyGravity(false);
+	else
+		gameData.player.applyGravity(true); // resetGrav is true, so we set vertical acceleration and velocity to 0
 
 	gameData.player.updateForces(deltaTime);
 
@@ -726,29 +728,6 @@ bool updateGame()
 		rect.height = (gameData.selectionEnd.y - gameData.selectionStart.y) + 1;
 
 		DrawRectangleLinesEx(rect, 0.1f, { 20, 101, 250, 145 });
-	}
-
-
-
-	Transform2D test;
-	test.pos = { 5000.5f, 335.5f };
-	test.w = 1;
-	test.h = 1;
-
-	Transform2D test2;
-	test2.pos = mousePos;
-	test2.w = 1;
-	test2.h = 1;
-
-	if (test.intersectTransform(test2))
-	{
-		DrawRectangleLinesEx(test.getAABB(), 0.1f, GREEN);
-		DrawRectangleLinesEx(test2.getAABB(), 0.1f, GREEN);
-	}
-	else
-	{
-		DrawRectangleLinesEx(test.getAABB(), 0.1f, BLUE);
-		DrawRectangleLinesEx(test2.getAABB(), 0.1f, RED);
 	}
 
 	// The sprite we DRAW is a bit bigger than the collision box, so the

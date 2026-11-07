@@ -7,6 +7,7 @@
 #include "structure.hpp"
 #include "saveMap.hpp"
 #include "physics.hpp"
+#include "entities/slime.hpp"	
 #include <raylib.h>
 #include <raymath.h>
 #include <imgui.h>
@@ -55,6 +56,8 @@ struct GameData
 	PhysicalEntity player;
 	bool detectCollisions = true;
 	bool isGravity = false;
+
+	Slime slime;
 } gameData;
 
 
@@ -94,6 +97,8 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 	float playerY = 335.0f;
 	bool isClear = false;
 	bool onGround = false;
+
+	gameData.slime.physics.teleport({ (float)worldWidth / 2 + 0.5f - 1, 331.5f });
 
 	// Make sure the spawn position is not obstructed, so the player is not inside a block
 	while (!isClear)
@@ -424,6 +429,15 @@ bool updateGame()
 	gameData.camera.target = gameData.player.getPosition();
 
 	gameData.player.updateFinal();
+
+	// Slime
+	gameData.slime.update(deltaTime);
+
+	gameData.slime.physics.applyGravity(false);
+
+	gameData.slime.physics.updateForces(deltaTime);
+	gameData.slime.physics.resolveConstraints(gameData.gameMap);
+	gameData.slime.physics.updateFinal();
 #pragma endregion
 
 #pragma region rendering 
@@ -729,6 +743,9 @@ bool updateGame()
 
 		DrawRectangleLinesEx(rect, 0.1f, { 20, 101, 250, 145 });
 	}
+
+	// Draw the slime
+	gameData.slime.render(assetManager);
 
 	// The sprite we DRAW is a bit bigger than the collision box, so the
 	// player's hair can stick out past the top without being solid.

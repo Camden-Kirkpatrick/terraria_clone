@@ -99,7 +99,7 @@ void PhysicalEntity::checkCollisionOnce(Vector2& pos, GameMap& mapData)
 	// Move the player on the x-axis
 	Vector2 newPos = performCollisionOnOneAxis(mapData, { pos.x, lastPosition.y }, { delta.x, 0 });
 
-	// MOve the player on the y-axis
+	// Move the player on the y-axis
 	pos = performCollisionOnOneAxis(mapData, { newPos.x, pos.y }, { 0, delta.y });
 }
 
@@ -123,10 +123,15 @@ void PhysicalEntity::resolveConstraints(GameMap& mapData)
 		return;
 	}
 
-	float GRANULARITY = 0.8f;
+	// The player isn't allowed to move more than this much in one frame.
+	// If this value is too large, the player could move far enough in a single
+	// collision check that its bounding box skips clean over a block (tiles
+	// are 1 unit wide) without ever overlapping it, tunneling through
+	// walls/floors instead of colliding with them.
+	float MAX_DISTANCE = 0.8f;
 
 	// Normal behavior
-	if (distance <= GRANULARITY)
+	if (distance <= MAX_DISTANCE)
 	{
 		checkCollisionOnce(pos, mapData);
 	}
@@ -136,7 +141,7 @@ void PhysicalEntity::resolveConstraints(GameMap& mapData)
 		Vector2 newPos = lastPosition;
 		Vector2 delta = pos - lastPosition;
 		delta = Vector2Normalize(delta);
-		delta *= GRANULARITY;
+		delta *= MAX_DISTANCE;
 
 		do
 		{
@@ -150,7 +155,7 @@ void PhysicalEntity::resolveConstraints(GameMap& mapData)
 				pos = newPos;
 				goto end;
 			}
-		} while (Vector2Length(pos - newPos) > GRANULARITY);
+		} while (Vector2Length(pos - newPos) > MAX_DISTANCE);
 
 		// Check for a collision one last time
 		checkCollisionOnce(pos, mapData);
@@ -165,7 +170,9 @@ end:
 	if (pos.y + transform.h / 2 > mapData.h) // The player can't fall below the bottom world edge
 		pos.y = mapData.h - transform.h / 2;
 
-	// If the player is touching a block and was moving, set the correct speed to 0,
+	// The player is allowed to go up infinitely, but blocks can only exist inside the map bounds
+
+	// If the player is touching a block and was moving, set the current velocity to 0,
 	// so the player is not trying to ram into the block continuously
 	if (leftTouch && velocity.x < 0)
 		velocity.x = 0;

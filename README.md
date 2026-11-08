@@ -33,6 +33,7 @@
 - [x] Save/Load structures to/from a file
 - [x] Tree generation
 - [x] Procedural tree generation 
+- [x] Add collisions
 - [ ] Add more biomes
   - [x] Tundra
   - [ ] Jungle

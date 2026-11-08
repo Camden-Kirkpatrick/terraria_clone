@@ -745,7 +745,7 @@ bool updateGame()
 	}
 
 	// Draw the slime
-	gameData.slime.render(assetManager);
+	//gameData.slime.render(assetManager);
 
 	// The sprite we DRAW is a bit bigger than the collision box, so the
 	// player's hair can stick out past the top without being solid.

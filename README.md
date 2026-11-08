@@ -16,6 +16,8 @@
 [![Watch the video](https://img.youtube.com/vi/irFjFR9b87E/maxresdefault.jpg)](https://www.youtube.com/watch?v=irFjFR9b87E)
 ## Video (v1.6.0)
 [![Watch the video](https://img.youtube.com/vi/yxPPpMebnrQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=yxPPpMebnrQ)
+## Video (v1.7.0)
+[![Watch the video](https://img.youtube.com/vi/pvUEH2vd76s/maxresdefault.jpg)](https://www.youtube.com/watch?v=pvUEH2vd76s)
 
 ## Features
 - [x] Random world generation

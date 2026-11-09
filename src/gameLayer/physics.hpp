@@ -3,6 +3,8 @@
 #include <raymath.h>
 #include <cstdlib>
 
+#define PLAYER_JUMP_FORCE 20
+
 // Forward declaration of GameMap, since we only use it by reference here
 struct GameMap;
 
@@ -215,6 +217,14 @@ struct PhysicalEntity
 			velocity = {};
 
 		acceleration = {};
+	}
+
+	void jump(float force)
+	{
+		if (downTouch)
+		{
+			velocity.y = -force;
+		}
 	}
 
 	// Called at the end of the frame

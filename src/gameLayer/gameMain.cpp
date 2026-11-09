@@ -155,8 +155,14 @@ bool updateGame()
 #pragma region keyboard_input
 	if (IsKeyDown(KEY_A))  { gameData.player.transform.pos.x -= gameData.cameraSpeed * deltaTime; } // pan left
 	if (IsKeyDown(KEY_D)) { gameData.player.transform.pos.x += gameData.cameraSpeed * deltaTime; } // pan right
-	if (IsKeyDown(KEY_W))    { gameData.player.transform.pos.y -= gameData.cameraSpeed * deltaTime; } // pan up
-	if (IsKeyDown(KEY_S))  { gameData.player.transform.pos.y += gameData.cameraSpeed * deltaTime; } // pan down
+
+	if (IsKeyDown(KEY_SPACE)) { gameData.player.jump(PLAYER_JUMP_FORCE); }
+
+	if (!gameData.isGravity)
+	{
+		if (IsKeyDown(KEY_W)) { gameData.player.transform.pos.y -= gameData.cameraSpeed * deltaTime; } // pan up
+		if (IsKeyDown(KEY_S)) { gameData.player.transform.pos.y += gameData.cameraSpeed * deltaTime; } // pan down
+	}
 	 
 	// Camera zoom
 	if (IsKeyDown(KEY_MINUS)) { gameData.camera.zoom -= INC_CAM_ZOOM; }

@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 #basically this will change the RESOURCES_PATH to be the local path
 #! ! ! ! ! ! !
 #delete the out folder after changing if visual studio doesn recognize the change
-set(PRODUCTION_BUILD ON CACHE BOOL "Make this a production build" FORCE)
+set(PRODUCTION_BUILD OFF CACHE BOOL "Make this a production build" FORCE)
 
 # Ensure raylib is built as static libraries
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Raylib as static libraries" FORCE)

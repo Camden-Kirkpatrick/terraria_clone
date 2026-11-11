@@ -53,6 +53,8 @@ struct GameData
 	bool previewStructure = true; // Show a preview of the structure before it's placed
 	bool previewSelection = true; // Show the selection outline rectangle
 
+	std::ranlux24_base rng;
+
 	PhysicalEntity player;
 	bool detectCollisions = true;
 	bool isGravity = false;
@@ -82,6 +84,8 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 
 	// Generate the world
 	generateWorld(gameData.gameMap, worldWidth, worldHeight, seed, resetWorldGen);
+
+	gameData.rng.seed(std::random_device{}());
 
 	// Camera setup
 	if (resetCamera)
@@ -422,6 +426,7 @@ bool updateGame()
 #pragma endregion
 
 #pragma region entities
+	// Player
 	if (gameData.isGravity)
 		gameData.player.applyGravity(false);
 	else
@@ -437,7 +442,7 @@ bool updateGame()
 	gameData.player.updateFinal();
 
 	// Slime
-	gameData.slime.update(deltaTime);
+	gameData.slime.update(deltaTime, gameData.rng, gameData.player.getPosition());
 
 	gameData.slime.physics.applyGravity(false);
 
@@ -751,7 +756,7 @@ bool updateGame()
 	}
 
 	// Draw the slime
-	//gameData.slime.render(assetManager);
+	gameData.slime.render(assetManager);
 
 	// The sprite we DRAW is a bit bigger than the collision box, so the
 	// player's hair can stick out past the top without being solid.

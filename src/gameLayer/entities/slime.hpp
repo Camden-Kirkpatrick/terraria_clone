@@ -14,6 +14,18 @@ struct Slime
 		physics.transform.h = 0.8f;
 	}
 
+	enum
+	{
+		STATE_WANDERING = 0,
+		STATE_CHASING,
+	};
+
+	int currentState = STATE_WANDERING;
+	float changeStateTimer = 1.0f;
+
+	float jumpTimer = 5.0f;
+	float moveSpeed = 0.0f; // positive = right-ward movement
+
 	PhysicalEntity physics;
 
 	Vector2& getPosition()
@@ -22,5 +34,5 @@ struct Slime
 	}
 
 	void render(AssetManager& assetManager);
-	void update(float deltaTime);
+	void update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosition);
 };

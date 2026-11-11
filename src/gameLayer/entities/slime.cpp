@@ -23,11 +23,11 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 
 	if (changeStateTimer <= 0)
 	{
-		changeStateTimer = getRandomFloat(rng, 1.0f, 7.0f);
+		changeStateTimer = getRandomFloat(rng, 1.0f, 5.0f);
 
 		float distanceToPlayer = Vector2Distance(playerPosition, getPosition());
 
-		if (distanceToPlayer < 20)
+		if (distanceToPlayer <= 20)
 		{
 			if (getRandomChance(rng, 0.8f))
 				currentState = STATE_CHASING;
@@ -44,6 +44,8 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 
 	jumpTimer -= deltaTime;
 
+	constexpr float JUMP_HEIGHT = 25.0f;
+
 	switch (currentState)
 	{
 		case STATE_WANDERING:
@@ -52,7 +54,7 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 			{
 				jumpTimer = getRandomFloat(rng, 3.0f, 12.0f);
 
-				physics.jump(20);
+				physics.jump(JUMP_HEIGHT);
 				moveSpeed = getRandomFloat(rng, -7.0f, 7.0f);
 			}
 		}
@@ -62,9 +64,9 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 		{
 			if (jumpTimer <= 0)
 			{
-				jumpTimer = getRandomFloat(rng, 2.0f, 7.0f);
+				jumpTimer = getRandomFloat(rng, 1.0f, 6.0f);
 
-				physics.jump(20);
+				physics.jump(JUMP_HEIGHT);
 
 				if (playerPosition.x > getPosition().x)
 					moveSpeed = getRandomFloat(rng, 1.0f, 7.0f);
@@ -78,6 +80,5 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 			break;
 	}
 
-	if (moveSpeed)
-		getPosition().x += moveSpeed * deltaTime;
+	getPosition().x += moveSpeed * deltaTime;
 }

@@ -1282,6 +1282,19 @@ bool updateGame()
 				ImGui::EndTabItem();
 			}
 
+			if (ImGui::BeginTabItem("Entities"))
+			{
+				ImGui::Text("Number of slimes:"); ImGui::SameLine();
+				if (ImGui::SliderInt("##numSlimes", &gameData.numSlimes, 1, 10000))
+					initGame(false, false);
+
+				ImGui::Text("Slime spawn distance from world origin:"); ImGui::SameLine();
+				if (ImGui::SliderInt("##slimeSpawnDist", &gameData.maxSlimeSpawnDistFromOrigin, 0, worldWidth / 3))
+					initGame(false, false);
+
+				ImGui::EndTabItem();
+			}
+
 			ImGui::EndTabBar();
 		}
 

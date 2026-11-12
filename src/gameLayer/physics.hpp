@@ -3,8 +3,6 @@
 #include <raymath.h>
 #include <cstdlib>
 
-#define PLAYER_JUMP_FORCE 20
-
 // Forward declaration of GameMap, since we only use it by reference here
 struct GameMap;
 
@@ -167,6 +165,8 @@ struct PhysicalEntity
 	Vector2 velocity = {};
 	Vector2 acceleration = {};
 
+	float jumpStrength = 0.0f;
+
 	// Which sides of the player are touching a block?
 	bool upTouch = 0;
 	bool downTouch = 0;
@@ -179,15 +179,15 @@ struct PhysicalEntity
 		lastPosition = pos;
 	}
 
-	void applyGravity(bool resetGrav)
+	void applyGravity(float gravity, bool flight)
 	{
-		if (resetGrav)
+		if (flight)
 		{
 			acceleration.y = 0.0f;
 			velocity.y = 0.0f;
 		}
 		else
-			acceleration += {0.0f, 50.0f};
+			acceleration += {0.0f, gravity};
 	}
 
 	void updateForces(float deltaTime)
@@ -219,11 +219,11 @@ struct PhysicalEntity
 		acceleration = {};
 	}
 
-	void jump(float force)
+	void jump()
 	{
 		if (downTouch)
 		{
-			velocity.y = -force;
+			velocity.y = -jumpStrength;
 		}
 	}
 

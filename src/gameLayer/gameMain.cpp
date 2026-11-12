@@ -56,12 +56,14 @@ struct GameData
 
 	std::ranlux24_base rng;
 
+	float gravity = 0.0f;
+
 	PhysicalEntity player;
 	bool detectCollisions = true;
-	bool isGravity = false;
+	bool flight = false;
 
-	int numSlimes = 5;
-	int maxSlimeSpawnDistFromOrigin = 100;
+	int numSlimes = 0;
+	int maxSlimeSpawnDistFromOrigin = 0;
 	std::vector<Slime> slimes = {};
 } gameData;
 
@@ -69,7 +71,7 @@ struct GameData
 AssetManager assetManager; // Global asset manager instance to load and store textures
 
 // Toggle the ImGui menu on/off
-// Blocks can't be broken or placed behind the ImGui menu
+// Blocks can't be broken or placed when the ImGui menu is on
 bool showImGui = true;
 bool showAdvancedSettings = false; // Hide or show certain settings
 
@@ -137,10 +139,13 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 		// Guarantees the final playerX/playerY gets applied even if neither loop above ever adjusted it
 		gameData.player.teleport({ playerX, playerY });
 
+		gameData.player.jumpStrength = 15.0f;
 		gameData.player.transform.w = 0.9f;
 		gameData.player.transform.h = 1.8f;
 	}
 
+	gameData.numSlimes = 5;
+	gameData.maxSlimeSpawnDistFromOrigin = 100;
 
 	gameData.slimes.reserve(gameData.numSlimes);
 
@@ -150,6 +155,7 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 		float y = 300.5f;
 		gameData.slimes.push_back(Slime());
 		gameData.slimes[i].physics.teleport({ x, y });
+		gameData.slimes[i].physics.jumpStrength = 30.0f;
 	}
 
 	return true;
@@ -170,9 +176,9 @@ bool updateGame()
 	if (IsKeyDown(KEY_A))  { gameData.player.transform.pos.x -= gameData.cameraSpeed * deltaTime; } // pan left
 	if (IsKeyDown(KEY_D)) { gameData.player.transform.pos.x += gameData.cameraSpeed * deltaTime; } // pan right
 
-	if (IsKeyDown(KEY_SPACE)) { gameData.player.jump(PLAYER_JUMP_FORCE); }
+	if (IsKeyDown(KEY_SPACE)) { gameData.player.jump(); }
 
-	if (!gameData.isGravity)
+	if (gameData.flight)
 	{
 		if (IsKeyDown(KEY_W)) { gameData.player.transform.pos.y -= gameData.cameraSpeed * deltaTime; } // pan up
 		if (IsKeyDown(KEY_S)) { gameData.player.transform.pos.y += gameData.cameraSpeed * deltaTime; } // pan down
@@ -437,10 +443,10 @@ bool updateGame()
 
 #pragma region entities
 	// Player
-	if (gameData.isGravity)
-		gameData.player.applyGravity(false);
+	if (!gameData.flight)
+		gameData.player.applyGravity(gameData.gravity, false);
 	else
-		gameData.player.applyGravity(true); // resetGrav is true, so we set vertical acceleration and velocity to 0
+		gameData.player.applyGravity(gameData.gravity, true); // flight is true, so we set vertical acceleration and velocity to 0
 
 	gameData.player.updateForces(deltaTime);
 
@@ -457,7 +463,7 @@ bool updateGame()
 	{
 		gameData.slimes[i].update(deltaTime, gameData.rng, gameData.player.getPosition());
 
-		gameData.slimes[i].physics.applyGravity(false);
+		gameData.slimes[i].physics.applyGravity(gameData.gravity, false);
 
 		gameData.slimes[i].physics.updateForces(deltaTime);
 		gameData.slimes[i].physics.resolveConstraints(gameData.gameMap);
@@ -841,8 +847,11 @@ bool updateGame()
 				ImGui::Text("Camera speed:"); ImGui::SameLine(); ImGui::SliderFloat("##camSpeed", &gameData.cameraSpeed, MIN_CAM_SPEED, MAX_CAM_SPEED);
 				HelpTooltip("How fast the camera pans with WASD.");
 
+				ImGui::SeparatorText("Physics");
 				ImGui::Checkbox("Detect Collisions", &gameData.detectCollisions);
-				ImGui::Checkbox("Gravity", &gameData.isGravity);
+				ImGui::Checkbox("Player flight (no gravity)", &gameData.flight);
+				ImGui::Text("Gravity strength:"); ImGui::SameLine();
+				if (ImGui::SliderFloat("##gravity", &gameData.gravity, 1.0f, 150.0f)) {}
 
 				ImGui::SeparatorText("World");
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.85f, 0.4f, 1.0f));

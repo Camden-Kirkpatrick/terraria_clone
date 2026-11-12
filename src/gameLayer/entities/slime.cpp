@@ -44,7 +44,6 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 
 	jumpTimer -= deltaTime;
 
-	constexpr float JUMP_HEIGHT = 25.0f;
 
 	switch (currentState)
 	{
@@ -54,7 +53,7 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 			{
 				jumpTimer = getRandomFloat(rng, 3.0f, 12.0f);
 
-				physics.jump(JUMP_HEIGHT);
+				physics.jump();
 				moveSpeed = getRandomFloat(rng, -7.0f, 7.0f);
 			}
 		}
@@ -66,7 +65,7 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 			{
 				jumpTimer = getRandomFloat(rng, 1.0f, 6.0f);
 
-				physics.jump(JUMP_HEIGHT);
+				physics.jump();
 
 				if (playerPosition.x > getPosition().x)
 					moveSpeed = getRandomFloat(rng, 1.0f, 7.0f);

@@ -59,6 +59,10 @@ struct GameData
 	PhysicalEntity player;
 	bool detectCollisions = true;
 	bool isGravity = false;
+
+	int numSlimes = 5;
+	int maxSlimeSpawnDistFromOrigin = 100;
+	std::vector<Slime> slimes = {};
 } gameData;
 
 
@@ -135,6 +139,17 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 
 		gameData.player.transform.w = 0.9f;
 		gameData.player.transform.h = 1.8f;
+	}
+
+
+	gameData.slimes.reserve(gameData.numSlimes);
+
+	for (int i = 0; i < gameData.numSlimes; i++)
+	{
+		float x = getRandomInt(gameData.rng, (float)worldWidth / 2 + 0.5f - gameData.maxSlimeSpawnDistFromOrigin, (float)worldWidth / 2 + 0.5f + gameData.maxSlimeSpawnDistFromOrigin);
+		float y = 300.5f;
+		gameData.slimes.push_back(Slime());
+		gameData.slimes[i].physics.teleport({ x, y });
 	}
 
 	return true;
@@ -435,6 +450,19 @@ bool updateGame()
 	gameData.camera.target = gameData.player.getPosition();
 
 	gameData.player.updateFinal();
+
+
+	// Slimes
+	for (int i = 0; i < gameData.numSlimes; i++)
+	{
+		gameData.slimes[i].update(deltaTime, gameData.rng, gameData.player.getPosition());
+
+		gameData.slimes[i].physics.applyGravity(false);
+
+		gameData.slimes[i].physics.updateForces(deltaTime);
+		gameData.slimes[i].physics.resolveConstraints(gameData.gameMap);
+		gameData.slimes[i].physics.updateFinal();
+	}
 
 #pragma endregion
 
@@ -740,6 +768,12 @@ bool updateGame()
 		rect.height = (gameData.selectionEnd.y - gameData.selectionStart.y) + 1;
 
 		DrawRectangleLinesEx(rect, 0.1f, { 20, 101, 250, 145 });
+	}
+
+	// Draw the slimes
+	for (int i = 0; i < gameData.numSlimes; i++)
+	{
+		gameData.slimes[i].render(assetManager);
 	}
 
 	// The sprite we DRAW is a bit bigger than the collision box, so the

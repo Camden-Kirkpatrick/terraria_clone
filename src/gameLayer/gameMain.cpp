@@ -8,6 +8,7 @@
 #include "saveMap.hpp"
 #include "physics.hpp"
 #include "entities/slime.hpp"	
+#include "randomStuff.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <imgui.h>
@@ -58,8 +59,6 @@ struct GameData
 	PhysicalEntity player;
 	bool detectCollisions = true;
 	bool isGravity = false;
-
-	Slime slime;
 } gameData;
 
 
@@ -87,60 +86,56 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 
 	gameData.rng.seed(std::random_device{}());
 
-	// Camera setup
 	if (resetCamera)
 	{
-		gameData.camera.target = { (float)worldWidth / 2, 325 };       // The world-space point the camera looks at
-		gameData.camera.rotation = 0.0f;							   // No rotation
+		gameData.camera.rotation = 0.0f;
 		gameData.camera.zoom = DEFAULT_CAM_ZOOM;
 		gameData.cameraSpeed = DEFAULT_CAM_SPEED;
-	}
 
-	// We add 0.5, since that spawns the player in the center of the block, not the left edge
-	float playerX = (float)worldWidth / 2 + 0.5f;
-	float playerY = 335.0f;
-	bool isClear = false;
-	bool onGround = false;
+		// We add 0.5, since that spawns the player in the center of the block, not the left edge
+		float playerX = (float)worldWidth / 2 + 0.5f;
+		float playerY = 335.0f;
+		bool isClear = false;
+		bool onGround = false;
 
-	gameData.slime.physics.teleport({ (float)worldWidth / 2 + 0.5f - 1, 331.5f });
-
-	// Make sure the spawn position is not obstructed, so the player is not inside a block
-	while (!isClear)
-	{
-		if (
-			gameData.gameMap.getBlockUnsafe(playerX, playerY).isCollidable() ||
-			gameData.gameMap.getBlockUnsafe(playerX + 1, playerY).isCollidable() ||
-			gameData.gameMap.getBlockUnsafe(playerX - 1, playerY).isCollidable() ||
-			gameData.gameMap.getBlockUnsafe(playerX, playerY + 1).isCollidable() ||
-			gameData.gameMap.getBlockUnsafe(playerX, playerY - 1).isCollidable()
-		)
+		// Make sure the spawn position is not obstructed, so the player is not inside a block
+		while (!isClear)
 		{
-			playerY--;
-			gameData.player.teleport({ playerX, playerY });
+			if (
+				gameData.gameMap.getBlockUnsafe(playerX, playerY).isCollidable() ||
+				gameData.gameMap.getBlockUnsafe(playerX + 1, playerY).isCollidable() ||
+				gameData.gameMap.getBlockUnsafe(playerX - 1, playerY).isCollidable() ||
+				gameData.gameMap.getBlockUnsafe(playerX, playerY + 1).isCollidable() ||
+				gameData.gameMap.getBlockUnsafe(playerX, playerY - 1).isCollidable()
+				)
+			{
+				playerY--;
+				gameData.player.teleport({ playerX, playerY });
+			}
+			else
+			{
+				isClear = true;
+			}
 		}
-		else
+
+		// Ensure the player is on the ground, not floating
+		while (!onGround)
 		{
-			isClear = true;
+			if (gameData.gameMap.getBlockUnsafe(playerX, playerY + 1).isCollidable())
+				onGround = true;
+			else
+			{
+				playerY++;
+				gameData.player.teleport({ playerX, playerY });
+			}
 		}
+
+		// Guarantees the final playerX/playerY gets applied even if neither loop above ever adjusted it
+		gameData.player.teleport({ playerX, playerY });
+
+		gameData.player.transform.w = 0.9f;
+		gameData.player.transform.h = 1.8f;
 	}
-
-	// Ensure the player is on the ground, not floating
-	while (!onGround)
-	{
-		if (gameData.gameMap.getBlockUnsafe(playerX, playerY + 1).isCollidable())
-			onGround = true;
-		else
-		{
-			playerY++;
-			gameData.player.teleport({ playerX, playerY });
-		}
-	}
-
-	// Guarantees the final playerX/playerY gets applied even if neither loop above ever adjusted it
-	gameData.player.teleport({ playerX, playerY });
-
-	gameData.player.transform.w = 0.9f;
-	gameData.player.transform.h = 1.8f;
 
 	return true;
 }
@@ -441,14 +436,6 @@ bool updateGame()
 
 	gameData.player.updateFinal();
 
-	// Slime
-	gameData.slime.update(deltaTime, gameData.rng, gameData.player.getPosition());
-
-	gameData.slime.physics.applyGravity(false);
-
-	gameData.slime.physics.updateForces(deltaTime);
-	gameData.slime.physics.resolveConstraints(gameData.gameMap);
-	gameData.slime.physics.updateFinal();
 #pragma endregion
 
 #pragma region rendering 
@@ -754,9 +741,6 @@ bool updateGame()
 
 		DrawRectangleLinesEx(rect, 0.1f, { 20, 101, 250, 145 });
 	}
-
-	// Draw the slime
-	gameData.slime.render(assetManager);
 
 	// The sprite we DRAW is a bit bigger than the collision box, so the
 	// player's hair can stick out past the top without being solid.

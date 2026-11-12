@@ -38,7 +38,7 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 			currentState = STATE_WANDERING;
 	}
 
-	// The slime only moves when it jumps
+	// The slime only moves when it jumps, not when it's on the ground
 	if (physics.downTouch)
 		moveSpeed = 0.0f;
 
@@ -80,5 +80,7 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 			break;
 	}
 
-	getPosition().x += moveSpeed * deltaTime;
+	// Move the slime
+	if (moveSpeed != 0.0f)
+		getPosition().x += moveSpeed * deltaTime;
 }

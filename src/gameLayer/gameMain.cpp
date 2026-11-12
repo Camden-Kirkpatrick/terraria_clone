@@ -92,6 +92,8 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 
 	gameData.rng.seed(std::random_device{}());
 
+	gameData.gravity = 50.0f;
+
 	if (resetCamera)
 	{
 		gameData.camera.rotation = 0.0f;
@@ -852,6 +854,8 @@ bool updateGame()
 				ImGui::Checkbox("Player flight (no gravity)", &gameData.flight);
 				ImGui::Text("Gravity strength:"); ImGui::SameLine();
 				if (ImGui::SliderFloat("##gravity", &gameData.gravity, 1.0f, 150.0f)) {}
+				ImGui::Text("Player jump height:"); ImGui::SameLine();
+				if (ImGui::SliderFloat("##jumpHeight", &gameData.player.jumpStrength, 10.0f, 100.0f)) {}
 
 				ImGui::SeparatorText("World");
 				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.85f, 0.4f, 1.0f));

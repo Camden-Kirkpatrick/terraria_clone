@@ -165,7 +165,7 @@ struct PhysicalEntity
 	Vector2 velocity = {};
 	Vector2 acceleration = {};
 
-	float jumpStrength = 0.0f;
+	float jumpStrength = 0.0f; // how high this entity can jump
 
 	// Which sides of the player are touching a block?
 	bool upTouch = 0;

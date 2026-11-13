@@ -1317,6 +1317,7 @@ bool updateGame()
 #pragma endregion
 
 	DrawFPS(10, 10); // FPS counter
+	DrawText(TextFormat("Player position: (%.1f, %.1f)", gameData.player.transform.pos.x, gameData.player.transform.pos.y), 10, 40, 20, RED); // Player position
 
 #pragma endregion
 

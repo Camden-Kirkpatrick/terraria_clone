@@ -9,7 +9,7 @@ void Slime::render(AssetManager& assetManager)
 
 	DrawTexturePro(
 		assetManager.slime,
-		getTextureAtlas(0, 0, 32, 32),
+		getTextureAtlas(animation.posX, animation.posY, 32, 32),
 		aabb,
 		{ 0, 0 },
 		0.0f,
@@ -40,7 +40,12 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 
 	// The slime only moves when it jumps, not when it's on the ground
 	if (physics.downTouch)
+	{
 		moveSpeed = 0.0f;
+		animation.setAnimation(0); // on the ground
+	}
+	else
+		animation.setAnimation(1); // currently in the air
 
 	jumpTimer -= deltaTime;
 
@@ -82,4 +87,6 @@ void Slime::update(float deltaTime, std::ranlux24_base &rng, Vector2 playerPosit
 	// Move the slime
 	if (moveSpeed != 0.0f)
 		getPosition().x += moveSpeed * deltaTime;
+
+	animation.update(deltaTime, 0.08f, 7);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../physics.hpp"
+#include "../entityAnimation.hpp"
 #include <raylib.h>
 #include <random>
 
@@ -25,6 +26,8 @@ struct Slime
 
 	float jumpTimer = 5.0f;
 	float moveSpeed = 0.0f; // positive = right-ward movement
+
+	EntityAnimation animation;
 
 	PhysicalEntity physics;
 

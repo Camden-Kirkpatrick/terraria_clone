@@ -224,6 +224,15 @@ bool updateGame()
 				initGame(true, false); break;
 	}
 
+	// Spawn slimes
+	if (IsKeyPressed(KEY_Y))
+	{
+		gameData.slimes.push_back(Slime());
+		gameData.slimes[gameData.numSlimes].physics.teleport({ (float)blockX, (float)blockY });
+		gameData.slimes[gameData.numSlimes].physics.jumpStrength = 30.0f;
+		gameData.numSlimes++;
+	}
+
 #pragma region structures
 	if (showImGui)
 	{
@@ -1297,6 +1306,8 @@ bool updateGame()
 
 			if (ImGui::BeginTabItem("Entities"))
 			{
+				ImGui::Text("Press 'Y' to spawn a slime");
+
 				ImGui::Text("Number of slimes:"); ImGui::SameLine();
 				if (ImGui::SliderInt("##numSlimes", &gameData.numSlimes, 1, 10000))
 					initGame(false, false);

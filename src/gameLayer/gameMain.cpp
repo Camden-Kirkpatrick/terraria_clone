@@ -809,7 +809,7 @@ bool updateGame()
 		playerSprite.getAABB(),
 		{ 0, 0 },
 		0.0f,
-		WHITE
+		WHITE 
 	);
 
 	// Debug: draw the actual collision box (0.9 x 1.8) as a translucent blue
@@ -819,6 +819,19 @@ bool updateGame()
 	//	0.1f,
 	//	{ 20, 101, 250, 120 }
 	//);
+
+
+
+	// Check and see how many entities are within a 50 block radius of the player
+	int entitiesNearPlayer = 0;
+	Vector2 playerPos = gameData.player.getPosition();
+
+	for (int i = 0; i < gameData.numSlimes; i++)
+	{
+		Vector2 slimePos = gameData.slimes[i].getPosition();
+		if (fabsf(slimePos.x - playerPos.x) <= 50.0f && fabsf(slimePos.y - playerPos.y) <= 50.0f)
+			entitiesNearPlayer++;
+	}
 
 	// Anything drawn after this (e.g. HUD) uses raw screen coordinates, unaffected by the camera.
 	EndMode2D();
@@ -1328,7 +1341,8 @@ bool updateGame()
 #pragma endregion
 
 	DrawFPS(10, 10); // FPS counter
-	DrawText(TextFormat("Player position: (%.1f, %.1f)", gameData.player.transform.pos.x, gameData.player.transform.pos.y), 10, 40, 20, RED); // Player position
+	DrawText(TextFormat("Player position: (%.1f, %.1f)", gameData.player.transform.pos.x, gameData.player.transform.pos.y), 10, 40, 20, LIME); // Player position
+	DrawText(TextFormat("Entities near player: %d", entitiesNearPlayer), 10, 70, 20, LIME); // Num entities near player
 
 #pragma endregion
 

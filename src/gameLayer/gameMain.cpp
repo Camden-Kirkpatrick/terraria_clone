@@ -62,8 +62,6 @@ struct GameData
 	bool detectCollisions = true;
 	bool flight = false;
 
-	int numSlimes = 0;
-	int maxSlimeSpawnDistFromOrigin = 0;
 	std::vector<Slime> slimes = {};
 } gameData;
 
@@ -109,12 +107,12 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 		// Make sure the spawn position is not obstructed, so the player is not inside a block
 		while (!isClear)
 		{
-			if (
-				gameData.gameMap.getBlockUnsafe(playerX, playerY).isCollidable() ||
-				gameData.gameMap.getBlockUnsafe(playerX + 1, playerY).isCollidable() ||
-				gameData.gameMap.getBlockUnsafe(playerX - 1, playerY).isCollidable() ||
-				gameData.gameMap.getBlockUnsafe(playerX, playerY + 1).isCollidable() ||
-				gameData.gameMap.getBlockUnsafe(playerX, playerY - 1).isCollidable()
+			if	(
+					gameData.gameMap.getBlockUnsafe(playerX, playerY).isCollidable() ||
+					gameData.gameMap.getBlockUnsafe(playerX + 1, playerY).isCollidable() ||
+					gameData.gameMap.getBlockUnsafe(playerX - 1, playerY).isCollidable() ||
+					gameData.gameMap.getBlockUnsafe(playerX, playerY + 1).isCollidable() ||
+					gameData.gameMap.getBlockUnsafe(playerX, playerY - 1).isCollidable()
 				)
 			{
 				playerY--;
@@ -146,19 +144,7 @@ bool initGame(bool resetWorldGen, bool resetCamera)
 		gameData.player.transform.h = 1.8f;
 	}
 
-	gameData.numSlimes = 5;
-	gameData.maxSlimeSpawnDistFromOrigin = 100;
-
-	gameData.slimes.reserve(gameData.numSlimes);
-
-	for (int i = 0; i < gameData.numSlimes; i++)
-	{
-		float x = getRandomInt(gameData.rng, (float)worldWidth / 2 + 0.5f - gameData.maxSlimeSpawnDistFromOrigin, (float)worldWidth / 2 + 0.5f + gameData.maxSlimeSpawnDistFromOrigin);
-		float y = 300.5f;
-		gameData.slimes.push_back(Slime());
-		gameData.slimes[i].physics.teleport({ x, y });
-		gameData.slimes[i].physics.jumpStrength = 30.0f;
-	}
+	gameData.slimes.clear();
 
 	return true;
 }
@@ -228,9 +214,18 @@ bool updateGame()
 	if (IsKeyPressed(KEY_Y))
 	{
 		gameData.slimes.push_back(Slime());
-		gameData.slimes[gameData.numSlimes].physics.teleport({ (float)blockX, (float)blockY });
-		gameData.slimes[gameData.numSlimes].physics.jumpStrength = 30.0f;
-		gameData.numSlimes++;
+		gameData.slimes[gameData.slimes.size() - 1].physics.teleport({(float)blockX, (float)blockY});
+		gameData.slimes[gameData.slimes.size() - 1].physics.jumpStrength = 30.0f;
+	}
+	// Delete slimes
+	if (IsKeyDown(KEY_U))
+	{
+		for (int i = 0; i < gameData.slimes.size(); i++)
+		{
+			Vector2 slimePos = gameData.slimes[i].getPosition();
+			if (fabsf(slimePos.x - mousePos.x) <= 0.5f && fabsf(slimePos.y - mousePos.y) <= 0.5f)
+				gameData.slimes.erase(gameData.slimes.begin() + i);
+		}
 	}
 
 #pragma region structures
@@ -470,7 +465,7 @@ bool updateGame()
 
 
 	// Slimes
-	for (int i = 0; i < gameData.numSlimes; i++)
+	for (int i = 0; i < gameData.slimes.size(); i++)
 	{
 		gameData.slimes[i].update(deltaTime, gameData.rng, gameData.player.getPosition());
 
@@ -788,7 +783,7 @@ bool updateGame()
 	}
 
 	// Draw the slimes
-	for (int i = 0; i < gameData.numSlimes; i++)
+	for (int i = 0; i < gameData.slimes.size(); i++)
 	{
 		gameData.slimes[i].render(assetManager);
 	}
@@ -826,10 +821,10 @@ bool updateGame()
 	int entitiesNearPlayer = 0;
 	Vector2 playerPos = gameData.player.getPosition();
 
-	for (int i = 0; i < gameData.numSlimes; i++)
+	for (int i = 0; i < gameData.slimes.size(); i++)
 	{
 		Vector2 slimePos = gameData.slimes[i].getPosition();
-		if (fabsf(slimePos.x - playerPos.x) <= 50.0f && fabsf(slimePos.y - playerPos.y) <= 50.0f)
+		if (fabsf(slimePos.x - playerPos.x) <= 25.0f && fabsf(slimePos.y - playerPos.y) <= 25.0f)
 			entitiesNearPlayer++;
 	}
 
@@ -1320,14 +1315,7 @@ bool updateGame()
 			if (ImGui::BeginTabItem("Entities"))
 			{
 				ImGui::Text("Press 'Y' to spawn a slime");
-
-				ImGui::Text("Number of slimes:"); ImGui::SameLine();
-				if (ImGui::SliderInt("##numSlimes", &gameData.numSlimes, 1, 10000))
-					initGame(false, false);
-
-				ImGui::Text("Slime spawn distance from world origin:"); ImGui::SameLine();
-				if (ImGui::SliderInt("##slimeSpawnDist", &gameData.maxSlimeSpawnDistFromOrigin, 0, worldWidth / 3))
-					initGame(false, false);
+				ImGui::Text("Press 'U' to delete a slime at the current mouse position");
 
 				ImGui::EndTabItem();
 			}

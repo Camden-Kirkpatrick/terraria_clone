@@ -8,7 +8,6 @@
 #include "saveMap.hpp"
 #include "physics.hpp"
 #include "entities/slime.hpp"	
-#include "randomStuff.hpp"
 #include <raylib.h>
 #include <raymath.h>
 #include <imgui.h>
@@ -839,6 +838,7 @@ bool updateGame()
 
 		if (ImGui::BeginTabBar("MenuTabs"))
 		{
+			// Game Menu
 			if (ImGui::BeginTabItem("Game Menu"))
 			{
 
@@ -1182,6 +1182,7 @@ bool updateGame()
 				ImGui::EndTabItem();
 			}
 
+			// Block Selection
 			if (ImGui::BeginTabItem("Block Selection"))
 			{
 				ImGui::SeparatorText("Placing & Breaking Blocks");
@@ -1312,6 +1313,7 @@ bool updateGame()
 				ImGui::EndTabItem();
 			}
 
+			// Entities
 			if (ImGui::BeginTabItem("Entities"))
 			{
 				ImGui::Text("Press 'Y' to spawn a slime");
@@ -1320,6 +1322,7 @@ bool updateGame()
 				ImGui::EndTabItem();
 			}
 
+			// Texture Packs
 			if (ImGui::BeginTabItem("Texture Packs"))
 			{
 				ImGui::Text("Load the 'HD Textures' texture pack: ");

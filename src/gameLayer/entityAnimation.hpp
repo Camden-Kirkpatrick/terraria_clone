@@ -2,8 +2,8 @@
 
 struct EntityAnimation
 {
-	int posX = 0;
-	int posY = 0;
+	int posX = 0; // Which animation frame are we on? (Column)
+	int posY = 0; // Which animation is this? (Row)
 
 	float timer = 0.0f;
 
@@ -31,6 +31,7 @@ struct EntityAnimation
 		{
 			// Start at the beginning of this animation
 			posX = 0;
+			// Change animation
 			posY = animation;
 		}
 	}

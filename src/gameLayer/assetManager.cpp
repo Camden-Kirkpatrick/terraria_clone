@@ -1,5 +1,6 @@
 #include "assetManager.hpp"
 #include <raylib.h>
+#include <string>
 
 void AssetManager::loadAll()
 {
@@ -11,4 +12,18 @@ void AssetManager::loadAll()
 	woodLogs = LoadTexture(RESOURCES_PATH "treetextures.png");
 	player = LoadTexture(RESOURCES_PATH "player.png");
 	slime = LoadTexture(RESOURCES_PATH "slime.png");
+}
+
+void AssetManager::unloadAll()
+{
+	textures = {};
+	frame = {};
+}
+
+void AssetManager::loadTexturePack(std::string texturePack)
+{
+	std::string filePath = "../texturePacks/" + texturePack + "/";
+
+	textures = LoadTexture((RESOURCES_PATH + filePath + "texturesWithBackgroundVersion.png").c_str());
+	frame = LoadTexture((RESOURCES_PATH + filePath + "frame.png").c_str());
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <raylib.h>
+#include <string>
 
 struct AssetManager
 {
@@ -10,4 +11,6 @@ struct AssetManager
 	Texture2D slime = {};
 
 	void loadAll();
+	void unloadAll();
+	void loadTexturePack(std::string texturePack);
 };

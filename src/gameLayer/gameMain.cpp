@@ -1320,6 +1320,24 @@ bool updateGame()
 				ImGui::EndTabItem();
 			}
 
+			if (ImGui::BeginTabItem("Texture Packs"))
+			{
+				ImGui::Text("Load the 'HD Textures' texture pack: ");
+				if (ImGui::Button("Load"))
+				{
+					assetManager.unloadAll();
+					assetManager.loadTexturePack("hdtextures");
+				}
+
+				ImGui::Text("Unload the 'HD Textures' texture pack: ");
+				if (ImGui::Button("Unload"))
+				{
+					assetManager.loadAll();
+				}
+
+				ImGui::EndTabItem();
+			}
+
 			ImGui::EndTabBar();
 		}
 

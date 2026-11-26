@@ -36,12 +36,16 @@
 - [x] Tree generation
 - [x] Procedural tree generation 
 - [x] Add collisions
+- [x] Add a player
+- [ ] Add entities
+  - [x] Slime
+  - [ ] Zombie 
+  - [ ] Flying enemy
+- [x] Add texture pack
 - [ ] Add more biomes
   - [x] Tundra
   - [ ] Jungle
   - [ ] Ocean
-- [ ] Add entities
-- [ ] Add a player
 - [ ] Sounds / Music
 - [ ] Game menu
 - [ ] Save/Load worlds

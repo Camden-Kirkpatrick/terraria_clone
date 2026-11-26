@@ -808,11 +808,11 @@ bool updateGame()
 
 	// Debug: draw the actual collision box (0.9 x 1.8) as a translucent blue
 	// outline so we can see it's shorter than the sprite and sits at the feet.
-	//DrawRectangleLinesEx(
-	//	gameData.player.transform.getAABB(),
-	//	0.1f,
-	//	{ 20, 101, 250, 120 }
-	//);
+	DrawRectangleLinesEx(
+		gameData.player.transform.getAABB(),
+		0.1f,
+		{ 20, 101, 250, 120 }
+	);
 
 
 
